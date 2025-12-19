@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=yes" />
+  <title>Canlı Mesajlar - DM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --sidebar-bg: #1e293b;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-gold: #f59e0b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --card-radius: 12px;
+    }
+
+    html,body { height:100%; margin:0; font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Topbar */
+    .topbar {
+      width: 100%;
+      background: rgba(30, 41, 59, 0.86);
+      backdrop-filter: blur(8px);
+      position: fixed;
+      top: 0; z-index: 120;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .top-left { display:flex; align-items:center; gap:8px; }
+    .menu-toggle {
+      background: transparent; border: none; color:var(--text-main);
+      width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .menu-toggle:hover { background: rgba(255,255,255,0.02); }
+    .profile-area { display:flex; align-items:center; gap:12px; }
+    .profile-name {
+      font-weight:600; padding:6px 12px; border-radius:999px;
+      background: rgba(59,130,246,0.08); color:var(--accent-blue); font-size:0.95rem;
+    }
+    .logout-btn {
+      background: #ef4444; color: white; border: none;
+      padding: 8px 12px; border-radius: 10px; font-weight: 700;
+      cursor: pointer;
+    }
+    .logout-btn:hover { filter:brightness(.95); transform:translateY(-1px); }
+
+    /* Main container below topbar */
+    .dm-wrap { display:flex; flex:1; margin-top:56px; min-height:0; } /* min-height:0 so flex children can scroll */
+
+    /* Sidebar */
+    .sidebar {
+      width: 320px;
+      min-width: 220px;
+      max-width: 360px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.22s ease, width 0.22s ease;
+      z-index:110;
+      overflow: hidden;
+    }
+    .sidebar.collapsed { transform: translateX(-100%); position: absolute; left:0; top:56px; height: calc(100% - 56px); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .sidebar-header {
+      padding: 12px 12px;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-search {
+      margin: 8px 12px 12px 12px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .user-search input {
+      flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04);
+      background: rgba(0,0,0,0.2); color:var(--text-main);
+    }
+
+    .users-list {
+      overflow-y: auto;
+      padding: 8px;
+      flex:1;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      margin: 6px 8px;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: all 0.15s ease;
+      background: transparent;
+    }
+    .user-item:hover { background: rgba(255,255,255,0.02); }
+    .user-item.active { background: linear-gradient(90deg, rgba(59,130,246,0.12), rgba(59,130,246,0.06)); box-shadow: 0 6px 18px rgba(59,130,246,0.06); }
+
+    .user-avatar {
+      width:40px; height:40px; border-radius:10px;
+      background: linear-gradient(135deg,#0f1724,#111827);
+      display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff;
+      flex-shrink:0;
+    }
+
+    .user-status {
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 2px solid var(--sidebar-bg);
+      flex-shrink:0;
+    }
+    .user-status.online { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+    .user-status.offline { background: #64748b; }
+
+    /* Main chat area */
+    .main-dm-area {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      background: linear-gradient(180deg, rgba(11,15,26,0.6), rgba(6,8,12,0.85));
+      min-width:0; /* important so flex children can shrink */
+      position:relative;
+    }
+
+    .dm-header {
+      padding: 16px 18px;
+      background: rgba(15, 23, 42, 0.6);
+      font-size: 1rem; font-weight:700;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .dm-messages {
+      flex:1; overflow-y:auto; padding: 18px;
+      display:flex; flex-direction:column; gap:12px;
+      /* extra bottom padding to avoid overlapping the fixed footer on mobile */
+      padding-bottom: 120px;
+    }
+
+    .dm-msg {
+      max-width: 72%;
+      padding:12px 14px;
+      border-radius:16px;
+      background:#0f1724;
+      color:var(--text-main);
+      align-self:flex-start;
+      word-break:break-word;
+      font-size:0.95rem;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    }
+    .dm-msg.me {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff; align-self:flex-end;
+    }
+    .dm-msg .meta { display:block; margin-top:8px; font-size:0.75rem; color:var(--text-muted); opacity:0.9; }
+
+    /* Footer (compose) */
+    .dm-footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 130;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(8,10,16,0.6), rgba(6,8,12,0.9));
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+
+    #dmInput {
+      flex:1;
+      background: #0f1724;
+      border: 1px solid #243043;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: white;
+      outline:none;
+      min-height:44px;
+      font-size:0.95rem;
+    }
+    #dmInput:focus { box-shadow: 0 6px 20px rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.18); }
+
+    .dm-footer button {
+      border: none; cursor:pointer; border-radius: 10px; padding: 10px 12px; font-weight:700;
+      display:flex; align-items:center; gap:8px; justify-content:center;
+    }
+    #sendBtn { background: var(--accent-blue); color:white; }
+    #sendCoinBtn { background: var(--accent-gold); color:#000; }
+    #sendBalanceBtn { background: var(--accent-green); color:#000; }
+
+    /* Small helpers */
+    .hidden { display:none !important; }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .sidebar { width: 100%; max-width: 100%; min-width: 0; position: absolute; left:0; top:56px; height: calc(100% - 56px); transform: translateX(-100%); transition: transform 0.22s ease; }
+      .sidebar.open { transform: translateX(0); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+      .dm-wrap { flex-direction: column; }
+      .main-dm-area { margin-top:0; }
+      .users-list { padding:6px; display:flex; flex-direction:column; }
+      .user-item { margin:6px 6px; }
+      .dm-header { padding-left: 12px; padding-right: 12px; }
+      .dm-messages { padding: 12px; padding-bottom: 140px; }
+      .dm-footer { padding: 10px; }
+      .topbar { height:56px; }
+      /* make message bubble widths comfortable on mobile */
+      .dm-msg { max-width: 86%; font-size:0.96rem; padding:12px; }
+    }
+
+    @media (max-width: 420px) {
+      .menu-toggle { width:36px; height:36px; }
+      .user-avatar { width:36px; height:36px; font-size:0.85rem; border-radius:8px; }
+      .profile-name { font-size:0.9rem; padding:6px 10px; }
+      .dm-footer button { padding:8px 10px; font-size:0.92rem; }
+      #dmInput { min-height:40px; font-size:0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP BAR -->
+  <div class="topbar" id="topBar" style="display:none;">
+    <div class="top-left">
+      <button class="menu-toggle" id="menuToggleBtn" aria-label="Menü">
+        <span class="material-icons-round" style="font-size:20px;color:var(--text-main)">menu</span>
+      </button>
+      <div style="font-weight:700; color:var(--text-main); font-size:1rem;">DM</div>
+    </div>
+
+    <div class="profile-area">
+      <span class="profile-name" id="profileName"></span>
+      <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-overlay" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:140;">
+    <form class="modal-box" id="loginForm" autocomplete="off" onsubmit="return false;">
+      <div style="font-weight:800; margin-bottom:8px; font-size:1.05rem; color:var(--accent-blue)">Giriş Yap</div>
+      <input id="loginUsername" placeholder="Kullanıcı Adı" autocomplete="username" required />
+      <input id="loginPassword" type="password" placeholder="Şifre" autocomplete="current-password" required />
+      <div style="display:flex; gap:8px;">
+        <button type="submit" id="loginBtn" style="flex:1; background:var(--accent-blue); color:#fff; border:none; padding:10px 12px; border-radius:10px;">Giriş yap</button>
+        <button type="button" id="guestBtn" style="flex:0 0 auto; background:transparent; color:var(--text-main); border:1px solid rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px;">Misafir</button>
+      </div>
+      <div class="err" id="loginError" style="color:#ffccd5; margin-top:8px; min-height:18px;"></div>
+    </form>
+  </div>
+
+  <div class="dm-wrap">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="material-icons-round" style="font-size:20px;color:var(--accent-blue)">people</span>
+        Arkadaşlar
+        <div style="flex:1"></div>
+        <button id="closeSidebarBtn" class="menu-toggle" title="Kapat" style="display:none;">
+          <span class="material-icons-round" style="font-size:18px;color:var(--text-main)">close</span>
+        </button>
+      </div>
+
+      <div class="user-search" style="padding: 0 12px 8px 12px;">
+        <input id="userSearch" placeholder="Ara: isim veya ID" />
+      </div>
+
+      <div class="users-list" id="usersList">
+        <div style="color:#aaa; text-align:center; margin:16px 0;">Yükleniyor...</div>
+      </div>
+    </aside>
+
+    <main class="main-dm-area">
+      <div class="dm-header" id="dmHeader">Kişi seç</div>
+      <div class="dm-messages" id="dmMessages">
+        <div style="text-align:center; color:#b9b9ce; opacity:0.75; margin-top:90px;">Soldan bir arkadaş seçin.</div>
+      </div>
+
+      <div class="dm-footer" id="dmFooter">
+        <input id="dmInput" type="text" placeholder="Mesaj yaz..." autocomplete="off" disabled />
+        <button id="sendBtn" disabled>Gönder</button>
+        <button id="sendCoinBtn" title="Coin Gönder" disabled>Coin</button>
+        <button id="sendBalanceBtn" title="Bakiye Gönder" disabled>Bakiye</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+  // --- FIREBASE INIT ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+    authDomain: "lilemir-new.firebaseapp.com",
+    projectId: "lilemir-new",
+    storageBucket: "lilemir-new.firebasestorage.app",
+    messagingSenderId: "339863121380",
+    appId: "1:339863121380:web:123195552e821b085e6bf1"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // --- STATE ---
+  let currentUser = null;
+  let selectedUserId = null;
+  let unsubDM = null;
+  let usersCache = {}; // { uid: userDoc }
+  let usersOrder = []; // array of uids in current sorted order
+
+  // --- DOM REFS ---
+  const dmHeader = document.getElementById("dmHeader");
+  const dmMessages = document.getElementById("dmMessages");
+  const dmInput = document.getElementById("dmInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const usersList = document.getElementById("usersList");
+  const sendCoinBtn = document.getElementById('sendCoinBtn');
+  const sendBalanceBtn = document.getElementById('sendBalanceBtn');
+  const loginModal = document.getElementById('loginModal');
+  const loginForm = document.getElementById('loginForm');
+  const loginUsername = document.getElementById('loginUsername');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const topBar = document.getElementById('topBar');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const profileName = document.getElementById('profileName');
+  const menuToggleBtn = document.getElementById('menuToggleBtn');
+  const sidebar = document.getElementById('sidebar');
+  const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+  const userSearch = document.getElementById('userSearch');
+
+  // --- UTIL ---
+  function escapeHtml(s) { return (s||'').toString().replace(/[&<"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]); }
+
+  async function sha256Hex(str) {
+    const enc = new TextEncoder();
+    const data = enc.encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // --- HELPERS TO AVOID SELF-SEND ---
+  function isSendingToSelf() {
+    return !!(currentUser && selectedUserId && currentUser.uid === selectedUserId);
+  }
+
+  function updateComposeStateAfterSelect() {
+    const self = isSendingToSelf();
+    // disable send buttons if selecting self
+    dmInput.disabled = self;
+    sendBtn.disabled = self;
+    sendCoinBtn.disabled = self;
+    sendBalanceBtn.disabled = self;
+    // give small hint in header
+    if(self) {
+      dmHeader.textContent = (currentUser.displayName || currentUser.username || currentUser.uid) + " (Siz) — Kendinize gönderim yasaklandı";
+    }
+  }
+
+  // --- AUTH (username & password stored in users collection) ---
+  async function signInByUsername(username, password) {
+    loginError.textContent = '';
+    if(!username || !password) { loginError.textContent = 'Kullanıcı adı ve şifre doldurulmalı.'; return null; }
+    try {
+      const candidateFields = ['username','userName','user','displayName','email'];
+      let doc = null;
+      for(const f of candidateFields) {
+        try {
+          const q = await db.collection('users').where(f, '==', username).limit(1).get();
+          if(!q.empty){ doc = q.docs[0]; break; }
+        }catch(e){}
+      }
+      if(!doc) {
+        const byId = await db.collection('users').doc(username).get();
+        if(byId.exists) doc = byId;
+      }
+      if(!doc) {
+        const newRef = db.collection('users').doc();
+        const hashed = await sha256Hex(password);
+        const payload = {
+          username, displayName: username,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          balance: 0, coins: 0,
+          hashedPassword: hashed
+        };
+        await newRef.set(payload);
+        const snap = await newRef.get();
+        doc = snap;
+      }
+      const data = doc.data() || {};
+      const passCandidates = ['hashedPassword','passwordHash','passHash','pwdHash','password','pwHash','pass','hashed_password','hashed'];
+      let stored = null;
+      for(const pf of passCandidates)
+        if(data[pf] !== undefined && data[pf] !== null) { stored = String(data[pf]).trim(); break; }
+      if(!stored) { loginError.textContent = 'Bu kullanıcı için şifre tanımlı değil'; return null; }
+      const isHex64 = /^[a-f0-9]{64}$/i.test(stored);
+      if(isHex64) {
+        const provided = await sha256Hex(password);
+        if(provided.toLowerCase() !== stored.toLowerCase()) { loginError.textContent = 'Şifre yanlış'; return null; }
+      } else {
+        if(password !== stored) { loginError.textContent = 'Şifre yanlış'; return null; }
+      }
+      currentUser = Object.assign({}, data, { uid: doc.id });
+      localStorage.setItem('oc_user', doc.id);
+      updateProfileBar();
+      loginModal.style.display = 'none';
+      topBar.style.display = 'flex';
+      subscribeUsers(); // start users subscription
+      setOnline(currentUser.uid, true);
+      window.addEventListener('beforeunload', ()=> setOnline(currentUser.uid, false));
+      return currentUser;
+    } catch(err) {
+      console.error('signIn error', err);
+      loginError.textContent = 'Giriş hatası';
+      return null;
+    }
+  }
+
+  loginForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    await signInByUsername(loginUsername.value.trim(), loginPassword.value);
+  });
+
+  // guest quick login (creates or loads a guest user)
+  document.getElementById('guestBtn').addEventListener('click', async ()=>{
+    const guestName = 'guest_' + Math.random().toString(36).slice(2,9);
+    await signInByUsername(guestName, 'guest' + Math.random().toString(36).slice(2,6));
+  });
+
+  function updateProfileBar() {
+    if(currentUser) {
+      profileName.textContent = currentUser.displayName || currentUser.username || currentUser.uid || "Kullanıcı";
+      topBar.style.display = 'flex';
+    }
+  }
+
+  function tryAuth() {
+    let userId = localStorage.getItem("oc_user");
+    if (!userId) return showLogin();
+    db.collection("users").doc(userId).get().then(doc=>{
+      if(!doc.exists) { showLogin(); return; }
+      currentUser = { uid: doc.id, ...(doc.data()||{}) };
+      updateProfileBar();
+      topBar.style.display = 'flex';
+      subscribeUsers();
+      setOnline(currentUser.uid,true);
+      window.addEventListener('beforeunload', ()=> setOnline(currentUser.uid, false));
+    }).catch(()=> showLogin());
+  }
+
+  function showLogin() {
+    loginModal.style.display = 'flex';
+    loginForm.reset();
+    loginError.textContent = '';
+    loginUsername.focus();
+    topBar.style.display = 'none';
+  }
+
+  logoutBtn?.addEventListener('click', function(){
+    localStorage.removeItem('oc_user');
+    topBar.style.display = 'none';
+    if(currentUser && currentUser.uid) setOnline(currentUser.uid,false);
+    currentUser = null;
+    selectedUserId = null;
+    dmHeader.textContent = "Kişi seç";
+    dmMessages.innerHTML = '<div style="text-align:center; color:#b9b9ce; opacity:0.75; margin-top:90px;">Soldan bir arkadaş seçin.</div>';
+    dmInput.disabled = sendBtn.disabled = sendCoinBtn.disabled = sendBalanceBtn.disabled = true;
+    showLogin();
+  });
+
+  async function setOnline(uid, val){
+    try { await db.collection('users').doc(uid).update({ online: !!val, lastActive: new Date().toISOString() }); }
+    catch(e){}
+  }
+
+  // --- USERS subscription & rendering (fix: ensure all users shown, client-side sort & filter) ---
+  let usersUnsub = null;
+  function subscribeUsers(){
+    if(usersUnsub) usersUnsub();
+    usersUnsub = db.collection("users").onSnapshot(snapshot=>{
+      usersCache = {};
+      usersOrder = [];
+      snapshot.forEach(doc=>{
+        usersCache[doc.id] = doc.data() || {};
+      });
+      // build sorted order client-side by displayName (fallback to uid)
+      usersOrder = Object.keys(usersCache).sort((a,b)=>{
+        const A = (usersCache[a].displayName || usersCache[a].username || a || '').toString().toLowerCase();
+        const B = (usersCache[b].displayName || usersCache[b].username || b || '').toString().toLowerCase();
+        return A.localeCompare(B);
+      });
+      renderUserListFromCache();
+    }, err=>{
+      console.error('users subscribe error', err);
+      usersList.innerHTML = `<div style="color:#ffccd5; padding:16px;">Kullanıcı listesi yüklenemedi: ${err.message}</div>`;
+    });
+  }
+
+  function renderUserListFromCache(filterText=''){
+    const q = (filterText||'').toString().trim().toLowerCase();
+    let html = '';
+    if(usersOrder.length===0){
+      usersList.innerHTML = '<div style="text-align:center; color:#888; margin-top:24px;">Kullanıcı yok.</div>';
+      return;
+    }
+    for(const uid of usersOrder){
+      const u = usersCache[uid] || {};
+      const display = (u.displayName || u.username || uid || '').toString();
+      const displayLower = display.toLowerCase();
+      if(q && !displayLower.includes(q) && !uid.toLowerCase().includes(q)) continue;
+      const initials = escapeHtml((display||'U').toString().trim().slice(0,2).toUpperCase());
+      const onlineClass = u.online ? 'online' : 'offline';
+      const youTag = (currentUser && currentUser.uid === uid) ? ' <span style="font-size:0.8rem; color:var(--text-muted)"> (Siz)</span>' : '';
+      html += `
+        <div class="user-item" data-uid="${uid}">
+          <div class="user-avatar">${initials}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(display)}${youTag}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">${escapeHtml(u.status||'')}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <div class="user-status ${onlineClass}"></div>
+            <div id="umsg_${uid}" style="color:#ef4444; font-size:12px; display:none;">●</div>
+          </div>
+        </div>
+      `;
+    }
+    usersList.innerHTML = html || '<div style="text-align:center; color:#888; margin-top:24px;">Aradığınız kullanıcı bulunamadı.</div>';
+    Array.from(document.querySelectorAll('.user-item')).forEach(el=> el.removeEventListener('click', onUserItemClick));
+    Array.from(document.querySelectorAll('.user-item')).forEach(el=> el.addEventListener('click', onUserItemClick));
+    watchNewDms();
+  }
+
+  function onUserItemClick(e){
+    const uid = this.dataset.uid;
+    selectUserForDM(uid);
+  }
+
+  // user search
+  userSearch.addEventListener('input', (e)=> renderUserListFromCache(e.target.value));
+
+  // initial subscription will be triggered by tryAuth()
+  function subscribeUsersOnceIfNeeded(){
+    if(!usersUnsub) subscribeUsers();
+  }
+
+  // --- SELECT / LOAD MESSAGES ---
+  function selectUserForDM(uid){
+    if(!uid) return;
+    if(selectedUserId===uid) return;
+    selectedUserId = uid;
+    if(unsubDM) { unsubDM(); unsubDM = null; }
+    Array.from(document.querySelectorAll('.user-item')).forEach(el=> el.classList.toggle('active', el.dataset.uid===uid));
+    const user = usersCache[uid]||{};
+    dmHeader.textContent = (user.displayName||user.username||uid) + (currentUser && currentUser.uid===uid ? ' (Siz)' : '');
+    dmInput.disabled = sendBtn.disabled = sendCoinBtn.disabled = sendBalanceBtn.disabled = false;
+    dmInput.value = '';
+    loadMessages(uid);
+    clearMsgBadgeFor(uid);
+    // update compose state to prevent self-send
+    updateComposeStateAfterSelect();
+    // on narrow screens, hide sidebar automatically
+    if(window.innerWidth <= 900) sidebar.classList.remove('open');
+  }
+
+  function scrollToBottom(){
+    setTimeout(()=>{ dmMessages.scrollTop = dmMessages.scrollHeight + 200 }, 80);
+  }
+
+  function loadMessages(uid){
+    if(unsubDM) unsubDM();
+    const myid = currentUser.uid;
+    const otherid = uid;
+    const pairId = [myid,otherid].sort().join("_");
+    unsubDM = db.collection("dms").doc(pairId).collection("messages")
+      .orderBy("createdAt","asc").onSnapshot(snapshot=>{
+        dmMessages.innerHTML = '';
+        if(snapshot.empty){
+          dmMessages.innerHTML = '<div style="text-align:center; color: #999; margin-top:70px;">Sohbet yok, bir mesaj yazın</div>';
+          return;
+        }
+        snapshot.forEach(doc=>{
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.className = "dm-msg"+(msg.sender===myid?' me':'');
+          const text = escapeHtml(msg.text || '');
+          div.innerHTML = `<div>${text}</div>`;
+          const metaParts = [];
+          if(msg.createdAt?.toDate) metaParts.push(msg.createdAt.toDate().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));
+          const whoLabel = msg.sender===myid ? 'Siz' : (usersCache[msg.sender]?.displayName || 'O');
+          div.innerHTML += `<div class="meta">${escapeHtml(whoLabel)} • ${metaParts.join(' • ')}</div>`;
+          dmMessages.appendChild(div);
+        });
+        scrollToBottom();
+      }, err=>{
+        console.error('messages subscribe error', err);
+      });
+  }
+
+  dmInput.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendDM(); }
+  });
+  sendBtn.addEventListener('click', sendDM);
+
+  function sendDM(){
+    // prevent sending DM to self
+    if(isSendingToSelf()) { alert("Kendinize mesaj gönderemezsiniz."); return; }
+
+    const txt = dmInput.value.trim();
+    if(!txt || !selectedUserId) return;
+    const myid = currentUser.uid;
+    const otherid = selectedUserId;
+    const pairId = [myid,otherid].sort().join("_");
+    db.collection("dms").doc(pairId).collection("messages").add({
+      text: txt,
+      sender: myid,
+      receiver: otherid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(()=>{ dmInput.value=''; });
+    db.collection("dms").doc(pairId).set({
+      lastMsg: txt, lastSender: myid, lastReceiver: otherid,
+      lastAt: firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  }
+
+  // --- COIN / BALANCE SEND ---
+  sendCoinBtn.addEventListener('click', async function(){
+    if(!selectedUserId) return;
+    // block self-send
+    if(isSendingToSelf()){ alert("Kendinize coin gönderemezsiniz."); return; }
+
+    let amountTxt = prompt("Kaç coin göndermek istiyorsun? (Pozitif sayı, min 1)");
+    let amount = Number(amountTxt);
+    if(!amount || amount<=0) return alert("Geçersiz miktar");
+    const fromRef = db.collection("users").doc(currentUser.uid);
+    const toRef = db.collection("users").doc(selectedUserId);
+    try{
+      await db.runTransaction(async (tx)=>{
+        const fromSnap = await tx.get(fromRef);
+        const toSnap = await tx.get(toRef);
+        if(!fromSnap.exists || !toSnap.exists) throw new Error("Kullanıcı yok.");
+        let myCoins = fromSnap.data().coins || 0;
+        let toCoins = toSnap.data().coins || 0;
+        if(myCoins < amount) throw new Error("Yeterli coinin yok!");
+        tx.update(fromRef, { coins: myCoins - amount });
+        tx.update(toRef, { coins: toCoins + amount });
+      });
+      const myid = currentUser.uid, otherid = selectedUserId, pairId=[myid,otherid].sort().join("_");
+      db.collection("dms").doc(pairId).collection("messages").add({
+        text: `💰 ${amount} coin gönderildi.`,
+        sender: myid, receiver: otherid, system:true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      alert("Coinler gönderildi!");
+    }catch(e){ alert("Hata: "+e.message); }
+  });
+
+  sendBalanceBtn.addEventListener('click', async function(){
+    if(!selectedUserId) return;
+    // block self-send
+    if(isSendingToSelf()){ alert("Kendinize bakiye gönderemezsiniz."); return; }
+
+    let amountTxt = prompt("Ne kadar bakiye göndermek istiyorsun? (Pozitif sayı, min 1)");
+    let amount = Number(amountTxt);
+    if(!amount || amount<=0) return alert("Geçersiz miktar");
+    const fromRef = db.collection("users").doc(currentUser.uid);
+    const toRef = db.collection("users").doc(selectedUserId);
+    try{
+      await db.runTransaction(async (tx)=>{
+        const fromSnap = await tx.get(fromRef);
+        const toSnap = await tx.get(toRef);
+        if(!fromSnap.exists || !toSnap.exists) throw new Error("Kullanıcı yok.");
+        let myBal = fromSnap.data().balance ?? fromSnap.data().money ?? 0;
+        let toBal = toSnap.data().balance ?? toSnap.data().money ?? 0;
+        if(myBal < amount) throw new Error("Yeterli bakiyen yok!");
+        if('balance' in fromSnap.data()) tx.update(fromRef, { balance: myBal - amount });
+        else tx.update(fromRef, { money: myBal - amount });
+        if('balance' in toSnap.data()) tx.update(toRef, { balance: toBal + amount });
+        else tx.update(toRef, { money: toBal + amount });
+      });
+      const myid = currentUser.uid, otherid = selectedUserId, pairId=[myid,otherid].sort().join("_");
+      db.collection("dms").doc(pairId).collection("messages").add({
+        text: `💵 $${amount} bakiye gönderildi.`,
+        sender: myid, receiver: otherid, system:true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      alert("Bakiye gönderildi!");
+    }catch(e){ alert("Hata: "+e.message); }
+  });
+
+  // --- NOTIFICATIONS / BADGES ---
+  function watchNewDms(){
+    if(!currentUser) return;
+    const myid = currentUser.uid;
+    db.collection("dms").where("lastReceiver","==",myid).onSnapshot(snapshot=>{
+      snapshot.forEach(doc=>{
+        const data = doc.data()||{};
+        if(data.lastSender && data.lastSender!==myid && data.lastMsg){
+          const badgeEl = document.getElementById('umsg_'+data.lastSender);
+          if(badgeEl) badgeEl.style.display = '';
+          // show web notification if allowed
+          if("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+          }
+          if("Notification" in window && Notification.permission === "granted") {
+            new Notification(`${usersCache[data.lastSender]?.displayName || 'Biri'} size mesaj gönderdi`, { body: data.lastMsg.slice(0,120) });
+          }
+        }
+      });
+    });
+  }
+
+  function clearMsgBadgeFor(uid){
+    const badgeEl = document.getElementById('umsg_'+uid);
+    if(badgeEl) badgeEl.style.display='none';
+  }
+
+  // --- SIDEBAR TOGGLE (mobile) ---
+  menuToggleBtn.addEventListener('click', ()=>{
+    if(sidebar.classList.contains('open')) sidebar.classList.remove('open');
+    else sidebar.classList.add('open');
+    // show close button when open
+    closeSidebarBtn.style.display = sidebar.classList.contains('open') ? 'inline-flex' : 'none';
+  });
+  closeSidebarBtn.addEventListener('click', ()=>{
+    sidebar.classList.remove('open');
+    closeSidebarBtn.style.display='none';
+  });
+
+  // hide sidebar on resize when wide screen
+  window.addEventListener('resize', ()=>{
+    if(window.innerWidth > 900){
+      sidebar.classList.remove('open');
+      sidebar.classList.remove('collapsed');
+      closeSidebarBtn.style.display='none';
+    }
+  });
+
+  // --- INIT ---
+  tryAuth = tryAuth; // expose for debugging
+  tryAuth();
+</script>
+</body>
+</html>

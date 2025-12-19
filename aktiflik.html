@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Kış Elitleri — Aktiflik Sıralaması</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* =================== YENİ YILBAŞI TEMASI & GENEL STİLLER =================== */
+    :root {
+      --bg-dark: #0A192F; /* Derin Gece Mavisi */
+      --card-bg: rgba(23, 42, 70, 0.85); /* Şeffaf Koyu Kart */
+      --accent-red: #E84D3C; /* Santa Kırmızısı */
+      --accent-blue: #00A3FF; /* Buz Mavisi */
+      --gold: #FFD700; /* Altın Sarısı */
+      --text-main: #E6F0F6;
+      --text-muted: #B8C2CC;
+      --rank-glow: 0 0 8px rgba(0, 163, 255, 0.4);
+    }
+    
+    /* Arka Plan */
+    html,body{height:100%;margin:0;font-family:'Inter', sans-serif;color:var(--text-main);background:radial-gradient(circle at top, #141c2c, #0d121c);overflow-x:hidden;position:relative;}
+
+    /* 🖼️ Arka Plan Görseli */
+    body::before {
+        content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url('https://images.unsplash.com/photo-1544976077-b9c2b9b7878d?q=80&w=1000&auto=format&fit=crop'); /* Kış/orman teması */
+        background-size: cover; background-position: center bottom;
+        filter: brightness(0.3) blur(1px); z-index: -1;
+    }
+
+    /* ❄️ Kar Efekti */
+    .snowflake { color: rgba(255, 255, 255, 0.8); font-size: 1em; position: fixed; top: -10%; z-index: 100; pointer-events: none; animation: snowflakes-fall 15s linear infinite, snowflakes-shake 5s ease-in-out infinite alternate; }
+    @keyframes snowflakes-fall { 0% { top: -10%; } 100% { top: 100%; } }
+    @keyframes snowflakes-shake { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(50px); } }
+
+    .wrap{max-width:980px;margin:28px auto;padding:18px}
+    header{display:flex;align-items:center;gap:12px; margin-bottom: 20px;}
+    h1{
+        margin:0; font-size:1.8rem; font-weight:900;
+        font-family: 'Pacifico', cursive; color: var(--accent-red);
+        text-shadow: 0 0 10px rgba(232, 77, 60, 0.5), 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+    .subtitle{color:var(--text-muted);font-size:0.95rem; margin-top: 5px;}
+    .card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.06);padding:15px;border-radius:15px;margin-top:14px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px);}
+    
+    /* Kontroller */
+    .controls{display:flex;gap:10px;align-items:center;margin-top:8px; flex-wrap: wrap;}
+    .input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:var(--bg-dark);color:var(--text-main); font-size: 0.9rem;}
+    .btn{padding:10px 15px;border-radius:10px;border:none;background:var(--accent-red);color:#fff;font-weight:700;cursor:pointer; transition: background 0.3s;}
+    .btn:hover{background:#C0392B;}
+
+    /* =================== TABLO STİLLERİ =================== */
+    table{width:100%;border-collapse:collapse;font-size:0.95rem; margin-top: 5px;}
+    thead th{padding:12px 10px;text-align:left;color:var(--text-muted);font-weight:700;border-bottom:2px solid rgba(255,255,255,0.1); text-transform: uppercase;}
+    tbody td{padding:14px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle; transition: background-color 0.2s;}
+    tbody tr:hover{background-color: rgba(255, 255, 255, 0.05);}
+    
+    /* 🏆 İlk 3 Özel Stilleri */
+    tbody tr:nth-child(1) { background: linear-gradient(90deg, var(--gold)15, transparent); font-weight: 800; border-left: 4px solid var(--gold); }
+    tbody tr:nth-child(2) { background: linear-gradient(90deg, #B8C2CC15, transparent); font-weight: 700; border-left: 4px solid #B8C2CC; }
+    tbody tr:nth-child(3) { background: linear-gradient(90deg, #CD7F3215, transparent); font-weight: 600; border-left: 4px solid #CD7F32; }
+
+    /* Sıra Numarası */
+    td:nth-child(1) { font-weight: 900; font-size: 1.1rem; color: var(--accent-blue); width: 40px; }
+    tbody tr:nth-child(1) td:nth-child(1) { color: var(--gold); }
+    tbody tr:nth-child(2) td:nth-child(1) { color: #B8C2CC; }
+    tbody tr:nth-child(3) td:nth-child(1) { color: #CD7F32; }
+    
+    /* Toplam Süre/Şöhret Puanı Vurgusu */
+    td:nth-child(3) { color: var(--accent-red); font-weight: 900; font-size: 1.1rem; }
+    
+    .avatar{width:44px;height:44px;border-radius:50%;background:var(--accent-red);display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden;flex:0 0 44px; border: 2px solid rgba(255, 255, 255, 0.1); transition: border-color 0.3s;}
+    .avatar:hover{border-color: var(--gold);}
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .meta{color:var(--muted);font-size:0.86rem}
+    .small-muted{color:var(--muted);font-size:0.9rem}
+
+    /* FLASHY STYLES (Korundu) */
+    .username { font-weight:900; display:inline-block; }
+    .rainbow-text { background: linear-gradient(90deg, #ff004c, #ff9900, #ffd400, #00d4ff, #0066ff, #c300ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; background-size: 300% 100%; animation: rainbowShift 3.2s linear infinite; font-weight: 900; display: inline-block; }
+    @keyframes rainbowShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .glow { text-shadow: 0 0 10px rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+    .chromatic { font-weight:900; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; background-size:200% 100%; display:inline-block; animation: chromaShift 3s linear infinite; }
+    .chrom-black { background-image: linear-gradient(90deg, #0b0b0b, #444444, #d7d7d7); }
+    .chrom-blue  { background-image: linear-gradient(90deg, #003b8a, #00A3FF, #66e0ff); }
+    /* Diğer chrom renkler... */
+    @keyframes chromaShift { 0% { background-position: 0% 50%; filter: saturate(1.05); transform: translateY(0); } 50% { background-position: 100% 50%; filter: saturate(1.25) brightness(1.02); transform: translateY(-1px); } 100% { background-position: 0% 50%; filter: saturate(1.05); transform: translateY(0); } }
+
+    /* =================== MOBİL UYUMLULUK =================== */
+    @media (max-width:720px){ 
+      .wrap{padding:10px}
+      .avatar{width:36px;height:36px}
+      h1{font-size: 1.5rem;}
+      thead th, tbody td{padding: 10px 6px; font-size: 0.85rem;}
+      
+      /* Günlük Aktiflik ve Son Görülme sütunlarını daralt */
+      table thead th:nth-child(4),
+      table tbody td:nth-child(4),
+      table thead th:nth-child(5),
+      table tbody td:nth-child(5) {
+        display: none; /* Mobil için bu sütunları kaldırarak ana veriyi (Süre) öne çıkar */
+      }
+      
+      /* Ana Süre sütununu büyüt */
+      td:nth-child(3) { font-size: 1rem; }
+      
+      .controls{ justify-content: space-between; }
+      .input, .btn{ flex-grow: 1; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+    
+    <div class="snowflakes" aria-hidden="true">
+        <div class="snowflake" style="--i:1;">❅</div><div class="snowflake" style="--i:2;">❆</div><div class="snowflake" style="--i:3;">❅</div>
+        <div class="snowflake" style="--i:4;">❆</div><div class="snowflake" style="--i:5;">❅</div><div class="snowflake" style="--i:6;">❆</div>
+        <div class="snowflake" style="--i:7;">❅</div><div class="snowflake" style="--i:8;">❆</div><div class="snowflake" style="--i:9;">❅</div>
+        <div class="snowflake" style="--i:10;">❆</div><div class="snowflake" style="--i:11;">❅</div><div class="snowflake" style="--i:12;">❆</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const snowContainer = document.querySelector('.snowflakes');
+            const numberOfSnowflakes = 25;
+            for (let i = 13; i < numberOfSnowflakes + 13; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.textContent = Math.random() > 0.5 ? '❅' : '❆';
+                flake.style.setProperty('--i', i);
+                flake.style.left = `${Math.random() * 100}%`;
+                flake.style.animationDelay = `${Math.random() * 15}s`;
+                flake.style.fontSize = `${0.8 + Math.random() * 0.6}em`;
+                snowContainer.appendChild(flake);
+            }
+        });
+    </script>
+    
+  <div class="wrap">
+    <header>
+      <div>
+        <h1><i class="fas fa-crown" style="color:var(--gold)"></i> Kış Elitleri — Şöhret (Aktiflik) Listesi</h1>
+        <div class="subtitle">En çok aktif zaman geçiren kullanıcıların Şöhret Sıralaması.</div>
+      </div>
+      <div style="margin-left:auto" id="info" class="small-muted">Yükleniyor…</div>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <select id="periodSelect" class="input" style="max-width:160px">
+          <option value="all">Hepsi (tüm zaman)</option>
+          <option value="30">Son 30 gün (varsa)</option>
+        </select>
+        <select id="limitSelect" class="input" style="max-width:160px">
+          <option value="10">Top 10</option>
+          <option value="25" selected>Top 25</option>
+          <option value="50">Top 50</option>
+        </select>
+        <button id="refreshBtn" class="btn"><i class="fas fa-sync-alt"></i> Yenile</button>
+      </div>
+
+      <div style="overflow-x:auto;margin-top:12px">
+        <table aria-live="polite">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Kullanıcı</th>
+              <th>Şöhret Puanı (Toplam Süre)</th>
+              <th>Son Görülme</th>
+              <th>Günlük Tıklama</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="small-muted" style="text-align:center;">Yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:10px" class="small-muted">Not: Şöhret Puanı, kullanıcının toplam aktif süresi (<code>totalActiveMs</code>) baz alınarak hesaplanır.</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Firebase Config (Yüklediğiniz dosyadan alınmıştır)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf",
+      measurementId: "G-CC3033Q4EM"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const tbody = document.getElementById('tbody');
+    const info = document.getElementById('info');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const periodSelect = document.getElementById('periodSelect');
+    const limitSelect = document.getElementById('limitSelect');
+
+    function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"'`=\/]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','=':'&#x3D;','`':'&#x60;' }[c])); }
+    
+    // Süre Formatlama
+    function fmtDuration(ms){
+      ms = Number(ms||0);
+      if (ms <= 0) return '—';
+      const sec = Math.floor(ms/1000)%60;
+      const min = Math.floor(ms/60000)%60;
+      const hrs = Math.floor(ms/3600000)%24;
+      const days = Math.floor(ms/86400000);
+      let parts = [];
+      if (days) parts.push(days+'g');
+      if (hrs) parts.push(hrs+'s');
+      if (min) parts.push(min+'d');
+      if (!parts.length) parts.push(sec+'s');
+      return parts.join(' ');
+    }
+    
+    function fmtDate(ts){ 
+        try{ 
+            // Türkiye yerel formatında sadece tarih/saat gösterir
+            return new Date(Number(ts)).toLocaleString('tr-TR', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); 
+        }catch(e){ return '—'; } 
+    }
+
+    // Renkli İsim Token Çözümleyici (Yüklediğiniz dosyadan alınmıştır)
+    function parseFlashyColorToken(colorToken){
+      if (!colorToken) return { isChromatic:false, cssColor: '#00A3FF', chromaType: null };
+      const t = String(colorToken).trim().toLowerCase();
+      if (t === 'rgb') return { isChromatic:false, cssColor: null, chromaType: 'rgb' };
+      if (t.startsWith('chrom-')) return { isChromatic:true, cssColor: null, chromaType: t.slice(6) };
+      return { isChromatic:false, cssColor: colorToken, chromaType: null };
+    }
+
+    function userDisplayHtml(u){
+      const photo = u.photoURL || u.avatarUrl || '';
+      const displayName = (u.flashyName && u.flashyName.length) ? u.flashyName : (u.profileName || u.username || 'anon');
+      const initials = (displayName.split(' ').map(s=>s[0]||'').join('').slice(0,2) || (u.username||'').slice(0,2)).toUpperCase();
+      const parsed = parseFlashyColorToken(u.flashyColor || u.profileColor || '#00A3FF');
+
+      let avatarHtml = '';
+      if (photo) {
+        avatarHtml = `<div class="avatar"><img src="${escapeHtml(photo)}" alt="${escapeHtml(displayName)}"/></div>`;
+      } else {
+        // Avatar arka planını renge göre ayarla
+        const bg = (!parsed.isChromatic && parsed.cssColor) ? `background:linear-gradient(135deg, ${parsed.cssColor}22, ${parsed.cssColor}10);border:2px solid ${parsed.cssColor}33;color:${parsed.cssColor}` : '';
+        avatarHtml = `<div class="avatar" style="${bg}">${escapeHtml(initials)}</div>`;
+      }
+
+      let nameHtml = '';
+      if (parsed.isChromatic) {
+        const chromClass = parsed.chromaType ? `chrom-${parsed.chromaType}` : 'chrom-blue';
+        nameHtml = `<span class="username chromatic ${chromClass} ${u.flashyAnimated ? 'glow' : ''}">${escapeHtml(displayName)}</span>`;
+      } else if (parsed.chromaType === 'rgb' || (u.flashyColor && u.flashyColor.toLowerCase()==='rgb')) {
+        nameHtml = `<span class="username rainbow-text ${u.flashyAnimated ? 'glow' : ''}">${escapeHtml(displayName)}</span>`;
+      } else {
+        // Renk kodu olmayanlar için sadece username sınıfı kullanılır (Normal görünüm)
+        const safeColor = parsed.cssColor && parsed.cssColor !== '#00A3FF' ? `color:${escapeHtml(parsed.cssColor)}` : '';
+        const glowClass = (u.flashyAnimated || safeColor) ? 'glow' : ''; /* Renkli ve Parlak ise glow ekle */
+        nameHtml = `<span class="username ${glowClass}" style="${safeColor}">${escapeHtml(displayName)}</span>`;
+      }
+
+      return { avatarHtml, nameHtml, rawUsername: escapeHtml(u.username || '') };
+    }
+
+    // activity score: prefer totalActiveMs (Yüklediğiniz dosyadan alınmıştır)
+    function activityScore(u){
+      if (typeof u.totalActiveMs === 'number' && u.totalActiveMs > 0) return u.totalActiveMs;
+      const now = Date.now();
+      const lastSeen = Number(u.lastSeen) || 0;
+      const recency = Math.max(0, Math.max(0, 1000*60*60*24*30 - (now - lastSeen)));
+      const clicks = Number(u.dailyClicks||0);
+      return recency * 0.6 + clicks * 1000;
+    }
+
+    function render(usersArr){
+      const limit = parseInt(limitSelect.value,10) || 25;
+      const arr = usersArr.map(u => ({...u, score: activityScore(u)}));
+      arr.sort((a,b) => (b.score||0) - (a.score||0));
+      const top = arr.slice(0, limit);
+      info.textContent = `${arr.length} kullanıcı tarandı (top ${top.length} gösteriliyor)`;
+      
+      if (top.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="small-muted" style="text-align:center;">Veri yok.</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = top.map((u, idx) => {
+        const rank = idx + 1;
+        const displayBlock = userDisplayHtml(u);
+        const totalMs = typeof u.totalActiveMs === 'number' ? u.totalActiveMs : 0;
+        const lastSeen = u.lastSeen ? fmtDate(u.lastSeen) : '—';
+        const daily = typeof u.dailyClicks === 'number' ? u.dailyClicks : (u.dailyClicks||0);
+        const note = totalMs ? '' : ' (tahmini)';
+        
+        return `<tr>
+          <td>${rank}</td>
+          <td style="display:flex;gap:12px;align-items:center">
+            ${displayBlock.avatarHtml}
+            <div>
+              <div style="font-weight:800">${displayBlock.nameHtml}</div>
+              <div class="meta">${displayBlock.rawUsername}</div>
+            </div>
+          </td>
+          <td>${fmtDuration(totalMs)}${note}</td>
+          <td class="meta">${lastSeen}</td>
+          <td class="meta">${daily} tıklama</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Subscribe to users (Yüklediğiniz dosyadan alınmıştır)
+    let unsubscribe = null;
+    function subscribe(){
+      if (unsubscribe) unsubscribe();
+      tbody.innerHTML = '<tr><td colspan="5" class="small-muted" style="text-align:center;">Sunucudan veriler çekiliyor...</td></tr>';
+      
+      // Not: totalActiveMs'e göre filtreleme yapılmadığı için, bu Firestore tarafından sıralama yapmaz, sadece veriyi çeker. Sıralama JS'de yapılır.
+      unsubscribe = db.collection('users').onSnapshot(snap=>{
+        const users = [];
+        snap.forEach(doc=>{
+          const d = doc.data() || {};
+          d.username = doc.id;
+          if (typeof d.totalActiveMs !== 'number') d.totalActiveMs = d.totalActiveMs ? Number(d.totalActiveMs) : undefined;
+          if (typeof d.lastSeen !== 'number') d.lastSeen = d.lastSeen ? Number(d.lastSeen) : undefined;
+          if (typeof d.dailyClicks !== 'number') d.dailyClicks = d.dailyClicks ? Number(d.dailyClicks) : 0;
+          users.push(d);
+        });
+        render(users);
+      }, err => {
+        console.error('users snapshot error', err);
+        tbody.innerHTML = '<tr><td colspan="5" class="small-muted" style="text-align:center;">Veri yüklenemiyor.</td></tr>';
+      });
+    }
+
+    refreshBtn.addEventListener('click', ()=> subscribe());
+    limitSelect.addEventListener('change', ()=> subscribe());
+    // init
+    subscribe();
+  </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Yakında... | Paindex Surveys</title>
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Orbitron:wght@900&family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      height: 100dvh;
+      background: radial-gradient(circle at 50% 20%, #1a0033, #000000);
+      overflow: hidden;
+      font-family: 'Orbitron', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ULTRA GERÇEKÇİ KAR EFEKTİ */
+    canvas#snow { position:fixed; top:0; left:0; pointer-events:none; z-index:2; }
+
+    .container {
+      text-align: center;
+      z-index: 10;
+      padding: 20px;
+    }
+
+    h1 {
+      font-family: 'Monoton', cursive;
+      font-size: clamp(3rem, 12vw, 9rem);
+      background: linear-gradient(45deg, #00ff6a, #00ff00, #39ff14, #00ff6a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 
+        0 0 40px #00ff6a,
+        0 0 80px #39ff14,
+        0 0 120px #00ff00;
+      animation: neonPulse 2s ease-in-out infinite alternate;
+      letter-spacing: 8px;
+      margin-bottom: 20px;
+    }
+
+    .main-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 900;
+      background: linear-gradient(90deg, #ff006a, #ff00ff, #00ffff, #39ff14, #ff006a);
+      background-size: 300%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 60px #ff00ff;
+      animation: rainbow 8s linear infinite, glow 3s ease-in-out infinite;
+      margin: 30px 0;
+    }
+
+    .subtitle {
+      font-size: clamp(1.4rem, 5vw, 2.5rem);
+      color: #00ff6a;
+      text-shadow: 0 0 30px #00ff6a;
+      margin: 20px 0;
+      animation: flicker 4s infinite;
+    }
+
+    .countdown {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 7vw, 4rem);
+      font-weight: 900;
+      color: #00ff6a;
+      text-shadow: 0 0 40px #00ff6a;
+      letter-spacing: 10px;
+      margin: 40px 0;
+    }
+
+    .decor {
+      font-size: 4rem;
+      margin: 20px 0;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.15);
+      padding: 12px 25px;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.2rem;
+      border: 1px solid rgba(255,255,255,0.3);
+      transition: all 0.3s;
+    }
+    .back-btn:hover { background: rgba(0,255,105,0.3); }
+
+    /* ANIMASYONLAR */
+    @keyframes neonPulse {
+      from { text-shadow: 0 0 40px #00ff6a, 0 0 80px #39ff14; }
+      to { text-shadow: 0 0 60px #00ff6a, 0 0 120px #39ff14, 0 0 160px #00ff00; }
+    }
+    @keyframes rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+    @keyframes glow { 0%,100% { text-shadow: 0 0 60px #ff00ff; } 50% { text-shadow: 0 0 100px #ff00ff; } }
+    @keyframes flicker { 0%,100% { opacity:1; } 50% { opacity:0.8; } }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+  </style>
+</head>
+<body>
+
+  <canvas id="snow"></canvas>
+
+  <a href="index.html" class="back-btn">Geri</a>
+
+  <div class="container">
+    <h1>PAINDEX</h1>
+    
+    <div class="main-title">YAKINDA...</div>
+    
+    <div class="subtitle">BÜYÜK YILBAŞI ETKİNLİĞİ</div>
+    
+    <div class="decor">MERRY CHRISTMAS</div>
+    
+    <div class="countdown" id="countdown">31 ARALIK 2025</div>
+    
+    <div style="font-size:1.5rem; color:#00ff6a; margin-top:40px; animation: flicker 3s infinite;">
+      DÜNYAYI SALLAYACAK BİR ETKİNLİK GELİYOR!
+    </div>
+  </div>
+
+  <!-- KAR EFEKTİ -->
+  <script>
+    const canvas = document.getElementById('snow');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    class Snowflake {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * -100;
+        this.size = Math.random() * 5 + 2;
+        this.speed = Math.random() * 2 + 0.5;
+        this.opacity = Math.random() * 0.6 + 0.4;
+        this.angle = Math.random() * Math.PI * 2;
+        this.angleSpeed = Math.random() * 0.02 + 0.005;
+      }
+      update() {
+        this.angle += this.angleSpeed;
+        const wind = Math.sin(Date.now() * 0.0002 + this.x * 0.001) * 2;
+        this.x += wind;
+        this.y += this.speed + this.size * 0.2;
+        if (this.y > canvas.height + 20) this.reset();
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#fff";
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    for(let i = 0; i < 400; i++) particles.push(new Snowflake());
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+  </script>
+
+  <!-- GERİ SAYIM (31 Aralık 2025 gece 00:00'a kadar) -->
+  <script>
+    const countdownEl = document.getElementById('countdown');
+    const targetDate = new Date('2025-12-05T23:59:59').getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        countdownEl.textContent = "BAŞLADI!";
+        countdownEl.style.color = "#ff006a";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      countdownEl.innerHTML = `${days} GÜN ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    }
+
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+  </script>
+</body>
+</html>

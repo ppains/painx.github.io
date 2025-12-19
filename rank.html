@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Yılbaşı Sıralaması</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* =================== YILBAŞI TEMASI & GENEL STİLLER =================== */
+        :root {
+            --bg-dark: #1A233A; /* Derin Gece Mavisi */
+            --card-bg: rgba(255, 255, 255, 0.05); /* Şeffaf Beyaz */
+            --accent-red: #E74C3C; /* Santa Kırmızısı */
+            --accent-green: #2ECC71; /* Çam Yeşili */
+            --gold: #FFD700; /* Altın Sarısı */
+            --text-main: #E6F0F6;
+            --text-muted: #B8C2CC;
+            --rank-bg-glow: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 20px 0; min-height: 100vh;
+            color: var(--text-main);
+            /* Zarif Kış Gradient Arkaplanı */
+            background: radial-gradient(circle at top, #141c2c, #0d121c);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 🖼️ Arka Plan Görüntüsü (Kış temalı, hafifçe flu) */
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1544976077-b9c2b9b7878d?q=80&w=1000&auto=format&fit=crop'); 
+            background-size: cover; background-position: center bottom;
+            filter: brightness(0.3) blur(1px); z-index: -1;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 15px; }
+
+        /* ❄️ Kar Efekti (Hafif ve Zarif) */
+        .snowflake {
+            color: rgba(255, 255, 255, 0.8); font-size: 1em; position: fixed; top: -10%; z-index: 100; pointer-events: none;
+            animation: snowflakes-fall 15s linear infinite, snowflakes-shake 5s ease-in-out infinite alternate;
+        }
+        @keyframes snowflakes-fall { 0% { top: -10%; } 100% { top: 100%; } }
+        @keyframes snowflakes-shake { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(50px); } }
+        /* Kar tanelerinin pozisyonları ve animasyon gecikmeleri */
+        .snowflake:nth-of-type(odd) { left: calc(var(--i) * 3%); animation-delay: calc(var(--i) * -1.5s), calc(var(--i) * 1s); font-size: 0.8em; }
+        .snowflake:nth-of-type(even) { left: calc(var(--i) * 4.5%); animation-delay: calc(var(--i) * -2s), calc(var(--i) * 0.5s); font-size: 1.2em; }
+
+
+        /* BAŞLIK */
+        header {
+            text-align: center; margin-bottom: 30px;
+            background: rgba(23, 42, 70, 0.7); border-radius: 12px; padding: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-family: 'Pacifico', cursive; /* Zarif yazı fontu */
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); /* Altın parlaklık */
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+        }
+        .status { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* =================== SIRA LİSTESİ STİLLERİ =================== */
+        
+        .rank-list { list-style: none; padding: 0; margin: 0; }
+        .rank-item {
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .rank-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 🥇 İlk 3 Sıra Görünümü (Zarif Vurgu) */
+        .rank-item:nth-child(1) { background: linear-gradient(90deg, #FFD7001A, #FFD70005); border-left: 5px solid var(--gold); }
+        .rank-item:nth-child(2) { background: linear-gradient(90deg, #B8C2CC1A, #B8C2CC05); border-left: 5px solid #B8C2CC; }
+        .rank-item:nth-child(3) { background: linear-gradient(90deg, #CD7F321A, #CD7F3205); border-left: 5px solid #CD7F32; }
+
+        /* Sıra Numarası (Rank Number) */
+        .rank-num {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-right: 15px;
+            width: 40px;
+            text-align: center;
+            color: var(--accent-red);
+            text-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+        }
+        .rank-item:nth-child(1) .rank-num { color: var(--gold); }
+        .rank-item:nth-child(2) .rank-num { color: #B8C2CC; }
+        .rank-item:nth-child(3) .rank-num { color: #CD7F32; }
+
+        /* Kullanıcı Bilgileri */
+        .rank-details { flex-grow: 1; min-width: 0; }
+        .rank-username {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+        }
+        .rank-stats { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* Rozet (Tier/Rank Badge) - ZARİF RANK BELİRTECİ */
+        .rank-badge {
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            /* Hafif 3D görünüm */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Stats (Clicks/Coin) Vurgusu */
+        .stats-value {
+            font-weight: 700;
+            margin-right: 15px; /* Sütunlar arasında boşluk */
+            text-align: right;
+        }
+        .stats-value i.fa-hand-pointer { color: var(--accent-green); }
+        .stats-value i.fa-coins { color: var(--gold); }
+
+
+        /* =================== ÖZEL RANK STİLLERİ (Tiers) =================== */
+        .tier-santa-claus { 
+            background-color: var(--accent-red); 
+            color: #fff; 
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.6); 
+        }
+        .tier-elf-lord { 
+            background-color: var(--accent-green); 
+            color: #000; 
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.6); 
+        }
+        .tier-golden-reindeer { 
+            background-color: var(--gold); 
+            color: #000; 
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); 
+        }
+        .tier-silver-bell { background-color: #B8C2CC; color: #000; }
+        .tier-snowflake { background-color: #00A3FF; color: #fff; }
+        .tier-default { background-color: var(--bg-dark); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* =================== BUTONLAR VE KONTROLLER =================== */
+        .controls {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; 
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .btn-primary { background: var(--accent-red); color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #C0392B; }
+        .btn-secondary { background: var(--card-bg); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* =================== PARLAYAN İSİM STİLLERİ (Şöhret) =================== */
+        .username-glow {
+            text-shadow: 0 0 6px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 255, 255, 0.3);
+            display: inline-block; 
+        }
+        /* Kromatik Siyah için beyaz/gümüş parlama */
+        .username-chromatic-black {
+            color: #fff !important; 
+            text-shadow: 0 0 8px #eee, 0 0 15px #ccc, 0 0 20px #fff;
+        }
+        /* Gökkuşağı animasyonu */
+        @keyframes rainbow-bg {
+            to { background-position: -200% center; }
+        }
+        .username-rainbow {
+            background-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent !important;
+            animation: rainbow-bg 6s linear infinite;
+            background-size: 200% auto;
+            filter: drop-shadow(0 0 3px #fff);
+            display: inline-block;
+        }
+        
+        /* =================== MOBİL UYUMLULUK =================== */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .rank-item { padding: 10px; }
+            .rank-num { font-size: 1.5rem; margin-right: 10px; width: 30px; }
+            .rank-username { font-size: 1rem; }
+            .rank-badge { 
+                margin-left: 10px; 
+                padding: 4px 8px; 
+                font-size: 0.75rem; 
+                /* Mobil için stats değerlerini alt alta al */
+                display: block; 
+                margin-top: 5px; 
+                text-align: left;
+            }
+            .stats-value { 
+                margin-left: 0; 
+                margin-right: 10px;
+                font-size: 0.85rem; 
+                display: inline-block;
+            }
+            .controls { justify-content: space-between; gap: 5px; }
+            .btn { padding: 8px 12px; font-size: 0.85rem; flex-grow: 1; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="snowflakes" aria-hidden="true">
+        <div class="snowflake" style="--i:1;">❅</div><div class="snowflake" style="--i:2;">❆</div><div class="snowflake" style="--i:3;">❅</div>
+        <div class="snowflake" style="--i:4;">❆</div><div class="snowflake" style="--i:5;">❅</div><div class="snowflake" style="--i:6;">❆</div>
+        <div class="snowflake" style="--i:7;">❅</div><div class="snowflake" style="--i:8;">❆</div><div class="snowflake" style="--i:9;">❅</div>
+        <div class="snowflake" style="--i:10;">❆</div><div class="snowflake" style="--i:11;">❅</div><div class="snowflake" style="--i:12;">❆</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-sleigh" style="color: var(--accent-red);"></i> Yılbaşı Sıralaması</h1>
+            <div class="status" id="lastUpdated">Yükleniyor...</div>
+        </header>
+
+        <div class="controls">
+            <button id="refreshBtn" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Yenile</button>
+            <button id="showTopBtn" class="btn btn-secondary"><i class="fas fa-trophy"></i> Top 10 Göster</button>
+            <button id="showAllBtn" class="btn btn-secondary"><i class="fas fa-list"></i> Tümünü Göster</button>
+            <a href="index.html" class="btn btn-secondary"><i class="fas fa-home"></i> Ana Sayfa</a>
+        </div>
+
+        <ul class="rank-list" id="rankList">
+            </ul>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase Config (Kullanıcının dosyasından korundu)
+        const firebaseConfig = {
+          apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+          authDomain: "lilemir-new.firebaseapp.com",
+          projectId: "lilemir-new",
+          storageBucket: "lilemir-new.firebasestorage.app",
+          messagingSenderId: "339863121380",
+          appId: "1:339863121380:web:123195552e821b085e6bf1"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // DOM Elementleri
+        const rankListEl = document.getElementById('rankList');
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const showTopBtn = document.getElementById('showTopBtn');
+
+        let isRealtimeActive = true;
+        let showAll = false; // Başlangıçta sadece Top 10 göster
+
+        // =================== Rank/Tier Belirleme Mantığı (ZARİF) ===================
+        // Kriter: Clicks (Tıklama sayısı)
+        const TIER_THRESHOLDS = [
+            { name: 'Santa Claus', clicks: 1000000, icon: '🎅', class: 'tier-santa-claus' },
+            { name: 'Elf Lord', clicks: 500000, icon: '🧝', class: 'tier-elf-lord' },
+            { name: 'Golden Reindeer', clicks: 100000, icon: '🦌', class: 'tier-golden-reindeer' },
+            { name: 'Silver Bell', clicks: 10000, icon: '🔔', class: 'tier-silver-bell' },
+            { name: 'Snowflake', clicks: 0, icon: '❄️', class: 'tier-snowflake' },
+        ];
+
+        function getRankTier(clicks) {
+            for (const tier of TIER_THRESHOLDS) {
+                if (clicks >= tier.clicks) {
+                    return tier;
+                }
+            }
+            return { name: 'Misafir', icon: '❓', class: 'tier-default' };
+        }
+        
+        // Coin formatlama
+        function formatMoney(amount) {
+            return (amount || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+        }
+
+
+        // =================== PARLAK İSİM HELPER FONKSİYONU ===================
+        function getStyledUsernameHtml(username, colorCode) {
+            let style = '';
+            let classList = '';
+            const safeUsername = (username || 'anon').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+            if (colorCode) {
+                const lowerColor = colorCode.toLowerCase();
+                
+                if (lowerColor === 'rainbow') {
+                    classList = 'username-rainbow';
+                    style = '';
+                } else if (lowerColor === 'chromatic_black') {
+                    classList = 'username-chromatic-black';
+                    style = '';
+                } else {
+                    classList = 'username-glow';
+                    style = `color: ${colorCode};`;
+                }
+            } 
+            // Varsayılan renge sahip isimler için de hafif bir parlama ekle (zariflik için)
+            if (!classList) classList = 'username-glow';
+
+
+            // username alanı için genel parlama sınıfını ve rengi uygular
+            return `<span class="${classList.trim()}" style="${style.trim()}">${safeUsername}</span>`;
+        }
+
+        // =================== RENDER FONKSİYONU ===================
+        function render(users) {
+            rankListEl.innerHTML = '';
+            const displayLimit = showAll ? users.length : 10;
+            const now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            lastUpdatedEl.textContent = `Son Güncelleme: ${now}`;
+
+            for (let i = 0; i < displayLimit; i++) {
+                const user = users[i];
+                const rank = i + 1;
+                const tier = getRankTier(user.clicks);
+                
+                // Kullanıcı adı ve rengini stilize et
+                const displayName = user.username || user.displayName || user.id;
+                // 'nameColor' alanını kullanır (Şöhret için parlak renkler)
+                const styledUsername = getStyledUsernameHtml(displayName, user.nameColor);
+
+                const item = document.createElement('li');
+                item.className = 'rank-item';
+
+                item.innerHTML = `
+                    <div class="rank-num">${rank}.</div>
+                    <div class="rank-details">
+                        <div class="rank-username">${styledUsername}</div>
+                        <div class="rank-stats">
+                             <span class="stats-value"><i class="fas fa-hand-pointer"></i> ${formatMoney(user.clicks)} Tıklama</span> 
+                             <span class="stats-value" style="color:var(--gold);"><i class="fas fa-coins"></i> ${formatMoney(user.coins)} Coin</span>
+                        </div>
+                    </div>
+                    <div class="rank-badge ${tier.class}">
+                        ${tier.icon} ${tier.name}
+                    </div>
+                `;
+
+                rankListEl.appendChild(item);
+            }
+            
+            // Eğer Top 10 gösteriliyor ve tüm kullanıcılar gösterilmiyorsa uyarı ekle
+            if (!showAll && users.length > 10) {
+                const moreItem = document.createElement('li');
+                moreItem.className = 'rank-item';
+                moreItem.style.justifyContent = 'center';
+                moreItem.style.backgroundColor = 'transparent';
+                moreItem.style.border = 'none';
+                moreItem.style.boxShadow = 'none';
+                moreItem.innerHTML = `<span style="color:var(--text-muted); font-style:italic;">Ve ${users.length - 10} kullanıcı daha...</span>`;
+                rankListEl.appendChild(moreItem);
+            }
+        }
+
+        // =================== VERİ İŞLEMLERİ ===================
+        let unsubscribe = null;
+
+        function startRealtimeListener() {
+            if (unsubscribe) unsubscribe(); // Eski dinleyiciyi temizle
+            
+            // onSnapshot ile gerçek zamanlı dinleme: Clicks'e göre azalan sıralama
+            const query = db.collection('users').orderBy('clicks', 'desc');
+
+            unsubscribe = query.onSnapshot(snapshot => {
+                const users = [];
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    // Veri temizliği ve varsayılan değerler
+                    d.clicks = Number(d.clicks) || 0;
+                    d.balance = Number(d.balance) || 0;
+                    d.coins = Number(d.coins) || 0;
+                    d.id = doc.id;
+                    users.push(d);
+                });
+                render(users);
+            }, error => {
+                console.error("Firestore dinleme hatası:", error);
+                lastUpdatedEl.textContent = 'Veri yüklenirken bir hata oluştu.';
+            });
+        }
+        
+        // Tek seferlik veri çekme (Refresh butonu için)
+        async function fetchOnceAndRender() {
+            if (unsubscribe) {
+               unsubscribe(); // Dinleyiciyi durdur
+               unsubscribe = null;
+            }
+            refreshBtn.disabled = true;
+            lastUpdatedEl.textContent = 'Veri çekiliyor...';
+            
+            try {
+                const snap = await db.collection('users').orderBy('clicks', 'desc').get();
+                const users = [];
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    d.clicks = Number(d.clicks) || 0;
+                    d.balance = Number(d.balance) || 0;
+                    d.coins = Number(d.coins) || 0;
+                    d.id = doc.id;
+                    users.push(d);
+                });
+                render(users);
+            } catch (e) {
+                console.error('fetchOnceAndRender error', e);
+                lastUpdatedEl.textContent = 'Yükleme hatası';
+            } finally {
+                refreshBtn.disabled = false;
+                // Yeniden real-time dinlemeye başla
+                startRealtimeListener(); 
+            }
+        }
+
+        // =================== Event Bağlama ===================
+        refreshBtn.addEventListener('click', fetchOnceAndRender);
+        
+        // Sayfalama/limit değiştirme sadece arayüzü yeniden çizerek halledilir
+        showTopBtn.addEventListener('click', () => { 
+            showAll = false; 
+            // Sadece arayüzü yeniden çizmek için dinleyiciyi tetikle
+            startRealtimeListener(); 
+        });
+        
+        showAllBtn.addEventListener('click', () => { 
+            showAll = true; 
+            // Sadece arayüzü yeniden çizmek için dinleyiciyi tetikle
+            startRealtimeListener();
+        });
+
+        // Başlangıç: canlı dinleyiciyi başlat
+        startRealtimeListener();
+    </script>
+</body>
+</html>

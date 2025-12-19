@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Şöhret — En Zenginler (Yılbaşı Teması)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ORİJİNAL TEMEL STİLLER (AZ DEĞİŞİKLİKLE KORUNDU) */
+    :root{ 
+      --bg:#071122; 
+      --card:#0e2233; 
+      --accent:#00A3FF; 
+      --accent-christmas:#ff456e; /* Noel Kırmızısı */
+      --text:#e6f0ff; 
+      --muted:rgba(230,240,255,0.7) 
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      color:var(--text);
+      background:linear-gradient(180deg,#0a1b33,#02121a); 
+      overflow-x: hidden; 
+    }
+
+    /* MOBİL UYUMLU VE TEMA STİLLERİ */
+    .wrap{max-width:980px;margin:28px auto;padding:18px;position:relative;z-index:2}
+    
+    /* Noel Ağacı Arkaplanı */
+    .christmas-tree {
+      position: absolute;
+      top: -20px;
+      right: -100px;
+      width: 250px;
+      height: 250px;
+      opacity: 0.1;
+      pointer-events: none;
+      z-index: 1;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,10 80,90 20,90' fill='%23008000'/%3E%3Crect x='45' y='90' width='10' height='10' fill='%23654321'/%3E%3Ccircle cx='50' cy='15' r='5' fill='%23ffd700'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center bottom;
+      background-size: 100% auto;
+      transform: scale(1.5) rotate(5deg);
+      filter: blur(2px);
+    }
+
+    /* Kar Tanesi Stilleri ve Animasyonları (Performans için optimize edildi) */
+    .snowflake {
+      color: #fff;
+      font-size: 1em;
+      font-family: Arial, sans-serif;
+      text-shadow: 0 0 1px #fff;
+      position: absolute;
+      top: -10px;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0.8;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.8; }
+      100% { transform: translate3d(0, 100vh, 0); opacity: 0.5; }
+    }
+
+    /* ORİJİNAL DEVAM EDEN STİLLER */
+    header{display:flex;align-items:center;gap:12px}
+    h1{margin:0;font-size:1.2rem;font-weight:900}
+    .subtitle{color:var(--muted);font-size:0.95rem}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:12px;margin-top:14px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);}
+    table{width:100%;border-collapse:collapse; font-size:0.95rem}
+    thead th{text-align:left;padding:10px 8px;color:var(--muted);font-weight:700;border-bottom:1px solid rgba(255,255,255,0.03)}
+    tbody td{padding:12px 8px;border-bottom:1px solid rgba(255,255,255,0.02);vertical-align:middle}
+    .rank{font-weight:900;width:56px; color:var(--accent-christmas)} 
+    .user-cell{display:flex;align-items:center;gap:12px}
+    .avatar{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#ffffff11,#00000011);display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden;flex:0 0 44px; border: 2px solid var(--accent-christmas);} 
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .name{font-weight:800}
+    .meta{color:var(--muted);font-size:0.86rem}
+    .search-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text);flex:1}
+    .btn{padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent-christmas),#ff809f);color:#021122;font-weight:800;cursor:pointer; transition: background 0.3s;}
+    .btn:hover{background:linear-gradient(90deg,#ff809f,var(--accent-christmas));}
+
+    .small-muted{color:var(--muted);font-size:0.9rem}
+    /* flashy / rainbow / chromatic */
+    .username { font-weight:900; display:inline-block; }
+    .rainbow-text {
+      background: linear-gradient(90deg, #ff004c, #ff9900, #ffd400, #00d4ff, #0066ff, #c300ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      background-size: 300% 100%;
+      animation: rainbowShift 3.2s linear infinite;
+      font-weight: 900;
+      display: inline-block;
+    }
+    @keyframes rainbowShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .glow { text-shadow: 0 0 10px rgba(255,255,255,0.06); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+    /* chromatic variants (Mevcut hali korundu) */
+    .chromatic { font-weight:900; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; background-size:200% 100%; display:inline-block; animation: chromaShift 3s linear infinite; }
+    .chrom-black { background-image: linear-gradient(90deg, #0b0b0b, #444444, #d7d7d7); }
+    .chrom-blue  { background-image: linear-gradient(90deg, #003b8a, #00A3FF, #66e0ff); }
+    .chrom-green { background-image: linear-gradient(90deg, #004214, #00FF8C, #b6ffd9); }
+    .chrom-purple{ background-image: linear-gradient(90deg, #36005e, #9a59ff, #ff99ff); }
+    .chrom-red   { background-image: linear-gradient(90deg, #3b0000, #8A0303, #ff6b6b); }
+    @keyframes chromaShift {
+      0% { background-position: 0% 50%; filter: saturate(1.05); transform: translateY(0); }
+      50% { background-position: 100% 50%; filter: saturate(1.25) brightness(1.02); transform: translateY(-1px); }
+      100% { background-position: 0% 50%; filter: saturate(1.05); transform: translateY(0); }
+    }
+
+    /* MOBİL UYUMLULUK OPTİMİZASYONLARI (720px altı) */
+    @media(max-width:720px){ 
+      .wrap{margin:10px auto; padding:10px;}
+      h1{font-size:1.1rem;} /* Başlık küçültüldü */
+      .subtitle{font-size:0.9rem;} /* Alt başlık küçültüldü */
+      .rank{width:36px; font-size:0.9rem;} /* Sıra no alanı küçültüldü */
+      .avatar{width:32px;height:32px; border-radius:8px;} /* Avatar küçültüldü */
+      .user-cell{gap:8px;} 
+      table{font-size:0.85rem;} /* Tablo metni küçültüldü */
+      tbody td{padding:8px 6px;}
+      .christmas-tree{display:none;} /* Noel ağacı tamamen gizlendi */
+      .small-muted{font-size:0.8rem;}
+      /* Kar Yağışı miktarını azaltmak için .snowflake JS'de ayarlanacak */
+    }
+  </style>
+</head>
+<body>
+  <div class="snow-container" id="snowContainer"></div>
+  
+  <div class="christmas-tree"></div>
+
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Şöhret — En Zenginler 🎄</h1>
+        <div class="subtitle">Yılbaşı Ruhuyla Bakiye Sıralaması!</div>
+      </div>
+      <div style="margin-left:auto" class="small-muted" id="countInfo">Yükleniyor…</div>
+    </header>
+
+    <div class="card" role="region" aria-label="Sıralama ve filtre">
+      <div class="search-row">
+        <input id="qInput" class="input" placeholder="Kullanıcı ara (username veya profil adı)"/>
+        <select id="limitSelect" class="input" style="max-width:160px">
+          <option value="10">Top 10</option>
+          <option value="25" selected>Top 25</option>
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+        </select>
+        <button id="refreshBtn" class="btn">Yenile</button>
+      </div>
+
+      <div style="overflow-x:auto; margin-top:12px">
+        <table aria-live="polite">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Kullanıcı</th>
+              <th>Bakiye</th>
+              <th>Tıklama</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="small-muted">Yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:10px" class="small-muted">Veri Firestore "users" koleksiyonundan çekiliyor. Profil fotoğrafı için user.photoURL veya user.avatarUrl alanlarına bakılır; yoksa baş harf gösterilir. Renkli/parıldayan isimler için user.flashyColor ve user.flashyAnimated kullanılır.</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // KAR YAĞIŞI JAVASCRIPT'İ (Mobil performansı artırmak için düzenlendi)
+    function createSnowflakes() {
+      const snowContainer = document.getElementById('snowContainer');
+      
+      // Ekran boyutuna göre kar tanesi sayısını ayarla
+      const isMobile = window.matchMedia("(max-width: 720px)").matches;
+      const numSnowflakes = isMobile ? 20 : 40; // Mobilde 20, diğerlerinde 40 tane kar
+
+      const snowflakes = ['❅', '❆', '❄'];
+
+      for (let i = 0; i < numSnowflakes; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        snowflake.innerHTML = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+        
+        const size = (Math.random() * 0.5) + (isMobile ? 0.6 : 0.8); // Mobilde daha küçük
+        const duration = (Math.random() * 15) + 8; // 8s - 23s
+        const delay = Math.random() * duration * -1;
+        
+        snowflake.style.left = `${Math.random() * 100}vw`;
+        snowflake.style.fontSize = `${size}em`;
+        snowflake.style.animationDuration = `${duration}s`;
+        snowflake.style.animationDelay = `${delay}s`;
+        
+        snowContainer.appendChild(snowflake);
+      }
+    }
+    // Sadece bir kere oluştur
+    createSnowflakes();
+    
+    // Pencere boyutu değiştiğinde kar tanelerini tekrar oluşturmak yerine, sayfayı yenilemek daha performanslıdır.
+
+    // ORİJİNAL FİREBASE VE RENDER KODU (DEĞİŞTİRİLMEDİ)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf",
+      measurementId: "G-CC3033Q4EM"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const tbody = document.getElementById('tbody');
+    const qInput = document.getElementById('qInput');
+    const limitSelect = document.getElementById('limitSelect');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const countInfo = document.getElementById('countInfo');
+
+    function formatMoney(n){ return '$' + Number(n || 0).toFixed(2); }
+    function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"'`=\/]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','=':'&#x3D;','`':'&#x60;' }[c])); }
+
+    function parseFlashyColorToken(colorToken){
+      if (!colorToken) return { isChromatic:false, cssColor: '#00A3FF', chromaType: null };
+      const t = String(colorToken).trim().toLowerCase();
+      if (t === 'rgb') return { isChromatic:false, cssColor: null, chromaType: 'rgb' };
+      if (t.startsWith('chrom-')) {
+        return { isChromatic:true, cssColor: null, chromaType: t.slice(6) };
+      }
+      return { isChromatic:false, cssColor: colorToken, chromaType: null };
+    }
+
+    function userDisplayHtml(u){
+      const photo = u.photoURL || u.avatarUrl || '';
+      const displayName = (u.flashyName && u.flashyName.length) ? u.flashyName : (u.profileName || u.username || 'anon');
+      const initials = (displayName.split(' ').map(s=>s[0]||'').join('').slice(0,2) || (u.username||'').slice(0,2)).toUpperCase();
+      const parsed = parseFlashyColorToken(u.flashyColor || u.profileColor || '#00A3FF');
+
+      let avatarHtml = '';
+      if (photo) {
+        avatarHtml = `<div class="avatar"><img src="${escapeHtml(photo)}" alt="${escapeHtml(displayName)}"/></div>`;
+      } else {
+        const bg = (!parsed.isChromatic && parsed.cssColor) ? `background:linear-gradient(135deg, ${parsed.cssColor}22, ${parsed.cssColor}10);border:1px solid ${parsed.cssColor}33;color:${parsed.cssColor}` : '';
+        avatarHtml = `<div class="avatar" style="${bg}">${escapeHtml(initials)}</div>`;
+      }
+
+      let nameHtml = '';
+      if (parsed.isChromatic) {
+        const chromClass = parsed.chromaType ? `chrom-${parsed.chromaType}` : 'chrom-blue';
+        nameHtml = `<span class="username chromatic ${chromClass} ${u.flashyAnimated ? 'glow' : ''}">${escapeHtml(displayName)}</span>`;
+      } else if (parsed.chromaType === 'rgb' || (u.flashyColor && u.flashyColor.toLowerCase()==='rgb')) {
+        nameHtml = `<span class="username rainbow-text ${u.flashyAnimated ? 'glow' : ''}">${escapeHtml(displayName)}</span>`;
+      } else {
+        const safeColor = parsed.cssColor ? `color:${escapeHtml(parsed.cssColor)}` : '';
+        nameHtml = `<span class="username ${u.flashyAnimated ? 'glow' : ''}" style="${safeColor}">${escapeHtml(displayName)}</span>`;
+      }
+
+      return { avatarHtml, nameHtml, rawUsername: escapeHtml(u.username || '') };
+    }
+
+    function renderRows(usersArr){
+      const q = (qInput.value||'').trim().toLowerCase();
+      const limit = parseInt(limitSelect.value,10) || 25;
+      let arr = usersArr.slice();
+      if (q) {
+        arr = arr.filter(u => (u.username||'').toLowerCase().includes(q) || (u.profileName||'').toLowerCase().includes(q) || (u.flashyName||'').toLowerCase().includes(q));
+      }
+      arr.sort((a,b) => (b.balance||0) - (a.balance||0));
+      const top = arr.slice(0, limit);
+      countInfo.textContent = `${arr.length} kullanıcı (gösteriliyor: ${top.length})`;
+      if (top.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="small-muted">Eşleşen kullanıcı yok.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = top.map((u, idx) => {
+        const rank = idx + 1;
+        const displayBlock = userDisplayHtml(u);
+        const banned = u.isBanned ? 'BANLI' : 'Aktif';
+        return `<tr>
+          <td class="rank">${rank}</td>
+          <td>
+            <div class="user-cell">
+              ${displayBlock.avatarHtml}
+              <div>
+                <div class="name">${displayBlock.nameHtml}</div>
+                <div class="meta">${displayBlock.rawUsername}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-weight:800;color:var(--accent-christmas)">${formatMoney(u.balance)}</td>
+          <td>${Number(u.clicks||0)}</td>
+          <td>${banned}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    let unsubscribe = null;
+    function subscribeUsers(){
+      if (unsubscribe) unsubscribe();
+      unsubscribe = db.collection('users').onSnapshot(snap=>{
+        const users = [];
+        snap.forEach(doc=>{
+          const d = doc.data() || {};
+          d.username = doc.id;
+          d.balance = typeof d.balance === 'number' ? d.balance : 0;
+          d.clicks = typeof d.clicks === 'number' ? d.clicks : 0;
+          users.push(d);
+        });
+        renderRows(users);
+      }, err => {
+        console.error('users snapshot error', err);
+        tbody.innerHTML = '<tr><td colspan="5" class="small-muted">Veri yüklenemiyor.</td></tr>';
+      });
+    }
+
+    refreshBtn.addEventListener('click', ()=> subscribeUsers());
+    qInput.addEventListener('input', () => { subscribeUsers(); });
+    limitSelect.addEventListener('change', () => subscribeUsers());
+
+    // init
+    subscribeUsers();
+  </script>
+</body>
+</html>

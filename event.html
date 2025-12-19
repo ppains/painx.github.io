@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAINDEX Yılbaşı Etkinliği 🎉</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Genel Sıfırlama ve Font */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #1e1e3f; /* Koyu Mavi - Gece Teması */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* --- Kar Efekti (Snow) CSS --- */
+        .snow-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .snowflake {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        /* Konfeti Efekti için Gerekli CSS Animasyonu */
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* --- Konteyner Stilleri --- */
+        .event-container {
+            background: linear-gradient(145deg, #2a2a57 0%, #17173a 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 0, 0, 0.8);
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            border: 3px solid gold; /* Altın Çerçeve */
+        }
+
+        /* --- Başlık Stilleri --- */
+        .event-header h1 {
+            font-size: 1.8rem;
+            color: gold;
+            text-shadow: 2px 2px #ff0000;
+            margin-bottom: 5px;
+        }
+
+        .event-header p {
+            font-size: 1rem;
+            margin-bottom: 25px;
+            color: #ffdd57;
+            font-weight: bold;
+        }
+
+        /* --- Geri Sayım Stilleri --- */
+        .countdown-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .countdown-timer {
+            display: flex;
+            justify-content: space-around;
+            gap: 5px;
+        }
+
+        .timer-box {
+            background-color: #ff0000; /* Kırmızı Kutular */
+            padding: 10px 5px;
+            border-radius: 10px;
+            flex-grow: 1;
+            min-width: 60px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-box span {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .timer-box small {
+            display: block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #ffd700; /* Altın Rengi */
+            margin-top: 5px;
+        }
+
+        .remaining-time-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        /* --- Görevler Stilleri --- */
+        .task-section {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .task-section h2 {
+            font-size: 1.2rem;
+            color: #ff0000;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .task-list li {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+            border-left: 5px solid gold;
+        }
+
+        .task-list li .icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            color: gold;
+        }
+
+        /* --- Kod ve Buton Stilleri --- */
+        .code-section h3 {
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .claim-button {
+            background-color: #00ff00; /* Yeşil - Dikkat Çekici */
+            color: #1e1e3f;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 15px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .claim-button:hover {
+            background-color: #00cc00;
+            transform: translateY(-2px);
+        }
+
+        /* --- Footer --- */
+        .event-footer {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .event-footer p {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+    </style>
+    </head>
+<body>
+    <div class="snow-container"></div> <div class="confetti-container"></div> <div class="event-container">
+        <header class="event-header">
+            <h1>PAINDEX YILBAŞI ETKİNLİĞİ 🎁</h1>
+            <p>Büyük Ödül: **5000$**</p>
+        </header>
+
+        <section class="countdown-section">
+            <div id="countdown-timer" class="countdown-timer">
+                <div class="timer-box">
+                    <span id="days">00</span>
+                    <small>GÜN</small>
+                </div>
+                <div class="timer-box">
+                    <span id="hours">00</span>
+                    <small>SAAT</small>
+                </div>
+                <div class="timer-box">
+                    <span id="minutes">00</span>
+                    <small>DAKİKA</small>
+                </div>
+                <div class="timer-box">
+                    <span id="seconds">00</span>
+                    <small>SANİYE</small>
+                </div>
+            </div>
+            <p class="remaining-time-info">Süre: **5 Gün** Kaldı!</p>
+        </section>
+
+        <section class="task-section">
+            <h2>GÖREVLERİ TAMAMLA & ÖDÜLÜ KAP!</h2>
+            <ul class="task-list">
+                <li>
+                    <i class="icon">👥</i> 
+                    **10 Arkadaşını Davet Et**
+                </li>
+                <li>
+                    <i class="icon">👑</i> 
+                    **5 Arkadaşına Premium Aldır**
+                </li>
+            </ul>
+        </section>
+
+        <section class="code-section">
+            <h3>Davet Kodunu Hemen Al!</h3>
+            <p>Davet kodun için **Profili Düzenle** bölümünü ziyaret et.</p>
+            <button class="claim-button" onclick="window.location.href='#'">
+                Ödülünü HEMEN Al!
+            </button>
+        </section>
+        
+        <footer class="event-footer">
+             <p>Kampanya Süresi Dolmadan Yetiş! ⏳</p>
+        </footer>
+    </div>
+
+    <script>
+        // Yılbaşı Geri Sayım Kodları
+
+        const countdown = document.getElementById('countdown-timer');
+        const daysEl = document.getElementById('days');
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+
+        const DURATION_MS = 5 * 24 * 60 * 60 * 1000; // 5 gün milisaniye cinsinden
+
+        let endTime;
+
+        // 1. Hedef zamanı belirle (localStorage'dan oku veya yeni bir tane oluştur)
+        function initializeTimer() {
+            const savedEndTime = localStorage.getItem('paindexEventEndTime');
+            const now = new Date().getTime();
+
+            if (savedEndTime && parseInt(savedEndTime) > now) {
+                // Kaydedilmiş ve süresi dolmamış bir hedef zaman varsa onu kullan
+                endTime = parseInt(savedEndTime);
+            } else {
+                // Yeni bir hedef zaman belirle (Şimdiki zaman + 5 gün)
+                endTime = now + DURATION_MS;
+                localStorage.setItem('paindexEventEndTime', endTime);
+            }
+        }
+
+        // 2. Geri sayımı güncelleme fonksiyonu
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = endTime - now;
+
+            if (distance < 0) {
+                clearInterval(timerInterval);
+                countdown.innerHTML = '<span style="color:red; font-size:1.5rem;">ETKİNLİK SONA ERDİ!</span>';
+                localStorage.removeItem('paindexEventEndTime');
+                triggerConfetti(); // Süre bitince konfeti fırlat
+                return;
+            }
+
+            // Zaman hesaplamaları
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Ekrana yazdırma
+            daysEl.innerText = String(days).padStart(2, '0');
+            hoursEl.innerText = String(hours).padStart(2, '0');
+            minutesEl.innerText = String(minutes).padStart(2, '0');
+            secondsEl.innerText = String(seconds).padStart(2, '0');
+        }
+
+        // 3. Kar Efekti Fonksiyonu
+        function createSnowflake() {
+            const snowContainer = document.querySelector('.snow-container');
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            
+            // Rastgele boyut ve başlangıç konumu
+            const size = Math.random() * 5 + 3; // 3px ile 8px arası
+            const left = Math.random() * 100 + 'vw';
+            const duration = Math.random() * 10 + 5; // 5s ile 15s arası
+            const delay = Math.random() * 5; // 0s ile 5s arası
+
+            snowflake.style.width = size + 'px';
+            snowflake.style.height = size + 'px';
+            snowflake.style.left = left;
+            snowflake.style.animationDuration = duration + 's';
+            snowflake.style.animationDelay = delay + 's';
+            snowflake.style.opacity = Math.random() * 0.7 + 0.3; // Saydamlık
+
+            snowContainer.appendChild(snowflake);
+
+            // Ekran dışına çıkanları temizle (performans için)
+            setTimeout(() => {
+                snowflake.remove();
+            }, (duration + delay) * 1000);
+        }
+
+        // 4. Konfeti Efekti Fonksiyonu
+        function triggerConfetti() {
+            const confettiContainer = document.querySelector('.confetti-container');
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Basit bir konfeti stili
+                confetti.style.width = Math.random() * 8 + 'px';
+                confetti.style.height = Math.random() * 15 + 'px';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.position = 'absolute';
+                confetti.style.top = '-10px';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                // Animasyon: Rastgele düşüş ve dönüş
+                confetti.style.animation = `confetti-fall ${Math.random() * 2 + 3}s linear forwards`;
+                confetti.style.animationDelay = Math.random() * 1 + 's';
+                
+                confettiContainer.appendChild(confetti);
+
+                // Bir süre sonra temizle
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+
+        // --- Başlatma ---
+        initializeTimer(); // Hedef zamanı belirle
+        updateCountdown(); // İlk çalıştırma
+        const timerInterval = setInterval(updateCountdown, 1000); // Her saniye güncelleme
+
+        // Kar yağışı efektini başlat
+        setInterval(createSnowflake, 300); // Her 300ms'de bir yeni kar tanesi oluştur
+    </script>
+    </body>
+</html>

@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yılbaşı Market</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 🎄 TEMEL AYARLAR (Önceki şık tasarımınız korundu) */
+    :root {
+      --bg-dark: #0A192F;
+      --card-bg: rgba(23, 42, 70, 0.95);
+      --accent-red: #E84D3C;
+      --accent-green: #37D399;
+      --gold: #FFD700;
+      --text-main: #E6F0F6;
+      --text-muted: #B8C2CC;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0; padding: 0; min-height: 100vh;
+      color: var(--text-main); background-color: var(--bg-dark);
+      overflow-x: hidden; position: relative;
+    }
+
+    /* 🖼️ Arka Plan */
+    body::before {
+      content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1000&auto=format&fit=crop'); 
+      background-size: cover; background-position: center;
+      filter: brightness(0.3) blur(2px); z-index: -1;
+    }
+
+    /* ❄️ Kar Animasyonu */
+    .snowflake {
+      color: #fff; font-size: 1em; position: fixed; top: -10%; z-index: 1; pointer-events: none;
+      animation-name: snowflakes-fall, snowflakes-shake;
+      animation-duration: 10s, 3s; animation-iteration-count: infinite, infinite;
+    }
+    @keyframes snowflakes-fall { 0% { top: -10%; } 100% { top: 100%; } }
+    @keyframes snowflakes-shake { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(80px); } }
+    .snowflake:nth-of-type(0) { left: 1%; animation-delay: 0s, 0s; }
+    .snowflake:nth-of-type(1) { left: 10%; animation-delay: 1s, 1s; }
+    .snowflake:nth-of-type(2) { left: 20%; animation-delay: 6s, 0.5s; }
+    .snowflake:nth-of-type(3) { left: 30%; animation-delay: 4s, 2s; }
+
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 20px; position: relative; z-index: 10; }
+
+    /* HEADER & GİRİŞ ALANI */
+    header {
+      background: rgba(232, 77, 60, 0.15); border: 1px solid rgba(232, 77, 60, 0.4);
+      border-radius: 16px; padding: 15px 20px; margin-bottom: 30px;
+      backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+    }
+    h1 { font-family: 'Pacifico', cursive; margin: 0; color: var(--accent-red); font-size: 1.8rem; }
+    
+    /* Sağ Üst Alan */
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* GİRİŞ Yapılınca Görünenler */
+    .logged-in-area { display: flex; align-items: center; gap: 12px; display: none; }
+    .stat-badge { background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .coin-val { color: var(--gold); }
+    .money-val { color: var(--accent-green); }
+
+    /* Butonlar */
+    .btn-login { background: var(--accent-green); color: #000; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .btn-logout { background: var(--accent-red); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+    .btn-back { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; }
+
+    /* MARKET KARTLARI */
+    .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; overflow: hidden;
+    }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent-red), var(--accent-green)); }
+    .card h3 { margin: 10px 0; font-size: 1.2rem; color: #fff; }
+    .card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; flex-grow: 1; }
+    
+    .price-tag { font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+    .price-coin { color: var(--gold); } .price-real { color: var(--accent-green); }
+
+    .btn-buy { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; }
+    .btn-coin { background: linear-gradient(135deg, #FFD700 0%, #FFAA00 100%); color: #332200; }
+    .btn-real { background: linear-gradient(135deg, #E84D3C 0%, #C0392B 100%); color: white; }
+
+    /* GİRİŞ MODALI (POPUP) */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); z-index: 10000;
+        display: none; justify-content: center; align-items: center;
+    }
+    .modal-box {
+        background: var(--bg-dark); border: 1px solid var(--accent-green);
+        padding: 25px; border-radius: 16px; width: 90%; max-width: 350px;
+        text-align: center; position: relative;
+    }
+    .modal-box h2 { color: var(--accent-green); margin-top: 0; font-family: 'Pacifico', cursive; }
+    .modal-input {
+        width: 100%; padding: 12px; margin: 10px 0;
+        background: rgba(255,255,255,0.1); border: 1px solid #333;
+        color: white; border-radius: 8px; box-sizing: border-box;
+    }
+    .modal-btn {
+        width: 100%; padding: 12px; background: var(--accent-green);
+        color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+    }
+    .close-modal { position: absolute; top: 10px; right: 15px; background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; }
+
+    @media (max-width: 600px) {
+        header { flex-direction: column; align-items: flex-start; }
+        .header-right { width: 100%; justify-content: space-between; margin-top: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="snowflakes" aria-hidden="true">
+    <div class="snowflake">❅</div><div class="snowflake">❆</div><div class="snowflake">❅</div><div class="snowflake">❆</div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <div>
+        <h1><i class="fas fa-gift"></i> Yılbaşı Market</h1>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Hoşgeldin, <span id="welcomeName">Misafir</span></div>
+      </div>
+      <a href="mmrkt.html">VİP KATALOGU</a>
+      <div class="header-right">
+        
+        <button id="loginBtnTrigger" class="btn-login" onclick="openLoginModal()">Giriş Yap</button>
+
+        <div id="loggedInArea" class="logged-in-area">
+            <div class="stat-badge"><i class="fas fa-coins" style="color:gold;"></i> <span id="myCoins">0</span></div>
+            <div class="stat-badge"><i class="fas fa-wallet" style="color:var(--accent-green);"></i> <span id="myBalance">$0</span></div>
+            <button class="btn-logout" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+        
+        <a href="index.html" class="btn-back">Geri</a>
+      </div>
+    </header>
+
+    <div id="itemsContainer" class="market-grid">
+      </div>
+  </div>
+
+  <div id="loginModal" class="modal-overlay">
+      <div class="modal-box">
+          <button class="close-modal" onclick="closeLoginModal()">✕</button>
+          <h2>Giriş Yap</h2>
+          <p style="font-size:0.9rem; color:#aaa;">(Eski sistemle giriş)</p>
+          
+          <input type="text" id="loginUsername" class="modal-input" placeholder="Kullanıcı Adı">
+          <input type="password" id="loginPassword" class="modal-input" placeholder="Şifre">
+          
+          <div id="loginError" style="color:var(--accent-red); font-size:0.85rem; display:none; margin-bottom:10px;"></div>
+          
+          <button class="modal-btn" onclick="performLogin()">Giriş Yap</button>
+      </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf1"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const LOGGED_KEY = 'market_logged_username_v1'; // Local Storage Key
+
+    // --- MARKET ÜRÜNLERİ ---
+    const PRODUCTS = [
+      { id: 'coin_pack_1000', name: '1000 Coin Paketi', desc: '1000 Coin eklenir.', type: 'balance_buy', price: 20, currency: '$', rewardCoins: 1000 },
+     
+      { id: 'color_chromatic_black', name: 'Kromatik Siyah İsim', desc: 'Özel siyah efekt.', type: 'coin_buy', price: 10000, meta: {color: 'chromatic_black'} },
+      { id: 'color_blood_red', name: 'Kan Kırmızı İsim', desc: 'Koyu kırmızı renk.', type: 'coin_buy', price: 10000, meta: {color: '#8B0000'} },
+      { id: 'color_chrome_green', name: 'Krom Yeşil İsim', desc: 'Parlak yeşil renk.', type: 'coin_buy', price: 10000, meta: {color: '#00FF00'} },
+      { id: 'color_rgb_blue', name: 'RGB Mavi İsim', desc: 'Parlak mavi renk.', type: 'coin_buy', price: 10000, meta: {color: '#0000FF'} },
+      { id: 'color_rgb_purple', name: 'RGB Mor İsim', desc: 'Mor renk.', type: 'coin_buy', price: 25000, meta: {color: '#800080'} },
+      { id: 'color_rainbow', name: 'Rengarenk Yönetici', desc: 'Sürekli renk değiştirir.', type: 'coin_buy', price: 50000, meta: {rainbow: true} },
+      { id: 'premium_sub', name: 'Premium Üyelik', desc: 'Premium özellikler. (Admin Onaylı)', type: 'real_money', priceText: '75 TL' },
+      { id: 'role_admin', name: 'Admin Yetkisi', desc: 'Admin yetkisi. (Admin Onaylı)', type: 'real_money', priceText: '150 TL' },
+      { id: 'role_manager', name: 'Yönetici Yetkisi', desc: 'Tam yönetim yetkisi. (Admin Onaylı)', type: 'real_money', priceText: '300 TL' },
+      { id: 'server_takeover', name: 'Sunucuyu DEVR AL', desc: 'Tüm haklar. (Admin Onaylı)', type: 'real_money', priceText: '500 TL' }
+
+    ];
+
+    let currentUser = null; // Firestore doc ID (temizlenmiş kullanıcı adı)
+    let userData = {};
+
+    // --- HELPER FONKSİYONLAR (Legacy HASH ve Sanitization) ---
+
+    // SHA-256 Hash Fonksiyonu
+    async function hashPassword(pass){
+      const enc = new TextEncoder();
+      const data = enc.encode(pass || '');
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+
+    // Kullanıcı adını temizler (küçük harf, boşlukları alt çizgiye çevirir)
+    function sanitizeUsername(u) { return (u || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, ''); }
+
+
+    // Firestore'dan kullanıcıyı bulur (Sizin legacy kodunuzdan alındı)
+    async function getUserDocByUsername(username){
+        const uname = sanitizeUsername(username);
+        // 1. Önce doc id olarak arama (en yüksek ihtimal)
+        try {
+            const docById = await db.collection('users').doc(uname).get();
+            if (docById.exists) return { id: docById.id, data: docById.data() };
+        } catch(e){ /* ignore */ }
+
+        // 2. fallback: usernameLower alanına göre arama (script.js'inizdeki alan)
+        try {
+            const q = await db.collection('users').where('usernameLower','==',uname).limit(1).get();
+            if (!q.empty) {
+                const d = q.docs[0];
+                return { id: d.id, data: d.data() };
+            }
+        } catch(e){ console.error('getUserByUsername error', e); }
+        
+        return null;
+    }
+
+    // --- GİRİŞ / ÇIKIŞ İŞLEMLERİ (Legacy) ---
+    
+    function openLoginModal() { 
+        document.getElementById('loginModal').style.display = 'flex'; 
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('loginError').textContent = '';
+    }
+    function closeLoginModal() { 
+        document.getElementById('loginModal').style.display = 'none'; 
+        document.getElementById('loginPassword').value = '';
+    }
+
+    async function performLogin() {
+        const u = document.getElementById('loginUsername').value;
+        const p = document.getElementById('loginPassword').value;
+        const errBox = document.getElementById('loginError');
+        
+        if (!u || !p) { errBox.style.display='block'; errBox.textContent="Alanları doldurun."; return; }
+        
+        errBox.textContent = "Giriş yapılıyor, lütfen bekleyin...";
+        errBox.style.display = 'block';
+        errBox.style.color = 'var(--gold)';
+
+        try {
+            const found = await getUserDocByUsername(u);
+
+            if (!found) { 
+                errBox.style.color = 'var(--accent-red)';
+                errBox.textContent='Kullanıcı bulunamadı.'; 
+                return;
+            }
+
+            const hashed = await hashPassword(p);
+            // Şifre hash'i için olası alan adlarını kontrol et: hashedPassword, passwordHash, hash (Sizin kodunuzdaki mantık)
+            const storedHash = found.data.hashedPassword || found.data.passwordHash || found.data.hash || '';
+
+            if (hashed !== storedHash || !storedHash) {
+                errBox.style.color = 'var(--accent-red)';
+                errBox.textContent='Şifre yanlış.'; 
+                return;
+            }
+            
+            // Başarılı giriş
+            localStorage.setItem(LOGGED_KEY, found.id);
+            await loadCurrentUser();
+            closeLoginModal(); 
+
+        } catch (error) {
+            console.error("Giriş Hatası:", error);
+            errBox.style.color = 'var(--accent-red)';
+            errBox.textContent = "Bilinmeyen bir hata oluştu: " + (error.message || 'Lütfen tekrar deneyin.');
+        }
+    }
+
+    function logoutUser() {
+        localStorage.removeItem(LOGGED_KEY);
+        currentUser = null;
+        userData = {};
+        updateUI(); // Arayüzü güncelle
+    }
+
+    // --- KULLANICI DURUMU YÖNETİMİ ---
+
+    async function loadCurrentUser(){
+        const uname = localStorage.getItem(LOGGED_KEY);
+        if (!uname) { 
+            currentUser = null;
+            userData = {};
+            updateUI();
+            return; 
+        }
+
+        // Firestore'da real-time dinleme başlat
+        db.collection('users').doc(uname).onSnapshot(doc => {
+            if (doc.exists) {
+                currentUser = doc.id;
+                userData = doc.data();
+            } else {
+                // Eğer doküman silindiyse/yoksa çıkış yap
+                localStorage.removeItem(LOGGED_KEY);
+                currentUser = null;
+                userData = {};
+            }
+            updateUI();
+        }, error => {
+            console.error("Firestore dinleme hatası:", error);
+            localStorage.removeItem(LOGGED_KEY);
+            currentUser = null;
+            userData = {};
+            updateUI();
+        });
+    }
+
+
+    // --- ARAYÜZ / MARKET İŞLEVLERİ ---
+
+    function updateUI() {
+        const loginBtnTrigger = document.getElementById('loginBtnTrigger');
+        const loggedInArea = document.getElementById('loggedInArea');
+
+        if (currentUser) {
+            const balance = userData.balance !== undefined ? userData.balance : (userData.money || 0);
+            document.getElementById('welcomeName').textContent = userData.displayName || userData.username || currentUser;
+            document.getElementById('myCoins').textContent = userData.coins || 0;
+            document.getElementById('myBalance').textContent = '$' + balance;
+            loginBtnTrigger.style.display = 'none';
+            loggedInArea.style.display = 'flex';
+        } else {
+            document.getElementById('welcomeName').textContent = "Misafir";
+            loginBtnTrigger.style.display = 'block';
+            loggedInArea.style.display = 'none';
+        }
+        renderProducts();
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('itemsContainer');
+      container.innerHTML = '';
+      PRODUCTS.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        let priceDisplay = '', btnClass = '', btnText = 'SATIN AL', icon = '';
+        const isLoggedIn = !!currentUser;
+        
+        if (product.type === 'coin_buy') {
+          priceDisplay = `<span class="price-coin"><i class="fas fa-coins"></i> ${product.price.toLocaleString()}</span>`;
+          btnClass = 'btn-coin'; icon = '<i class="fas fa-palette"></i>';
+        } else if (product.type === 'balance_buy') {
+          priceDisplay = `<span class="price-real"><i class="fas fa-wallet"></i> ${product.currency}${product.price}</span>`;
+          btnClass = 'btn-real'; icon = '<i class="fas fa-sack-dollar"></i>';
+        } else {
+          priceDisplay = `<span class="price-real" style="color:#fff;"><i class="fas fa-credit-card"></i> ${product.priceText}</span>`;
+          btnClass = 'btn-real'; btnText = 'SİPARİŞ VER'; icon = '<i class="fas fa-crown"></i>';
+        }
+
+        card.innerHTML = `
+          <div><h3>${icon} ${product.name}</h3><p>${product.desc}</p></div>
+          <div><div class="price-tag">${priceDisplay}</div>
+          <button class="btn-buy ${btnClass}" onclick="buyItem('${product.id}')" ${isLoggedIn ? '' : 'disabled'}>
+            ${isLoggedIn ? btnText : 'GİRİŞ GEREKLİ'}
+          </button></div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function buyItem(itemId) {
+      if (!currentUser) { 
+          openLoginModal(); 
+          return; 
+      }
+      
+      const product = PRODUCTS.find(p => p.id === itemId);
+      const confirmMsg = product.type === 'real_money' ? "Sipariş oluşturulsun mu?" : "Satın alıyor musunuz?";
+      if (!confirm(confirmMsg)) return;
+
+      const userRef = db.collection('users').doc(currentUser); // userRef: doc id'si kullanıcı adı olan doküman
+
+      try {
+        if (product.type === 'real_money') {
+          await db.collection('orders').add({
+            // Legacy sistemde uid yerine currentUser (doc id) kullanılır
+            userId: currentUser,
+            username: userData.username || currentUser,
+            item: product.name,
+            price: product.priceText,
+            status: 'Beklemede',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          alert("✅ Sipariş oluşturuldu, admin onayı bekleniyor.");
+        } else {
+          await db.runTransaction(async (transaction) => {
+            const userDoc = await transaction.get(userRef);
+            if (!userDoc.exists) throw "Kullanıcı verisi bulunamadı! Lütfen tekrar giriş yapın.";
+            const data = userDoc.data();
+            const currentCoins = data.coins || 0;
+            const currentBalance = data.balance !== undefined ? data.balance : (data.money || 0);
+
+            if (product.type === 'coin_buy') {
+              if (currentCoins < product.price) throw "Yetersiz Coin!";
+
+              // Compute fields so bought name color works across the app:
+              // - script.js expects flashyColor / flashyAnimated / profileColor (not nameColor)
+              // - map legacy meta to those fields:
+              let flashyColorValue = null;
+              let flashyAnimated = false;
+              let profileColorValue = null;
+
+              if (product.meta) {
+                const metaColor = (product.meta.color || '').toString();
+                // rainbow token (meta.rainbow === true) -> use legacy 'rgb' token and animated flag
+                if (product.meta.rainbow === true || metaColor.toLowerCase() === 'rainbow' || metaColor.toLowerCase() === 'rgb') {
+                  flashyColorValue = 'rgb';
+                  flashyAnimated = true;
+                  profileColorValue = '#FFD400'; // fallback
+                } else if (metaColor.toLowerCase().includes('chromatic') || metaColor.toLowerCase().startsWith('chrom')) {
+                  // map 'chromatic_black' -> 'chrom-black' which parseFlashyColorToken recognizes as 'chrom-<type>'
+                  flashyColorValue = metaColor.toLowerCase().replace(/^chromatic_?/,'chrom-').replace(/_/g,'-');
+                  profileColorValue = '#FFFFFF';
+                } else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(metaColor)) {
+                  // hex value -> use as flashyColor and profileColor fallback
+                  flashyColorValue = metaColor;
+                  profileColorValue = metaColor;
+                } else if (metaColor) {
+                  // generic string -> set as flashyColor (parseFlashyColorToken handles names)
+                  flashyColorValue = metaColor;
+                  profileColorValue = metaColor;
+                }
+              }
+
+              const updateObj = {
+                coins: currentCoins - product.price,
+                inventory: firebase.firestore.FieldValue.arrayUnion(product.id)
+              };
+              if (flashyColorValue !== null) updateObj.flashyColor = flashyColorValue;
+              if (flashyAnimated) updateObj.flashyAnimated = true;
+              if (profileColorValue) updateObj.profileColor = profileColorValue;
+              // also keep legacy nameColor field for compatibility
+              if (product.meta && product.meta.color) updateObj.nameColor = product.meta.color;
+
+              transaction.update(userRef, updateObj);
+            } else if (product.type === 'balance_buy') {
+              if (currentBalance < product.price) throw "Yetersiz Bakiye!";
+              transaction.update(userRef, {
+                balance: currentBalance - product.price,
+                coins: currentCoins + product.rewardCoins
+              });
+            }
+          });
+          alert("🎉 Satın alma başarılı!");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("❌ Hata: " + (typeof error === 'string' ? error : error.message || 'Satın alma işlemi başarısız.'));
+      }
+    }
+    
+    // Uygulama Başlangıcı
+    loadCurrentUser();
+  </script>
+
+</body>
+</html>

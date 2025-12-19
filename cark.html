@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Yılbaşı Şans Çarkı | emir2MİNN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* (mevcut stil aynı kaldı) */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: radial-gradient(circle at top, #0f0c29, #000);
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    canvas#bgSnow { position:fixed; top:0; left:0; pointer-events:none; z-index:1; }
+
+    .header { text-align:center; z-index:10; margin-bottom:20px; }
+    h1 {
+      font-family: 'Monoton', cursive;
+      font-size: clamp(2.5rem, 10vw, 6rem);
+      background: linear-gradient(45deg, #00ff6a, #39ff14);
+      -webkit-background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 60px #00ff6a;
+    }
+    .timer { font-size:1.4rem; color:#00ff6a; margin:10px 0; font-weight:900; }
+
+    .wheel-box {
+      position:relative;
+      width: 92vmin;
+      height: 92vmin;
+      max-width: 460px;
+      max-height: 460px;
+      filter: drop-shadow(0 0 60px rgba(0,255,105,0.6));
+      z-index: 10;
+    }
+    #wheel { width:100%; height:100%; transition: transform 8s cubic-bezier(0.16,1,0.3,1); }
+
+    .pointer {
+      position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+      width:0; height:0;
+      border-left:36px solid transparent;
+      border-right:36px solid transparent;
+      border-top:90px solid #FFD700;
+      filter: drop-shadow(0 15px 30px #000);
+      z-index:20;
+    }
+
+    #spinBtn {
+      margin-top:30px;
+      padding:20px 80px;
+      font-size:2rem;
+      background:#00ff6a;
+      color:#000;
+      border:none;
+      border-radius:80px;
+      font-weight:900;
+      box-shadow:0 0 80px #00ff6a;
+      cursor:pointer;
+    }
+    #spinBtn:disabled { background:#003300; color:#006600; box-shadow:none; }
+
+    #result {
+      margin-top:30px;
+      font-size:2.5rem;
+      font-weight:900;
+      min-height:80px;
+      text-shadow:0 0 30px #00ff6a;
+    }
+    .back-btn {
+      position:absolute; top:20px; left:20px; z-index:100;
+      background:rgba(255,255,255,0.2); padding:12px 20px; border-radius:50px;
+      font-size:1.5rem; backdrop-filter:blur(10px); color:#fff; text-decoration:none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bgSnow"></canvas>
+
+  <a href="menubar.html" class="back-btn">Geri</a>
+
+  <div class="header">
+    <h1>PAINDEX</h1>
+    <div class="timer" id="wheelTimer">Yükleniyor...</div>
+  </div>
+
+  <div class="wheel-box">
+    <div class="pointer"></div>
+    <canvas id="wheel"></canvas>
+  </div>
+
+  <button id="spinBtn">ÇEVİR!</button>
+  <div id="result"></div>
+
+  <!-- KAR EFEKTİ -->
+  <script>
+    const snow = document.getElementById('bgSnow');
+    const sctx = snow.getContext('2d');
+    let flakes = [];
+    function initSnow(){ snow.width=innerWidth; snow.height=innerHeight; flakes=[]; for(let i=0;i<200;i++) flakes.push({x:Math.random()*snow.width,y:Math.random()*snow.height,r:Math.random()*3+1,s:Math.random()*2+0.5,o:Math.random()*0.7+0.3}); }
+    function animateSnow(){ sctx.clearRect(0,0,snow.width,snow.height); flakes.forEach(f=>{f.y+=f.s; f.x+=Math.sin(Date.now()*0.0005+f.y*0.01)*1.5; if(f.y>snow.height) f.y=-10; sctx.fillStyle=`rgba(255,255,255,${f.o})`; sctx.beginPath(); sctx.arc(f.x,f.y,f.r,0,Math.PI*2); sctx.fill();}); requestAnimationFrame(animateSnow); }
+    initSnow(); animateSnow(); window.addEventListener('resize',initSnow);
+  </script>
+
+  <!-- ÇARK + FIRESTORE (DÜZELTİLDİ VE ÇALIŞIYOR) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf1"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const prizes = ["0 $", "50 $", "100 $", "225 $", "250 $", "350 $", "SÜPRİZ ÖDÜL"];
+    const values = [0, 50, 100, 225, 250, 350, 1000]; // SÜPRİZ = 1000$
+    const colors = ["#8B0000","#006400","#00ff6a","#228B22","#32CD32","#90EE90","#FFD700"];
+
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spinBtn");
+    const resultDiv = document.getElementById("result");
+    const timerDiv = document.getElementById("wheelTimer");
+
+    function canSpin() {
+      const last = localStorage.getItem("yilbasi_wheel_2025");
+      return !last || last !== new Date().toDateString();
+    }
+
+    function updateTimer() {
+      if (!auth.currentUser) {
+        timerDiv.textContent = "Giriş yapmalısın!";
+        spinBtn.disabled = true;
+        return;
+      }
+      if (canSpin()) {
+        timerDiv.innerHTML = "<span style='color:#00ff6a'>Bugün 1 çevirme hakkın var!</span>";
+        spinBtn.disabled = false;
+      } else {
+        const tomorrow = new Date();
+        tomorrow.setHours(24,0,0,0);
+        const diff = tomorrow - new Date();
+        const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+        const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+        const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+        timerDiv.innerHTML = `Yeni hak için: <span style='color:#ff0066'>${h}:${m}:${s}</span>`;
+        spinBtn.disabled = true;
+        setTimeout(updateTimer,1000);
+      }
+    }
+
+    function resizeCanvas() {
+      const size = Math.min(innerWidth, innerHeight) * 0.88;
+      canvas.width = canvas.height = size;
+      drawWheel();
+    }
+
+    function drawWheel() {
+      const c = canvas.width/2;
+      const r = c - 30;
+      const step = Math.PI*2 / prizes.length;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      prizes.forEach((text,i)=>{
+        const angle = i*step - Math.PI/2;
+        const grad = ctx.createRadialGradient(c,c,0,c,c,r);
+        grad.addColorStop(0, colors[i]);
+        grad.addColorStop(1, "#000000");
+        ctx.beginPath();
+        ctx.moveTo(c,c);
+        ctx.arc(c,c,r,angle,angle+step);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 8;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(c,c);
+        ctx.rotate(angle + step/2);
+        ctx.textAlign = "center";
+        ctx.fillStyle = i===6 ? "#000" : "#fff";
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 5;
+        ctx.font = `bold ${canvas.width/13}px Orbitron`;
+        ctx.strokeText(text, r*0.68, 8);
+        ctx.fillText(text, r*0.68, 8);
+        ctx.restore();
+      });
+    }
+
+    async function creditUserAmount(amount) {
+      // wheel: award direkt miktar (USD)
+      if (!auth || !auth.currentUser) return;
+      if (!amount || amount <= 0) return;
+      const uid = auth.currentUser.uid;
+      const userRef = db.collection("users").doc(uid);
+      try {
+        await db.runTransaction(async (transaction) => {
+          const doc = await transaction.get(userRef);
+          if (!doc.exists) {
+            transaction.set(userRef, { balance: amount, moneyEarned: amount }, { merge: true });
+          } else {
+            const cur = Number(doc.data().balance || 0);
+            const curEarn = Number(doc.data().moneyEarned || 0);
+            transaction.update(userRef, { balance: cur + amount, moneyEarned: curEarn + amount });
+          }
+        });
+        try { showToast && showToast(`+${amount}$ bakiyene eklendi.`, true, 4000); } catch(e){}
+      } catch (e) {
+        console.error("Wheel credit error:", e);
+      }
+    }
+
+    async function spin() {
+      if (!canSpin() || !auth.currentUser) return;
+
+      localStorage.setItem("yilbasi_wheel_2025", new Date().toDateString());
+      spinBtn.disabled = true;
+      spinBtn.textContent = "DÖNÜYOR...";
+      resultDiv.textContent = "";
+
+      const spins = 12 + Math.random() * 10;
+      const finalAngle = spins * 360 + Math.random() * 360;
+      canvas.style.transform = `rotate(${finalAngle}deg)`;
+
+      setTimeout(async () => {
+        const deg = finalAngle % 360;
+        const slice = 360 / prizes.length;
+        const winnerIndex = Math.floor((360 - deg + 45) % 360 / slice);
+        const prizeText = prizes[winnerIndex];
+        const amount = values[winnerIndex];
+
+        resultDiv.innerHTML = `<div style="color:#00ff6a">KAZANDIN!</div><div style="font-size:3rem;color:#fff">${prizeText}</div>`;
+
+        if (amount > 0) {
+          try {
+            // direkt ödül miktarını kullanıcıya ekle
+            await creditUserAmount(amount);
+            alert(`+${amount}$ bakiyene eklendi!`);
+          } catch (err) {
+            console.error("Bakiye eklenemedi:", err);
+            alert("Hata oluştu, ödül eklenemedi.");
+          }
+        }
+        updateTimer();
+        spinBtn.textContent = "ÇEVİR!";
+      }, 8500);
+    }
+
+    // Başlat
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        resizeCanvas();
+        drawWheel();
+        updateTimer();
+        setInterval(updateTimer, 1000);
+      } else {
+        location.href = "index.html";
+      }
+    });
+
+    spinBtn.addEventListener("click", spin);
+    window.addEventListener("resize", resizeCanvas);
+  </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futrows Spotify - Yakında!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Roboto:wght@400;700&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to bottom, #121212, #000000);
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 5rem;
+            color: #1DB954; /* Spotify Yeşili */
+            text-shadow: 0 0 20px #1DB954, 0 0 40px #1DB954;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.6rem;
+            margin: 30px 0;
+            color: #b3b3b3;
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 50px 0;
+            flex-wrap: wrap;
+        }
+
+        .time-box {
+            background: rgba(29, 185, 84, 0.15);
+            padding: 25px;
+            border-radius: 20px;
+            min-width: 130px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(29, 185, 84, 0.3);
+            box-shadow: 0 0 30px rgba(29, 185, 84, 0.4);
+        }
+
+        .time-box span {
+            display: block;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #1DB954;
+        }
+
+        .time-box small {
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .spotify-link {
+            margin-top: 40px;
+        }
+
+        .spotify-link a {
+            background: #1DB954;
+            color: #fff;
+            padding: 18px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(29, 185, 84, 0.4);
+        }
+
+        .spotify-link a:hover {
+            background: #1ed760;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(29, 185, 84, 0.6);
+        }
+
+        /* Kar Efekti */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: #fff;
+            font-size: 1.5em;
+            user-select: none;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        /* Arka plan yıldız/parıltı efekti */
+        .bg-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .sparkle {
+            position: absolute;
+            background: #1DB954;
+            border-radius: 50%;
+            opacity: 0;
+            animation: sparkle 4s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 0.8; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-effects" id="effects"></div>
+
+    <div class="container">
+        <h1>Spotify</h1>
+        <h2>Spotify'da Dinleme Yakında!</h2>
+        <p>Yeni yıl ile birlikte müziklerim Spotify'da olacak.<br>Heyecanla bekleyin! 🎧🎄</p>
+
+        <div class="countdown" id="countdown">
+            <div class="time-box"><span id="days">00</span><small>Gün</small></div>
+            <div class="time-box"><span id="hours">00</span><small>Saat</small></div>
+            <div class="time-box"><span id="minutes">00</span><small>Dakika</small></div>
+            <div class="time-box"><span id="seconds">00</span><small>Saniye</small></div>
+        </div>
+
+        <div class="spotify-link">
+            <a href="https://open.spotify.com/artist/your-artist-id" target="_blank">Spotify'da Takip Et</a>
+            <!-- Yukarıdaki linki kendi Spotify profilinle değiştir -->
+        </div>
+    </div>
+
+    <script>
+        // 2026 Yeni Yıl Geri Sayım
+        const newYear = new Date('January 1, 2026 00:00:00').getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = newYear - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+
+            if (distance < 0) {
+                document.getElementById('countdown').innerHTML = '<h2 style="color:#1DB954;">Mutlu Yıllar! Müzikler Yayında 🎉</h2>';
+            }
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Kar Efekti
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            snowflake.textContent = ['❄', '❅', '❆'][Math.floor(Math.random() * 3)];
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            snowflake.style.animationDuration = Math.random() * 6 + 6 + 's';
+            snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+            snowflake.style.fontSize = Math.random() * 20 + 12 + 'px';
+            document.body.appendChild(snowflake);
+
+            setTimeout(() => snowflake.remove(), 12000);
+        }
+
+        setInterval(createSnowflake, 250);
+
+        // Spotify yeşili parıltılar
+        function createSparkles() {
+            const container = document.getElementById('effects');
+            for (let i = 0; i < 50; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.width = Math.random() * 6 + 'px';
+                sparkle.style.height = sparkle.style.width;
+                sparkle.style.top = Math.random() * 100 + '%';
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(sparkle);
+            }
+        }
+
+        createSparkles();
+    </script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3D Avatar Yönetimi — Emir2MİNN</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#041225 0%, #071428 60%); color: #E6F0F6; min-height:100vh; }
+    .panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+    #canvasWrap { width:100%; height:420px; border-radius:12px; overflow:hidden; background: linear-gradient(180deg,#061226,#0b2236); display:flex; align-items:center; justify-content:center; }
+    canvas { display:block; width:100%; height:100%; }
+  </style>
+</head>
+<body class="antialiased">
+
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold">3D Avatar & Kıyafetler</h1>
+        <p class="text-sm text-slate-300">Avatarınızı düzenleyin. Düğmeler çalışır, profil etiketleri ve "Hakkında" görünür.</p>
+      </div>
+      <a href="index.html" class="px-3 py-2 rounded-md bg-slate-800/60 text-slate-100 text-sm">← Ana Sayfaya Dön</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- 3D VIEW -->
+      <div class="lg:col-span-1 panel rounded-xl p-4">
+        <h3 class="text-lg font-semibold mb-3">3D Önizleme</h3>
+        <div id="canvasWrap" class="mb-4">
+          <canvas id="avatar3d" aria-label="3d avatar önizlemesi"></canvas>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="resetAvatarBtn" class="px-4 py-2 rounded-md bg-rose-500 text-white">Avatar Sıfırla</button>
+          <button id="removeAllEquippedBtn" class="px-4 py-2 rounded-md bg-yellow-500 text-black">Tümünü Kaldır</button>
+        </div>
+
+        <div class="mt-3 text-sm text-slate-300">
+          <div>Fotoğraf/Texture yükle (PNG/JPG):</div>
+          <input id="texFile" type="file" accept="image/*" class="mt-2 text-slate-300" />
+          <button id="uploadTexBtn" class="mt-2 px-4 py-2 rounded-md bg-sky-500 text-slate-900">Yükle & Uygula</button>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="lg:col-span-2 panel rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-3">Profil & Envanter</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+          <input id="profileName" placeholder="Görünen İsim (opsiyonel)" class="col-span-2 px-3 py-2 rounded-md bg-slate-900/40 border border-slate-700 text-slate-100" />
+          <label class="flex items-center gap-2">
+            <span class="text-sm text-slate-300">Renk</span>
+            <input type="color" id="profileColor" class="w-12 h-10 rounded-md p-0 border-0" />
+          </label>
+        </div>
+
+        <div class="mt-4 panel rounded-lg p-4">
+          <h4 class="font-semibold mb-2">Hakkında</h4>
+          <textarea id="aboutText" rows="4" class="w-full bg-slate-900/40 border border-slate-700 p-3 rounded-md text-slate-100" placeholder="Kendiniz hakkında kısa bir açıklama yazın..."></textarea>
+          <div class="mt-2 flex gap-2">
+            <button id="saveAboutBtn" class="px-3 py-1 bg-emerald-400 text-black rounded-md">Kaydet</button>
+            <button id="clearAboutBtn" class="px-3 py-1 bg-slate-700 text-white rounded-md">Temizle</button>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-slate-200 mb-3">Envanter</h4>
+            <div class="text-sm text-slate-400">Marketten aldığınız tüm item'ler burada gözükür.</div>
+          </div>
+
+          <div id="inventoryList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        </div>
+
+        <div class="mt-6">
+          <h4 class="text-sm font-semibold text-slate-200 mb-3">Ekiplenen Öğeler</h4>
+          <div id="equippedList" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <button id="deleteFeatureBtn" class="px-4 py-2 rounded-md bg-rose-600 text-white">Özellik Sil (Inventory'den)</button>
+          <button id="removeItemBtn" class="px-4 py-2 rounded-md bg-orange-500 text-black">Seçili Ekipmanı Çıkar</button>
+          <div class="text-sm text-slate-400">Seçili öğeyi inventörden tamamen silmek için "Özellik Sil" kullanın.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 text-sm text-slate-400">
+      Not: Firestore bağlantınız varsa veriler gerçek veritabanından alınır ve kaydedilir. Aksi halde demo/localStorage modunda çalışır.
+    </div>
+  </div>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Three.js + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // DOM refs
+      const wrap = document.getElementById('canvasWrap');
+      const canvas = document.getElementById('avatar3d');
+      const inventoryList = document.getElementById('inventoryList');
+      const equippedList = document.getElementById('equippedList');
+      const profileNameEl = document.getElementById('profileName');
+      const profileColorEl = document.getElementById('profileColor');
+      const texFileEl = document.getElementById('texFile');
+      const aboutTextEl = document.getElementById('aboutText');
+      const saveAboutBtn = document.getElementById('saveAboutBtn');
+      const clearAboutBtn = document.getElementById('clearAboutBtn');
+
+      const resetAvatarBtn = document.getElementById('resetAvatarBtn');
+      const removeAllEquippedBtn = document.getElementById('removeAllEquippedBtn');
+      const uploadTexBtn = document.getElementById('uploadTexBtn');
+      const deleteFeatureBtn = document.getElementById('deleteFeatureBtn');
+      const removeItemBtn = document.getElementById('removeItemBtn');
+
+     
+
+      const DEMO_KEY = 'avatar_demo_user_v1';
+      let userData = { inventory: [], equippedItems: [], displayName: '', profileColor: '#FFD400', avatarTexture: null, about: '', roles: [], titles: [] };
+
+      // THREE setup
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 1000);
+      camera.position.set(0, 1.6, 3.2);
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.set(0,1.4,0);
+      controls.enableDamping = true;
+
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.9); scene.add(hemi);
+      const dir = new THREE.DirectionalLight(0xffffff, 0.6); dir.position.set(5,10,7); scene.add(dir);
+
+      const avatarRoot = new THREE.Group(); scene.add(avatarRoot);
+      const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.36, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffd9b3 })); headMesh.position.set(0,1.6,0); avatarRoot.add(headMesh);
+      const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.5,1.0,32), new THREE.MeshStandardMaterial({ color: 0xcc0000 })); bodyMesh.position.set(0,0.9,0); avatarRoot.add(bodyMesh);
+      const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.04,12,12), new THREE.MeshStandardMaterial({ color:0x111111 })); leftEye.position.set(-0.12,1.62,0.32); avatarRoot.add(leftEye);
+      const rightEye = leftEye.clone(); rightEye.position.set(0.12,1.62,0.32); avatarRoot.add(rightEye);
+
+      const ITEM_MAPPINGS = {
+        santa_hat: () => {
+          const g = new THREE.Group();
+          const cone = new THREE.Mesh(new THREE.ConeGeometry(0.28,0.6,16), new THREE.MeshStandardMaterial({ color:0xd33d2b }));
+          cone.position.set(0,1.98,0); cone.rotation.z = 0.18; g.add(cone);
+          const brim = new THREE.Mesh(new THREE.TorusGeometry(0.32,0.06,8,32), new THREE.MeshStandardMaterial({ color:0xffffff })); brim.position.set(0,1.78,0); brim.rotation.x = Math.PI/2; g.add(brim);
+          const puff = new THREE.Mesh(new THREE.SphereGeometry(0.06,12,12), new THREE.MeshStandardMaterial({ color:0xffffff })); puff.position.set(0.25,2.18,0); g.add(puff);
+          return g;
+        },
+        red_coat: () => {
+          const coat = new THREE.Mesh(new THREE.BoxGeometry(1.0,1.1,0.6), new THREE.MeshStandardMaterial({ color:0xcc0000 })); coat.position.set(0,0.95,0); return coat;
+        },
+        glasses: () => {
+          const mat = new THREE.MeshStandardMaterial({ color:0x000000 });
+          const left = new THREE.Mesh(new THREE.TorusGeometry(0.08,0.02,8,24), mat); left.position.set(-0.12,1.62,0.34);
+          const right = left.clone(); right.position.set(0.12,1.62,0.34);
+          const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.02,0.02), mat); bridge.position.set(0,1.62,0.36);
+          const group = new THREE.Group(); group.add(left); group.add(right); group.add(bridge); return group;
+        },
+        hat_basic: () => {
+          const m = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.18,0.9), new THREE.MeshStandardMaterial({ color:0x222222 })); m.position.set(0,1.86,0); return m;
+        },
+        cape_red: () => {
+          const geo = new THREE.PlaneGeometry(0.9,1.0,8,8);
+          const mat = new THREE.MeshStandardMaterial({ color:0xd33d2b, side: THREE.DoubleSide });
+          const mesh = new THREE.Mesh(geo, mat); mesh.position.set(0,1.0,-0.45); mesh.rotation.x = -0.3; return mesh;
+        },
+        crown: () => {
+          const geo = new THREE.ConeGeometry(0.28,0.25,8);
+          const mat = new THREE.MeshStandardMaterial({ color:0xffd700, metalness:1.0 });
+          const mesh = new THREE.Mesh(geo, mat); mesh.position.set(0,1.9,0); mesh.rotation.y = Math.PI; return mesh;
+        }
+      };
+
+      const activeItemMeshes = {};
+
+      function resizeRendererToDisplaySize() {
+        const width = Math.max(300, wrap.clientWidth);
+        const height = Math.max(240, wrap.clientHeight);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        renderer.setPixelRatio(dpr);
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        resizeRendererToDisplaySize();
+        controls.update();
+        avatarRoot.rotation.y += 0.002;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // state helpers (local fallback)
+      function saveLocal() { try { localStorage.setItem(DEMO_KEY, JSON.stringify(userData)); } catch(e){} }
+      function loadLocal() { try { const raw = localStorage.getItem(DEMO_KEY); if (raw) userData = Object.assign(userData, JSON.parse(raw)); } catch(e){} }
+
+      function ensureDemo() {
+        if (!Array.isArray(userData.inventory) || userData.inventory.length === 0) {
+          userData.inventory = ['santa_hat','red_coat','glasses','hat_basic','cape_red','crown'];
+        }
+        if (!Array.isArray(userData.equippedItems) || userData.equippedItems.length === 0) {
+          userData.equippedItems = ['santa_hat','red_coat'];
+        }
+        userData.displayName = userData.displayName || '';
+        userData.profileColor = userData.profileColor || '#FFD400';
+        userData.about = userData.about || '';
+        userData.roles = userData.roles || [];
+        userData.titles = userData.titles || [];
+      }
+
+      function renderInventoryUI() {
+        inventoryList.innerHTML = '';
+        const inv = userData.inventory || [];
+        if (inv.length === 0) inventoryList.innerHTML = `<div class="text-slate-400">Envanter boş.</div>`;
+        else inv.forEach(itemId => {
+          const card = document.createElement('div');
+          card.className = 'bg-slate-900/40 border border-slate-700 rounded-lg p-3 flex flex-col items-center text-center';
+          card.innerHTML = `
+            <div class="text-xs font-semibold text-slate-100 truncate">${itemId}</div>
+            <div class="mt-3 w-full flex gap-2">
+              <button data-item="${itemId}" class="equipBtn w-1/2 px-2 py-1 text-sm rounded-md bg-indigo-500 hover:bg-indigo-600 text-white">Giydir</button>
+              <button data-item="${itemId}" class="dropBtn w-1/2 px-2 py-1 text-sm rounded-md bg-rose-600 hover:bg-rose-700 text-white">Sil</button>
+            </div>
+          `;
+          inventoryList.appendChild(card);
+        });
+        renderEquippedUI();
+      }
+
+      function renderEquippedUI() {
+        equippedList.innerHTML = '';
+        const eq = userData.equippedItems || [];
+        if (!eq || eq.length === 0) { equippedList.innerHTML = `<div class="text-slate-400">Hiçbir öğe takılı değil.</div>`; return; }
+        eq.forEach(it => {
+          const el = document.createElement('div');
+          el.className = 'px-3 py-1 rounded-full bg-amber-500 text-slate-900 font-semibold flex items-center gap-2';
+          el.setAttribute('data-item', it);
+          el.innerHTML = `${it} <button class="ml-2 text-xs removeEquipBtn bg-transparent">×</button>`;
+          equippedList.appendChild(el);
+        });
+      }
+
+      function syncMeshes() {
+        const wanted = new Set(userData.equippedItems || []);
+        Object.keys(activeItemMeshes).forEach(k => { if (!wanted.has(k)) { avatarRoot.remove(activeItemMeshes[k]); delete activeItemMeshes[k]; } });
+        (userData.equippedItems || []).forEach(id => {
+          if (!activeItemMeshes[id] && ITEM_MAPPINGS[id]) {
+            try { const m = ITEM_MAPPINGS[id](); avatarRoot.add(m); activeItemMeshes[id] = m; } catch(e){ console.warn(e); }
+          }
+        });
+        renderEquippedUI();
+      }
+
+      async function persistUser(updates = {}) {
+        if (firebaseOk && currentUser) {
+          try { await db.collection('users').doc(currentUser).update(updates); }
+          catch(e){ console.warn('persist failed', e); saveLocal(); }
+        } else saveLocal();
+      }
+
+      // equip / unequip
+      async function equipItem(itemId) {
+        if (!userData.inventory.includes(itemId)) return alert('Envanterde yok: ' + itemId);
+        userData.equippedItems = Array.from(new Set([...(userData.equippedItems||[]), itemId]));
+        syncMeshes();
+        await persistUser({ equippedItems: firebaseOk ? firebase.firestore.FieldValue.arrayUnion(itemId) : userData.equippedItems });
+      }
+      async function unequipItem(itemId) {
+        userData.equippedItems = (userData.equippedItems || []).filter(x=>x!==itemId);
+        if (activeItemMeshes[itemId]) { avatarRoot.remove(activeItemMeshes[itemId]); delete activeItemMeshes[itemId]; }
+        renderEquippedUI();
+        await persistUser({ equippedItems: firebaseOk ? firebase.firestore.FieldValue.arrayRemove(itemId) : userData.equippedItems });
+      }
+
+      async function deleteFeature(itemId) {
+        if (!confirm(itemId + ' silinsin mi?')) return;
+        userData.inventory = (userData.inventory||[]).filter(x=>x!==itemId);
+        userData.equippedItems = (userData.equippedItems||[]).filter(x=>x!==itemId);
+        if (activeItemMeshes[itemId]) { avatarRoot.remove(activeItemMeshes[itemId]); delete activeItemMeshes[itemId]; }
+        renderInventoryUI();
+        await persistUser({
+          inventory: firebaseOk ? firebase.firestore.FieldValue.arrayRemove(itemId) : userData.inventory,
+          equippedItems: firebaseOk ? firebase.firestore.FieldValue.arrayRemove(itemId) : userData.equippedItems
+        });
+      }
+
+      async function removeAllEquipped() {
+        userData.equippedItems = [];
+        Object.keys(activeItemMeshes).forEach(k=>{ avatarRoot.remove(activeItemMeshes[k]); delete activeItemMeshes[k]; });
+        renderEquippedUI();
+        await persistUser({ equippedItems: [] });
+      }
+
+      async function resetAvatar() {
+        if (!confirm('Avatar sıfırlansın mı?')) return;
+        Object.keys(activeItemMeshes).forEach(k=>{ avatarRoot.remove(activeItemMeshes[k]); delete activeItemMeshes[k]; });
+        userData.equippedItems = [];
+        userData.avatarTexture = null;
+        headMesh.material.map = null; headMesh.material.needsUpdate = true;
+        bodyMesh.material.map = null; bodyMesh.material.needsUpdate = true;
+        renderEquippedUI();
+        await persistUser({ equippedItems: [], avatarTexture: firebaseOk ? firebase.firestore.FieldValue.delete && undefined : null });
+      }
+
+      async function uploadTexture(file) {
+        if (!file) return alert('Dosya seçin');
+        if (firebaseOk && currentUser) {
+          try {
+            const ref = storage.ref().child(`avatars/${currentUser}/textures/${Date.now()}_${file.name}`);
+            const snap = await ref.put(file);
+            const url = await snap.ref.getDownloadURL();
+            userData.avatarTexture = url;
+            applyTexture(url);
+            await persistUser({ avatarTexture: url });
+            return;
+          } catch(e){ console.warn('upload failed', e); alert('Yükleme hatası'); }
+        }
+        const url = URL.createObjectURL(file);
+        userData.avatarTexture = url;
+        applyTexture(url);
+        saveLocal();
+      }
+
+      function applyTexture(url) {
+        const loader = new THREE.TextureLoader();
+        loader.load(url, (tex) => {
+          tex.encoding = THREE.sRGBEncoding;
+          tex.flipY = false;
+          headMesh.material.map = tex; headMesh.material.needsUpdate = true;
+          bodyMesh.material.map = tex; bodyMesh.material.needsUpdate = true;
+        }, undefined, (err) => console.error('texture err', err));
+      }
+
+      // About save/clear
+      saveAboutBtn.addEventListener('click', async () => {
+        userData.about = aboutTextEl.value || '';
+        await persistUser({ about: userData.about });
+        alert('Hakkında kaydedildi.');
+      });
+      clearAboutBtn.addEventListener('click', async () => {
+        if (!confirm('Hakkında sıfırlansın mı?')) return;
+        userData.about = '';
+        aboutTextEl.value = '';
+        await persistUser({ about: firebaseOk ? firebase.firestore.FieldValue.delete && undefined : '' });
+      });
+
+      // Inventory delegation
+      inventoryList.addEventListener('click', (ev) => {
+        const eq = ev.target.closest('.equipBtn');
+        const drop = ev.target.closest('.dropBtn');
+        if (eq) equipItem(eq.dataset.item);
+        if (drop) deleteFeature(drop.dataset.item);
+      });
+      equippedList.addEventListener('click', (ev) => {
+        const rem = ev.target.closest('.removeEquipBtn');
+        if (!rem) return;
+        const parent = rem.closest('[data-item]');
+        if (!parent) return;
+        unequipItem(parent.getAttribute('data-item'));
+      });
+
+      removeAllEquippedBtn.addEventListener('click', removeAllEquipped);
+      resetAvatarBtn.addEventListener('click', resetAvatar);
+      uploadTexBtn.addEventListener('click', () => { const file = texFileEl.files[0]; uploadTexture(file); });
+      deleteFeatureBtn.addEventListener('click', async () => { const id = prompt('Silinecek item id:'); if (id) deleteFeature(id); });
+      removeItemBtn.addEventListener('click', async () => { const id = prompt('Çıkarılacak item id:'); if (id) unequipItem(id); });
+
+      // Profile fields persistence (debounced)
+      let pTimer = null;
+      function scheduleProfileSave() {
+        clearTimeout(pTimer);
+        pTimer = setTimeout(async () => {
+          userData.displayName = profileNameEl.value || '';
+          userData.profileColor = profileColorEl.value || '#FFD400';
+          await persistUser({ displayName: userData.displayName, profileColor: userData.profileColor });
+        }, 600);
+      }
+      profileNameEl.addEventListener('input', scheduleProfileSave);
+      profileColorEl.addEventListener('input', scheduleProfileSave);
+
+      // Load local/demo & initialize
+      loadLocal();
+      ensureDemo();
+      renderInventoryUI();
+      syncMeshes();
+      aboutTextEl.value = userData.about || '';
+
+      // If firebase available and logged user, override with server doc
+      if (firebaseOk && currentUser) {
+        db.collection('users').doc(currentUser).onSnapshot(doc => {
+          if (!doc.exists) return;
+          const d = doc.data() || {};
+          userData.inventory = Array.isArray(d.inventory) ? d.inventory.slice() : userData.inventory;
+          userData.equippedItems = Array.isArray(d.equippedItems) ? d.equippedItems.slice() : userData.equippedItems;
+          userData.displayName = d.displayName || userData.displayName;
+          userData.profileColor = d.profileColor || userData.profileColor;
+          userData.avatarTexture = d.avatarTexture || userData.avatarTexture;
+          userData.about = d.about || userData.about;
+          userData.roles = d.roles || userData.roles || [];
+          userData.titles = d.titles || userData.titles || [];
+          profileNameEl.value = userData.displayName || '';
+          profileColorEl.value = userData.profileColor || '#FFD400';
+          aboutTextEl.value = userData.about || '';
+          if (userData.avatarTexture) applyTexture(userData.avatarTexture);
+          renderInventoryUI();
+          syncMeshes();
+        }, err => console.warn('listener err', err));
+      }
+
+      // expose debug
+      window.__avatarDebug = { userData, equipItem, unequipItem, syncMeshes, applyTexture };
+      new ResizeObserver(() => resizeRendererToDisplaySize()).observe(wrap);
+      window.addEventListener('resize', resizeRendererToDisplaySize);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Elite Market & Günlük</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Pacifico&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent-blue: #38bdf8;
+      --accent-gold: #fbbf24;
+      --accent-green: #34d399;
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top right, #1e293b, #0f172a);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      background: var(--glass-bg);
+      padding: 15px 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+    }
+
+    .market-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 1.6rem;
+      background: linear-gradient(90deg, var(--accent-gold), #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-badge {
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      color: var(--accent-gold);
+      margin-left: 5px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      border-radius: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .login-form {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .input {
+      width: 80%;
+      padding: 14px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .input:focus { border-color: var(--accent-blue); }
+
+    .login-btn {
+      background: linear-gradient(135deg, var(--accent-blue), #818cf8);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 40px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .login-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .xp-bar {
+      height: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    .xp-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      border-radius: 20px;
+      transition: width 0.5s ease-out;
+    }
+
+    .streak-badge { background: var(--accent-gold); color: #000; padding: 4px 15px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; }
+    .premium { background: linear-gradient(90deg, #f59e0b, #ec4899); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; margin-left: 8px;}
+    .level { border: 1px solid var(--accent-green); color: var(--accent-green); font-size: 0.8rem; padding: 3px 10px; border-radius: 8px; margin-left: 8px; font-weight: bold;}
+
+    .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+    .market-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: 0.3s;
+    }
+    .market-card:hover { background: rgba(255,255,255,0.05); border-color: var(--accent-blue); }
+    .market-card h3 { margin: 0 0 8px 0; font-size: 1.1rem; color: #fff; }
+    .market-card .desc { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px; }
+    .btn-buy {
+      background: transparent;
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-buy:hover:not(:disabled) { background: var(--accent-blue); color: #000; }
+
+    .mission {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0,0,0,0.2);
+      padding: 12px 15px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .mission.completed { opacity: 0.9; border-left: 3px solid var(--accent-green); }
+
+    .btn-logout { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <div>
+        <span class="market-title"><i class="fa fa-gift"></i> Market</span>
+        <span style="display:block; font-size:0.7rem; color:var(--text-dim); margin-left:5px;" id="welcomeName">Misafir</span>
+      </div>
+      <div>
+        <span class="stat-badge"><i class="fa fa-coins"></i> <span id="userCoins">0</span></span>
+        <span class="stat-badge"><i class="fa fa-wallet"></i> <span id="userBalance">$0</span></span>
+        <button class="btn-logout" id="logoutBtn" style="display:none;margin-left:6px;"><i class="fa fa-sign-out"></i></button>
+      </div>
+    </div>
+
+    <form class="login-form card" id="loginForm">
+      <h2 style="margin-top:0">Hoş Geldiniz</h2>
+      <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:25px;">Devam etmek için hesabınıza giriş yapın.</p>
+      <input type="text" id="usernameInput" class="input" placeholder="Kullanıcı Adı" autocomplete="username" required>
+      <input type="password" id="passwordInput" class="input" placeholder="Şifre" autocomplete="current-password" required>
+      <br>
+      <button type="submit" class="login-btn" id="loginBtn">Giriş Yap</button>
+      <div id="loginError" style="color:#FF6B6B;margin-top:15px;font-size:0.85rem;"></div>
+    </form>
+
+    <div id="loggedArea" style="display:none;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <span id="userName" style="font-weight:800; font-size:1.1rem;"></span>
+            <span id="premiumLabel" class="premium" style="display:none;">PREMIUM</span>
+            <span id="levelInfo" class="level"></span>
+          </div>
+          <span class="streak-badge" id="streakDays">0 GÜN</span>
+        </div>
+
+        <div style="background:rgba(251, 191, 36, 0.05); padding:15px; border-radius:15px; border:1px dashed rgba(251, 191, 36, 0.3);">
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--accent-gold); font-weight:bold;">Bugünün Hediyesi</div>
+          <div id="dailyRewardDesc" style="font-weight:600; font-size:1.1rem; margin:5px 0;"></div>
+          <button class="login-btn" id="claimBtn" style="padding:8px 20px; font-size:0.9rem; margin-top:10px; width:100%;">ÖDÜLÜMÜ AL</button>
+        </div>
+        <div id="streakInfo" style="font-size:0.75rem; color:var(--text-dim); margin-top:12px; text-align:center;"></div>
+      </div>
+
+      <div class="card" style="padding:15px 24px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600;">
+          <span>Seviye <span id="currentLevel" style="color:var(--accent-blue)">-</span></span>
+          <span style="color:var(--text-dim)"><span id="currentXp">-</span> / <span id="xpForNext">-</span> XP</span>
+        </div>
+        <div class="xp-bar"><div id="xpBarInner" class="xp-bar-inner"></div></div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 15px 0;"><i class="fa fa-tasks" style="color:var(--accent-blue)"></i> Günlük Görevler</h4>
+        <div id="missionsList"></div>
+        <div id="missionClaimResp" style="font-size:0.85rem; color:var(--accent-green); margin-top:10px; text-align:center;"></div>
+      </div>
+
+      <div id="hourlyEventBox" style="display:none; margin-bottom:20px;" class="card"></div>
+      <div id="randomSurpriseBox" style="display:none; margin-bottom:20px;" class="card"></div>
+
+      <div class="card" id="statsBox" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.85rem;"></div>
+
+      <h3 style="margin:30px 0 15px 10px;"><i class="fa fa-shopping-cart" style="color:var(--accent-gold)"></i> Mağaza</h3>
+      <div id="itemsContainer" class="market-grid"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // --- FIREBASE CONFIG (ORIJINAL) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.appspot.com",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf1"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ÜRÜNLER (ORIJINAL)
+    const PRODUCTS = [
+      { id: 'coin_pack_1000', name: '1000 Coin Paketi', desc: 'Anında hesabına 1000 coin tanımlanır.', type: 'balance_buy', price: 20, currency: '$', rewardCoins: 1000 },
+      { id: 'color_chromatic_black', name: 'Kromatik Siyah', desc: 'Asil bir görünüm için özel siyah nick.', type: 'coin_buy', price: 10000, meta: {color: 'chromatic_black'} },
+      { id: 'color_blood_red', name: 'Kan Kırmızısı', desc: 'Dikkat çekici koyu kırmızı renk.', type: 'coin_buy', price: 10000, meta: {color: '#8B0000'} },
+      { id: 'color_chrome_green', name: 'Krom Yeşil', desc: 'Parlak ve fütüristik yeşil tonu.', type: 'coin_buy', price: 10000, meta: {color: '#00FF00'} },
+      { id: 'color_rgb_blue', name: 'Elektronik Mavi', desc: 'Canlı RGB mavi deneyimi.', type: 'coin_buy', price: 10000, meta: {color: '#0000FF'} },
+      { id: 'color_rgb_purple', name: 'Galaksi Moru', desc: 'Derin ve gizemli mor renk.', type: 'coin_buy', price: 25000, meta: {color: '#800080'} },
+      { id: 'color_rainbow', name: 'Rengarenk Mod', desc: 'Gökkuşağı efektiyle sürekli değişen renkler.', type: 'coin_buy', price: 50000, meta: {rainbow: true} }
+    ];
+
+    let u = null;
+    let userDocRef = null;
+    let retentionData = null;
+    const LOGGED_KEY = 'market_logged_username_v1';
+    const byId = (id) => document.getElementById(id);
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function escapeHtml(s){ return (""+s).replace(/[&<>"'`=\/]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','=':'&#x3D;','`':'&#x60;' }[c])); }
+    function coloredName(name, color){return `<span style="color:${color};font-weight:bold">${escapeHtml(name)}</span>`;}
+
+    // === Missions setup ===
+    // Simple static missions for demonstration. Each mission grants 20 coins on claim.
+    const MISSIONS = [
+      { id: 'm1', title: 'Sohbete 3 mesaj gönder', desc: 'Sohbete katkıda bulun', rewardCoins: 20 },
+      { id: 'm2', title: 'Profiline fotoğraf yükle', desc: 'Profilini özelleştir', rewardCoins: 20 },
+      { id: 'm3', title: 'Bir arkadaş davet et', desc: 'Arkadaşını davet et', rewardCoins: 20 }
+    ];
+
+    // Robust login: try doc id, username fields, and include hashedPassword candidate
+    async function loginUser(username, password) {
+      const raw = (username || "").trim();
+      if(!raw) throw new Error("Kullanıcı adı boş.");
+      const unameLower = raw.toLowerCase();
+      let doc = null;
+
+      // Try doc by id (raw and lowercase)
+      try {
+        let d = await db.collection("users").doc(raw).get();
+        if (d.exists) doc = d;
+        else {
+          d = await db.collection("users").doc(unameLower).get();
+          if (d.exists) doc = d;
+        }
+      } catch(e){ console.warn('doc lookup err', e); }
+
+      // Try query by common username fields if not found
+      const candidateFields = ['username','userName','user','usernameLower','email','name'];
+      if(!doc){
+        for(const f of candidateFields){
+          try{
+            const q = await db.collection("users").where(f,'==', raw).limit(1).get();
+            if(q && !q.empty){ doc = q.docs[0]; break; }
+            const q2 = await db.collection("users").where(f,'==', unameLower).limit(1).get();
+            if(q2 && !q2.empty){ doc = q2.docs[0]; break; }
+          }catch(e){ /* ignore */ }
+        }
+      }
+
+      // Fallback scan (limited)
+      if(!doc){
+        try{
+          const snap = await db.collection("users").limit(500).get();
+          snap.forEach(d=>{
+            if(doc) return;
+            const data = d.data() || {};
+            const checks = [d.id, data.username, data.userName, data.email, data.usernameLower, data.displayName, data.name];
+            for(const v of checks){
+              if(!v) continue;
+              if(String(v).toLowerCase() === unameLower){ doc = d; break; }
+            }
+          });
+        }catch(e){ console.warn('scan fallback failed', e); }
+      }
+
+      if(!doc) throw new Error("Kullanıcı bulunamadı");
+
+      const dat = doc.data() || {};
+      // find password field candidates (include hashedPassword as provided in your doc)
+      const passFields = ['hashedPassword','passwordHash','passHash','pwdHash','password_hash','password','pwHash','pass'];
+      let stored = null, usedField = null;
+      for(const f of passFields){
+        if(dat[f] !== undefined && dat[f] !== null){
+          stored = String(dat[f]).trim();
+          usedField = f;
+          break;
+        }
+      }
+
+      if(!stored) throw new Error("Bu kullanıcı için şifre tanımlı değil");
+
+      // stored might be hex SHA-256 -- detect
+      const isHex64 = /^[a-f0-9]{64}$/i.test(stored);
+      if(isHex64){
+        const inputHash = await sha256(password);
+        if(inputHash.toLowerCase() !== stored.toLowerCase()) throw new Error("Hatalı şifre");
+      }else{
+        // plaintext fallback (insecure)
+        if(password !== stored) throw new Error("Hatalı şifre");
+      }
+
+      // success — set globals
+      u = Object.assign({}, dat, { uid: doc.id, username: doc.id });
+      userDocRef = db.collection("users").doc(doc.id);
+      localStorage.setItem(LOGGED_KEY, doc.id);
+      return u;
+    }
+
+    async function autoRelogin() {
+      const getU = localStorage.getItem(LOGGED_KEY);
+      if (!getU) return;
+      try{
+        const doc = await db.collection("users").doc(getU).get();
+        if (doc.exists) {
+          u = doc.data(); u.username = getU;
+          userDocRef = db.collection("users").doc(getU);
+          await loadAndShowRetention();
+          byId("loginForm").style.display = "none";
+          byId("loggedArea").style.display = "block";
+          byId("logoutBtn").style.display = "inline-block";
+        }
+      }catch(e){
+        console.warn('autoRelogin failed', e);
+      }
+    }
+
+    byId("loginForm").onsubmit = async (e)=>{
+      e.preventDefault();
+      byId("loginError").textContent = "";
+      byId("loginBtn").disabled = true;
+      try {
+        await loginUser(byId("usernameInput").value, byId("passwordInput").value);
+        await loadAndShowRetention();
+        byId("loginForm").style.display = "none";
+        byId("loggedArea").style.display = "block";
+        byId("logoutBtn").style.display = "inline-block";
+      } catch(err){
+        byId("loginError").textContent = err.message || "Giriş başarısız";
+      }
+      byId("loginBtn").disabled = false;
+    };
+
+    byId("logoutBtn").onclick = () => {
+      localStorage.removeItem(LOGGED_KEY);
+      location.reload();
+    };
+
+    const todayKey = () => (new Date()).toISOString().slice(0,10);
+
+    async function refreshUserData() {
+      if(!userDocRef) return;
+      const snap = await userDocRef.get();
+      retentionData = snap.data() || {};
+      byId("userCoins").textContent = (retentionData.coins || 0).toLocaleString();
+      byId("userBalance").textContent = "$" + (retentionData.balance || 0);
+      byId("welcomeName").textContent = "@" + (retentionData.username || u.username);
+      byId("userName").innerHTML = coloredName(retentionData.displayName||retentionData.username||u.username, retentionData.premium?"#fbbf24":"#38bdf8");
+      byId("premiumLabel").style.display = retentionData.premium?"inline-block":"none";
+      // ensure missionsCompleted map exists
+      retentionData.missionsCompleted = retentionData.missionsCompleted || {};
+    }
+
+    async function loadAndShowRetention() {
+      await refreshUserData();
+      showDailyLoginBlock();
+      showMissionBlock();
+      showLevelXPBlock();
+      showHourlyEvent();
+      showRandomSurprise();
+      showStatsBlock();
+      renderProducts();
+    }
+
+    function calcDailyReward(streakDay){
+      let rew = 10 + Math.min(90, Math.floor(streakDay * 3 + Math.random()*10));
+      let xp = 25+10*Math.floor(Math.random()*streakDay/2);
+      return {coins:rew, xp:xp, desc:`+${rew} Coin & +${xp} XP`};
+    }
+
+    async function claimDailyReward(){
+      if(!userDocRef) return alert('Önce giriş yapın');
+      const last = retentionData.lastDailyClaim||"";
+      const today = todayKey();
+      if (last===today) return alert("Bugün zaten aldın!");
+      
+      let streak = Number(retentionData.streak||0);
+      const yesterday = (() => { let d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })();
+      
+      if (last===yesterday) streak += 1;
+      else if (last !== "" && retentionData.coins >= 30) {
+        if(confirm("Serin bozulmuş! 30 Coin karşılığında kurtarmak ister misin?")) {
+           streak += 1;
+           await userDocRef.update({coins: firebase.firestore.FieldValue.increment(-30)});
+        } else streak = 1;
+      } else streak = 1;
+
+      const reward = calcDailyReward(streak);
+      await userDocRef.update({
+        lastDailyClaim: today,
+        streak: streak,
+        coins: firebase.firestore.FieldValue.increment(reward.coins),
+        xp: firebase.firestore.FieldValue.increment(reward.xp),
+        premium: (streak % 7 === 0) ? true : (retentionData.premium || false)
+      });
+      await loadAndShowRetention();
+      alert("Tebrikler! " + reward.desc);
+    }
+
+    function showDailyLoginBlock(){
+      const streak = Number(retentionData.streak||0);
+      byId("streakDays").textContent = `${streak} GÜN`;
+      const today = todayKey();
+      byId("dailyRewardDesc").textContent = `Günlük ödülünüz hazır — Son alım: ${retentionData.lastDailyClaim || 'yok'}`;
+      byId("claimBtn").onclick = claimDailyReward;
+    }
+
+    // === Missions: render & claim (20 coins each) ===
+    function showMissionBlock(){
+      const container = byId("missionsList");
+      container.innerHTML = '';
+      const today = todayKey();
+      retentionData.missionsCompleted = retentionData.missionsCompleted || {};
+
+      MISSIONS.forEach(m=>{
+        const div = document.createElement('div');
+        div.className = 'mission';
+        const left = document.createElement('div');
+        left.innerHTML = `<strong>${m.title}</strong><div style="font-size:0.85rem; color:var(--text-dim)">${m.desc}</div>`;
+        const right = document.createElement('div');
+
+        const doneToday = retentionData.missionsCompleted && retentionData.missionsCompleted[m.id] === today;
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.style.minWidth = '120px';
+        btn.style.padding = '8px 12px';
+        btn.style.borderRadius = '8px';
+        if(doneToday){
+          btn.textContent = 'Alındı';
+          btn.disabled = true;
+          btn.style.background = 'linear-gradient(90deg,var(--accent-green),#34d399)';
+          btn.style.color = '#001';
+        } else {
+          btn.textContent = `Al (+${m.rewardCoins} coin)`;
+          btn.onclick = ()=> claimMission(m.id, m.rewardCoins);
+        }
+
+        right.appendChild(btn);
+        div.appendChild(left);
+        div.appendChild(right);
+        container.appendChild(div);
+      });
+    }
+
+    async function claimMission(missionId, rewardCoins = 20){
+      if(!userDocRef) { alert('Önce giriş yapın'); return; }
+      const today = todayKey();
+      // Refresh retentionData to be safe
+      await refreshUserData();
+      retentionData.missionsCompleted = retentionData.missionsCompleted || {};
+      if(retentionData.missionsCompleted[missionId] === today){
+        byId("missionClaimResp").textContent = "Bu görevi zaten bugün aldınız.";
+        return;
+      }
+      try{
+        // Mark mission as completed for today and add coins
+        const updateObj = {};
+        updateObj[`missionsCompleted.${missionId}`] = today;
+        updateObj['coins'] = firebase.firestore.FieldValue.increment(rewardCoins);
+        await userDocRef.update(updateObj);
+        await refreshUserData();
+        showMissionBlock();
+        byId("missionClaimResp").textContent = `Görev ödülü verildi: +${rewardCoins} coin`;
+      }catch(e){
+        console.error('claimMission error', e);
+        byId("missionClaimResp").textContent = 'Ödül verilirken hata oluştu.';
+      }
+    }
+
+    // === Level / XP UI (simple) ===
+    function showLevelXPBlock(){
+      const xp = Number(retentionData.xp || retentionData.XP || 0);
+      const level = Number(retentionData.level || 1);
+      const xpForNext = (level+1)*100;
+      byId("currentLevel").textContent = level;
+      byId("currentXp").textContent = xp;
+      byId("xpForNext").textContent = xpForNext;
+      const pct = Math.min(100, Math.round((xp / xpForNext) * 100));
+      byId("xpBarInner").style.width = pct + '%';
+    }
+
+    // placeholders for other UI pieces:
+    function showHourlyEvent(){ /* optional */ }
+    function showRandomSurprise(){ /* optional */ }
+    function showStatsBlock(){ /* optional */ }
+    function renderProducts(){
+      const wrap = byId("itemsContainer");
+      wrap.innerHTML = '';
+      PRODUCTS.forEach(p=>{
+        const card = document.createElement('div'); card.className='market-card';
+        card.innerHTML = `<div><h3>${escapeHtml(p.name)}</h3><div class="desc">${escapeHtml(p.desc)}</div></div>`;
+        const btn = document.createElement('button'); btn.className='btn-buy'; btn.textContent = p.type === 'balance_buy' ? `Satın Al ${p.price}${p.currency}` : `Satın Al ${p.price} coin`;
+        // dummy buy handler (not implemented)
+        btn.onclick = ()=> alert('Satın alma demo - gerçek ödeme sistemine bağlanın.');
+        card.appendChild(btn);
+        wrap.appendChild(card);
+      });
+    }
+
+    // init auto relogin
+    autoRelogin().catch(e=>console.warn(e));
+
+    // For dev: expose globals
+    window._market = { loginUser, claimMission, refreshUserData, retentionData };
+  </script>
+</body>
+</html>

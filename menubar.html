@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAME CENTER</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+            perspective: 1000px; /* Add perspective for the tree and santa */
+        }
+
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 1;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #00FF00; /* Para yeşili */
+            text-shadow: 0 0 10px #00FF00, 0 0 20px #228B22;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        a {
+            background-color: #ff0000;
+            color: #fff;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        a:hover {
+            background-color: #00ff00;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        /* Yılbaşı Ağacı Stilleri */
+        .tree {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d; /* Ensure children are rendered in 3D space */
+            transform: translate(-50%, -50%) rotateX(30deg) rotateY(0deg); /* Başlangıç dönüşü */
+            z-index: 0; /* Ağacı arka plana koy */
+            opacity: 0.7; /* Hafif şeffaf yap ki seçenekler ön planda olsun */
+            animation: rotateTree 20s linear infinite; /* 3D dönme animasyonu */
+            will-change: transform; /* Akıcılık için */
+        }
+
+        @keyframes rotateTree {
+            0% {
+                transform: translate(-50%, -50%) rotateX(30deg) rotateY(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotateX(30deg) rotateY(360deg);
+            }
+        }
+
+        .star {
+            position: absolute;
+            font-size: 12px;
+            opacity: 0;
+            animation: twinkle 1s infinite alternate, appear 5s forwards;
+            will-change: opacity; /* Akıcılık için */
+        }
+
+        @keyframes twinkle {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+
+        @keyframes appear {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 3D Hediye Kutusu Stilleri */
+        .gift {
+            position: absolute;
+            bottom: -50px; /* Ağacın altına yerleştir */
+            width: 40px;
+            height: 40px;
+            transform-style: preserve-3d;
+            animation: rotateGift 5s linear infinite, bounce 2s infinite;
+            will-change: transform; /* Akıcılık için */
+        }
+
+        .gift-face {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #ff0000;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 10px #ffd700;
+            backface-visibility: visible;
+        }
+
+        .gift-front { transform: translateZ(20px); }
+        .gift-back { transform: translateZ(-20px) rotateY(180deg); }
+        .gift-left { transform: translateX(-20px) rotateY(-90deg); }
+        .gift-right { transform: translateX(20px) rotateY(90deg); }
+        .gift-top { transform: translateY(-20px) rotateX(90deg); background-color: #00ff00; }
+        .gift-bottom { transform: translateY(20px) rotateX(-90deg); }
+
+        @keyframes rotateGift {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Noel Baba Stili */
+        .santa {
+            position: absolute;
+            bottom: -100px;
+            left: -300px; /* Ağacın soluna yerleştir */
+            width: 300px;
+            height: 200px;
+            background: url('https://thumbs.dreamstime.com/b/figurine-santa-sitting-armchair-smiling-browsing-gifts-tablet-holding-coffee-mug-surrounded-colorful-presents-406265631.jpg') no-repeat center/cover; /* Yeni 3D oturan Noel Baba resmi */
+            transform-style: preserve-3d;
+            transform: rotateY(20deg) translateZ(-50px); /* 3D efekt */
+            animation: throwMoney 2s infinite;
+            will-change: transform; /* Akıcılık için */
+            opacity: 0.8;
+        }
+
+        @keyframes throwMoney {
+            0%, 100% { transform: rotateY(20deg) translateZ(-50px) translateY(0) rotate(0); }
+            50% { transform: rotateY(20deg) translateZ(-50px) translateY(-10px) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particleCanvas"></canvas>
+    <div class="tree" id="tree">
+        <div class="santa"></div> <!-- Noel Baba'yı ağacın yanına ekle -->
+    </div>
+    <div class="container">
+        <h1>PAİNDEX</h1>
+        <div class="options">
+            <a href="flappy.html">Seçenek 1: Flappy</a>
+            <a href="gt.html">Seçenek 2: Adam Asmaca</a>
+           <a href="cark.html" class="menu-link">
+  <i class="fa-solid fa-gift"></i> Yılbaşı Çarkı
+</a>
+            <a href="soon.html">Seçenek 4: Yeni Yıl Kutlaması (yakında) </a>
+            <a href="#">Seçenek 5: YAKINDA</a>
+                <a href="index.html">Ana MENÜ</a>
+        </div>
+    </div>
+
+    <script>
+        // Partikül canvas scripti (kar ve para için)
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: false }); // Optimizasyon
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const snowflakes = [];
+        const moneys = [];
+        const numSnowflakes = 150; // Sayıyı azaltarak akıcılığı artır
+        const numMoneys = 80; // Sayıyı azaltarak akıcılığı artır
+
+        class Particle {
+            constructor(isMoney = false) {
+                this.isMoney = isMoney;
+                this.reset();
+            }
+
+            reset(fromSanta = false) {
+                if (fromSanta) {
+                    this.x = canvas.width / 2 - 150 + Math.random() * 60; // Santa'nın konumundan (ağacın solunda)
+                    this.y = canvas.height / 2 + 50 + Math.random() * 20; // Santa'nın üstünden
+                } else {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * -canvas.height; // Üstten başla
+                }
+                this.radius = Math.random() * 3 + 1;
+                this.speed = this.radius * 0.3 + 0.5; // Yavaşlat
+                this.angle = Math.random() * Math.PI * 2;
+                this.amplitude = Math.random() * 15 + 5; // Azalt genlik
+                this.frequency = Math.random() * 0.01 + 0.005; // Azalt frekans
+                this.alpha = Math.random() * 0.5 + 0.5;
+                this.rotation = 0;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02; // Para için dönme
+            }
+
+            update() {
+                this.y += this.speed;
+                this.angle += this.frequency;
+                this.x += Math.sin(this.angle) * (this.amplitude / 10);
+                if (this.isMoney) {
+                    this.rotation += this.rotationSpeed;
+                }
+
+                if (this.y > canvas.height + 10 || this.x < -10 || this.x > canvas.width + 10) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                if (this.isMoney) {
+                    ctx.rotate(this.rotation);
+                }
+                ctx.globalAlpha = this.alpha;
+                if (this.isMoney) {
+                    ctx.fillStyle = '#00FF00';
+                    ctx.font = `${this.radius * 4}px Arial`;
+                    ctx.fillText('$', -this.radius * 2, this.radius * 2);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < numSnowflakes; i++) {
+            snowflakes.push(new Particle(false));
+        }
+
+        for (let i = 0; i < numMoneys; i++) {
+            moneys.push(new Particle(true));
+        }
+
+        let lastTime = 0;
+        const fps = 60; // Hedef FPS
+        const interval = 1000 / fps;
+
+        function animateParticles(timestamp) {
+            if (!timestamp) timestamp = 0;
+            const delta = timestamp - lastTime;
+
+            if (delta > interval) {
+                lastTime = timestamp - (delta % interval);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                snowflakes.forEach(snowflake => {
+                    snowflake.update();
+                    snowflake.draw();
+                });
+
+                moneys.forEach(money => {
+                    money.update();
+                    money.draw();
+                });
+            }
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Yılbaşı Ağacı Scripti (optimizasyon için katmanları azalt)
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function createTree() {
+            const tree = document.getElementById('tree');
+            const layers = 8; // Katmanları azalt
+            let delay = 0;
+
+            for (let i = 0; i < layers; i++) {
+                const layerSize = (layers - i) * 5; // Yıldız sayısını yarıya indir
+                const radius = (layers - i) * 15;
+                for (let j = 0; j < layerSize; j++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    const angle = (j / layerSize) * 2 * Math.PI;
+                    const x = radius * Math.cos(angle);
+                    const z = radius * Math.sin(angle);
+                    const y = i * 20;
+                    star.innerText = '*';
+                    star.style.color = getRandomColor();
+                    star.style.left = `${x}px`;
+                    star.style.bottom = `${y}px`;
+                    star.style.transform = `translateZ(${z}px)`;
+                    star.style.animationDelay = `${delay}s, ${delay + 1}s`;
+                    star.style.fontSize = `${12 + i}px`;
+                    tree.appendChild(star);
+
+                    delay += 0.1; // Delay'i artırarak yükü azalt
+                }
+            }
+
+            // Add Top Star
+            const topStar = document.createElement('div');
+            topStar.className = 'star';
+            topStar.innerText = '*';
+            topStar.style.color = '#FFD700';
+            topStar.style.fontSize = '42px';
+            topStar.style.left = '-2px';
+            topStar.style.bottom = `${layers * 20}px`;
+            topStar.style.transform = `translateZ(0px)`;
+            topStar.style.animationDelay = `${delay}s, ${delay + 1}s`;
+            tree.appendChild(topStar);
+
+            // 3D Hediye Kutuları Ekle
+            const numGifts = 5;
+            for (let k = 0; k < numGifts; k++) {
+                const gift = document.createElement('div');
+                gift.className = 'gift';
+                const giftX = (Math.random() - 0.5) * 200; // Rastgele x pozisyonu
+                const giftSize = Math.random() * 20 + 30; // Rastgele boyut
+                gift.style.left = `${giftX}px`;
+                gift.style.width = `${giftSize}px`;
+                gift.style.height = `${giftSize}px`;
+
+                // 3D yüzler ekle
+                const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+                faces.forEach(face => {
+                    const faceDiv = document.createElement('div');
+                    faceDiv.className = `gift-face gift-${face}`;
+                    gift.appendChild(faceDiv);
+                });
+
+                gift.style.animationDelay = `${k * 0.5}s`;
+                tree.appendChild(gift);
+            }
+        }
+
+        createTree();
+
+        // Noel Baba para atma (canvas'a entegre)
+        function santaThrowMoney() {
+            const money = new Particle(true);
+            money.reset(true); // Santa'dan başla
+            moneys.push(money);
+
+            // Fazla para birikmemesi için eskiyi kaldır
+            if (moneys.length > numMoneys + 50) {
+                moneys.shift();
+            }
+        }
+
+        setInterval(santaThrowMoney, 400); // Daha az sıklıkta çağır
+    </script>
+</body>
+</html>

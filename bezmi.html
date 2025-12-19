@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lilemir — 3D E-Ticaret (Demo)</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- model-viewer for 3D product previews -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <!-- Firebase SDKs will be loaded as modules in JS -->
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo-3d" aria-hidden="true"><div class="logo-face"></div></div>
+      <h1>Lilemir</h1>
+    </div>
+
+    <div class="search-wrap">
+      <input id="search" placeholder="Ürün ara — örn: tişört, kask..." />
+    </div>
+
+    <nav>
+      <button id="tab-shop" class="tab-btn active">Mağaza</button>
+      <button id="tab-orders" class="tab-btn">Siparişlerim</button>
+      <button id="tab-admin" class="tab-btn">Admin</button>
+      <button id="auth-btn" class="btn-ghost">Giriş / Kayıt</button>
+      <a id="cart-link" href="#" class="cart">Sepet (<span id="cart-count">0</span>)</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- SHOP -->
+    <section id="view-shop" class="view active">
+      <section class="hero">
+        <div class="hero-3d">
+          <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+                        alt="Örnek 3D model"
+                        camera-controls ar auto-rotate exposure="1"
+                        shadow-intensity="1" style="width:100%;height:100%"></model-viewer>
+        </div>
+        <div class="hero-copy">
+          <h2>3D Tasarımlı Ürün Vitrini</h2>
+          <p>Yüksek kaliteli tasarım, 3D ürün görünümleri ve güçlü admin panel — demo sürüm.</p>
+        </div>
+      </section>
+
+      <section>
+        <h3>Ürünler</h3>
+        <div id="products" class="product-grid"></div>
+      </section>
+    </section>
+
+    <!-- ORDERS (YILBAŞI TEMALI) -->
+    <section id="view-orders" class="view">
+      <div class="newyear-hero">
+        <h2>🎄 Siparişlerim — Yeni Yıl</h2>
+        <p>Mutlu yıllar! Siparişlerinizi bu temalı sayfada görüntüleyebilirsiniz.</p>
+      </div>
+
+      <section>
+        <h3>Geçmiş Siparişler</h3>
+        <div id="my-orders" class="orders-list"></div>
+      </section>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="view-admin" class="view">
+      <h2>Admin Panel</h2>
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h4>Yeni Ürün Ekle</h4>
+          <form id="product-form">
+            <label>Başlık<input id="p-title" required /></label>
+            <label>Açıklama<textarea id="p-desc" rows="3"></textarea></label>
+            <label>Fiyat (TL)<input id="p-price" type="number" min="0" step="0.01" required /></label>
+            <label>Bedenleri (virgülle ayır)</label>
+            <input id="p-sizes" placeholder="S,M,L,XL" />
+            <label>3 Fotoğraf (sırayla):</label>
+            <input id="p-photo1" type="file" accept="image/*" />
+            <input id="p-photo2" type="file" accept="image/*" />
+            <input id="p-photo3" type="file" accept="image/*" />
+            <label>GLB/GLTF model (isteğe bağlı)</label>
+            <input id="p-model" type="file" accept=".glb,.gltf,model/*" />
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button type="submit" class="btn-primary">Ürünü Kaydet</button>
+              <button type="button" id="btn-clear" class="btn-ghost">Temizle</button>
+            </div>
+            <div id="p-msg" class="messages"></div>
+          </form>
+        </div>
+
+        <div class="admin-card">
+          <h4>Siparişleri Görüntüle</h4>
+          <div id="admin-orders" class="orders-list"></div>
+          <div style="margin-top:10px">
+            <button id="send-notif" class="btn-primary">Tüm Kullanıcılara Bildirim Gönder</button>
+            <div class="small" style="margin-top:6px">Bildirimler için güvenli sunucu (Cloud Function) kurun. Aşağıdaki örnek kodu README'de bulabilirsiniz.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Product detail modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button id="modal-close" class="modal-close">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>© Lilemir Demo — 3D e-ticaret arayüzü</p>
+  </footer>
+
+  <!-- Firebase + App -->
+  <script type="module" src="js/firebase-init.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

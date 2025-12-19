@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>🎅 Noel Kasabası: Efsanevi Klan & Ödül Sistemi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #04120f; color: #f1f5f9; overflow-x: hidden; }
+    .noel-font { font-family: 'Mountains of Christmas', cursive; }
+    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .snowflake { color: #fff; position: fixed; top: -10%; z-index: 1000; animation: fall linear infinite; pointer-events: none; }
+    @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+    .chat-active { transform: translateY(0); opacity: 1; pointer-events: all; }
+    .chat-hidden { transform: translateY(100%) scale(0.9); opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<script>
+  setInterval(() => {
+    const s = document.createElement('div');
+    s.classList.add('snowflake'); s.innerHTML = '❄';
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.fontSize = Math.random() * 10 + 10 + 'px';
+    s.style.animationDuration = Math.random() * 3 + 3 + 's';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 6000);
+  }, 150);
+</script>
+
+<div id="loginModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#04120f]/95 backdrop-blur-lg">
+  <div class="glass p-12 rounded-[3.5rem] w-full max-w-md text-center border-red-500/20 shadow-2xl">
+    <div class="text-7xl mb-6">🎄</div>
+    <h2 class="noel-font text-5xl text-red-500 mb-8 font-bold">Noel Kasabası</h2>
+    <input type="text" id="logUser" placeholder="Kullanıcı Adınızı Yazın" class="w-full mb-4 p-5 rounded-2xl bg-white/5 border border-white/10 outline-none focus:border-red-500 transition-all text-center text-lg" />
+    <button onclick="login()" class="w-full bg-red-600 hover:bg-red-500 py-5 rounded-2xl font-black shadow-lg shadow-red-600/20 transition-all active:scale-95 uppercase tracking-widest">Kasabaya Giriş Yap</button>
+  </div>
+</div>
+
+<main id="app" class="max-w-6xl mx-auto p-6 space-y-8 py-12" style="display:none;">
+  <header class="glass p-8 rounded-[3rem] flex items-center justify-between border-green-500/20 shadow-xl">
+    <div class="flex items-center gap-6">
+      <div class="w-16 h-16 bg-red-600/20 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🎅</div>
+      <div>
+        <h1 class="noel-font text-4xl text-white font-bold leading-none mb-1">Selam, <span id="uName" class="text-red-500">...</span></h1>
+        <div class="flex gap-4">
+           <span class="text-xs font-bold text-green-500 uppercase tracking-widest bg-green-500/10 px-3 py-1 rounded-full"><i class="fa fa-coins mr-1"></i><span id="uCoins">0</span> Coin</span>
+           <span class="text-xs font-bold text-blue-500 uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full"><i class="fa fa-star mr-1"></i><span id="uLevel">Lv. 1</span></span>
+        </div>
+      </div>
+    </div>
+    <button onclick="location.reload()" class="bg-white/5 w-12 h-12 rounded-2xl hover:bg-red-500/20 transition-all flex items-center justify-center border border-white/10"><i class="fa fa-power-off text-red-500"></i></button>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="space-y-6">
+      <section class="glass p-8 rounded-[2.5rem] border-white/5">
+        <h3 class="noel-font text-3xl text-red-500 mb-6 flex items-center gap-2"><i class="fa fa-search"></i> Klan Keşfet</h3>
+        <div class="space-y-4">
+          <input type="text" id="searchClanInput" placeholder="Klan İsmi..." class="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-red-500 transition" />
+          <div class="flex gap-2">
+            <button onclick="joinClan()" class="flex-1 bg-green-600 hover:bg-green-500 p-4 rounded-xl font-black text-sm transition-all active:scale-95">KATIL</button>
+            <button onclick="createClan()" class="flex-1 bg-white/5 hover:bg-white/10 p-4 rounded-xl font-black text-sm transition-all border border-white/10">KUR</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass p-8 rounded-[2.5rem] border-white/5">
+        <h3 class="noel-font text-3xl text-green-500 mb-6 flex items-center gap-2"><i class="fa fa-users"></i> Klan Dostların</h3>
+        <div id="memberList" class="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scroll">
+          <p class="text-xs text-slate-500 text-center italic py-4">Henüz bir klanda değilsin...</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="lg:col-span-2 space-y-6">
+      <section class="glass p-10 rounded-[3.5rem] bg-gradient-to-br from-red-900/10 to-green-900/10 border-white/10 relative overflow-hidden">
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h2 id="clanNameDisplay" class="noel-font text-6xl text-white font-bold italic mb-2 tracking-tight text-shadow-lg">KLAN YOK</h2>
+            <div id="clanRoleDisplay" class="bg-yellow-500/20 text-yellow-500 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest inline-block border border-yellow-500/20">BOŞTA</div>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-slate-500 font-bold uppercase mb-1">Klan Tecrübesi</p>
+            <p id="clanLv" class="text-3xl font-black text-white italic">Lv. 0</p>
+          </div>
+        </div>
+        
+        <div class="mt-10 relative">
+          <div class="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2">
+            <span>İlerleme</span>
+            <span id="xpText">0 / 0 XP</span>
+          </div>
+          <div class="w-full bg-white/5 rounded-full h-4 border border-white/10 overflow-hidden p-1 shadow-inner">
+            <div id="clanXpBar" class="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div id="rewardSection" class="mt-8 hidden">
+            <div class="bg-red-600/10 border border-red-600/30 p-6 rounded-3xl flex items-center justify-between">
+                <div>
+                    <h4 class="font-black text-white">🎁 KLAN HEDİYESİ HAZIR!</h4>
+                    <p class="text-xs text-slate-400">Kurucu ödülü aldığında herkese 500 Coin dağıtılır.</p>
+                </div>
+                <button id="claimBtn" onclick="claimClanReward()" class="bg-red-600 hover:bg-red-500 text-white font-black px-6 py-3 rounded-2xl shadow-lg animate-bounce">ÖDÜLÜ AL</button>
+            </div>
+        </div>
+        
+        <div class="absolute -bottom-10 -right-10 text-9xl opacity-10 rotate-12">🎁</div>
+      </section>
+
+      <div id="market" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>
+    </div>
+  </div>
+</main>
+
+<div id="chatContainer" class="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-6">
+  <div id="chatWin" class="glass w-80 md:w-[400px] h-[550px] rounded-[3rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden chat-hidden border-red-500/20">
+    <div class="p-6 bg-red-600/10 border-b border-white/10 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+        <span class="noel-font text-3xl text-white">Klan Sohbeti</span>
+      </div>
+      <button onclick="toggleChat()" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition"><i class="fa fa-times text-white/50"></i></button>
+    </div>
+    <div id="msgs" class="flex-1 overflow-y-auto p-6 space-y-4 text-sm custom-scroll">
+      </div>
+    <div class="p-5 bg-black/30 border-t border-white/5 flex gap-3">
+      <input type="text" id="mInp" onkeypress="if(event.key==='Enter') sendMsg()" placeholder="Mesajını yaz..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 outline-none focus:border-red-500 transition text-white" />
+      <button onclick="sendMsg()" class="bg-red-600 w-14 h-12 rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 transition-all active:scale-95"><i class="fa fa-paper-plane text-white"></i></button>
+    </div>
+  </div>
+  <button onclick="toggleChat()" class="bg-red-600 w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-[0_15px_35px_rgba(220,38,38,0.4)] hover:scale-110 transition-all active:scale-90 relative">
+    <i class="fa fa-comments text-3xl text-white"></i>
+    <div class="absolute -top-2 -right-2 bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded-lg">LIVE</div>
+  </button>
+</div>
+
+<script>
+// FIREBASE YAPILANDIRMASI
+const firebaseConfig = {
+  apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+  authDomain: "lilemir-new.firebaseapp.com",
+  projectId: "lilemir-new",
+  storageBucket: "lilemir-new.appspot.com",
+  messagingSenderId: "339863121380",
+  appId: "1:339863121380:web:123195552e821b085e6bf1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let me = null, myClan = null, unsubClan = null, unsubChat = null;
+
+async function login() {
+  const name = document.getElementById('logUser').value.trim().toLowerCase();
+  if(!name) return alert("🎅 Lütfen ismini yaz!");
+  const ref = db.collection('users').doc(name);
+  const snap = await ref.get();
+  
+  if(!snap.exists) {
+    // Yeni Üye Noel Paketi
+    await ref.set({ username: name, coins: 1000, xp: 0, clan: "" });
+  }
+  
+  me = name;
+  document.getElementById('loginModal').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('uName').textContent = name;
+  
+  syncUser();
+  renderMarket();
+}
+
+function syncUser() {
+  db.collection('users').doc(me).onSnapshot(doc => {
+    const data = doc.data();
+    if(!data) return;
+    document.getElementById('uCoins').textContent = (data.coins || 0).toLocaleString();
+    document.getElementById('uLevel').textContent = "Lv. " + (Math.floor((data.xp || 0) / 1000) + 1);
+    
+    if(data.clan && data.clan !== myClan) {
+      myClan = data.clan;
+      syncClan(data.clan);
+    }
+  });
+}
+
+function syncClan(clanName) {
+  if(unsubClan) unsubClan();
+  unsubClan = db.collection('clans').doc(clanName).onSnapshot(doc => {
+    const data = doc.data();
+    if(!data) return;
+    document.getElementById('clanNameDisplay').textContent = data.name.toUpperCase();
+    document.getElementById('clanLv').textContent = "Lv. " + data.level;
+    const targetXp = data.level * 2000;
+    document.getElementById('xpText').textContent = `${data.xp} / ${targetXp} XP`;
+    document.getElementById('clanXpBar').style.width = Math.min(100, (data.xp / targetXp * 100)) + "%";
+    
+    // RÜTBE KONTROLÜ
+    let role = "Üye";
+    if(data.leader === me) role = "Kurucu";
+    else if(data.admins?.includes(me)) role = "Admin";
+    else if(data.seniors?.includes(me)) role = "Kıdemli";
+    document.getElementById('clanRoleDisplay').textContent = "RÜTBEN: " + role;
+
+    // ÖDÜL BUTONU GÖRÜNÜRLÜĞÜ (SADECE KURUCU ALABİLİR)
+    document.getElementById('rewardSection').classList.toggle('hidden', !(data.xp >= targetXp && !data.rewardClaimed));
+    if(role !== "Kurucu") document.getElementById('claimBtn').style.display = 'none';
+
+    // ÜYE LİSTESİ VE RÜTBE ATAMA
+    let html = '';
+    data.members.forEach(m => {
+      let mRole = "Üye";
+      let icon = "❄️";
+      if(m === data.leader) { mRole = "Kurucu"; icon = "👑"; }
+      else if(data.admins?.includes(m)) { mRole = "Admin"; icon = "🛡️"; }
+      else if(data.seniors?.includes(m)) { mRole = "Kıdemli"; icon = "🎖️"; }
+
+      html += `
+        <div class="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between group hover:bg-white/10 transition-all">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">${icon}</span>
+            <div>
+              <p class="text-sm font-bold text-white">${m}</p>
+              <p class="text-[9px] uppercase font-black text-red-500 tracking-tighter">${mRole}</p>
+            </div>
+          </div>
+          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+            ${(role === "Kurucu" || role === "Admin") && m !== me ? `
+              <button onclick="setRank('${m}', 'admins')" class="text-[8px] bg-blue-600 p-1 px-2 rounded-lg font-bold">ADM</button>
+              <button onclick="setRank('${m}', 'seniors')" class="text-[8px] bg-green-600 p-1 px-2 rounded-lg font-bold">KID</button>
+            ` : ''}
+          </div>
+        </div>`;
+    });
+    document.getElementById('memberList').innerHTML = html;
+  });
+
+  // KLAN ÖZEL CHAT SYNC
+  if(unsubChat) unsubChat();
+  unsubChat = db.collection('clans').doc(clanName).collection('chat').orderBy('t','asc').limitToLast(50).onSnapshot(snap => {
+    let h = '';
+    snap.forEach(d => {
+      const msg = d.data();
+      const isMe = msg.user === me;
+      h += `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in">
+              <div class="${isMe ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'bg-white/10 text-slate-200'} p-3 px-4 rounded-2xl max-w-[85%]">
+                ${!isMe ? `<p class="text-[9px] font-black uppercase text-red-400 mb-1">${msg.user}</p>` : ''}
+                <p class="text-sm leading-relaxed">${msg.text}</p>
+              </div>
+            </div>`;
+    });
+    const box = document.getElementById('msgs');
+    box.innerHTML = h; box.scrollTop = box.scrollHeight;
+  });
+}
+
+// COIN ÖDÜLÜNÜ HESABA YANSITAN FONKSİYON
+async function claimClanReward() {
+    if(!myClan) return;
+    const ref = db.collection('clans').doc(myClan);
+    const snap = await ref.get();
+    const data = snap.data();
+    
+    if(data.leader !== me) return alert("Sadece Kurucu ödülü dağıtabilir!");
+
+    // 1. Klan ödülünü alındı işaretle ve XP'yi sıfırla/seviye atlat
+    await ref.update({
+        rewardClaimed: true,
+        level: firebase.firestore.FieldValue.increment(1),
+        xp: 0
+    });
+
+    // 2. Ödülü TÜM üyelere dağıt (Kod örneği olarak şu anki kullanıcıya yansıtıyoruz)
+    // Gerçek sistemde bir "Cloud Function" tüm üyelere döner, burada aktif kullanıcıya yansıtıyoruz:
+    await db.collection('users').doc(me).update({
+        coins: firebase.firestore.FieldValue.increment(500),
+        xp: firebase.firestore.FieldValue.increment(300)
+    });
+
+    alert("🎁 TEBRİKLER! Klan ödülü dağıtıldı. Hesabına 500 Coin ve 300 XP eklendi!");
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('mInp');
+  if(!inp.value.trim() || !myClan) return;
+  await db.collection('clans').doc(myClan).collection('chat').add({
+    user: me, text: inp.value, t: Date.now()
+  });
+  // Mesaj attıkça klana 10 XP kazandır (Ödüle yaklaştırır)
+  await db.collection('clans').doc(myClan).update({ 
+      xp: firebase.firestore.FieldValue.increment(10),
+      rewardClaimed: false // Yeni seviye için ödülü tekrar aç
+  });
+  inp.value = "";
+}
+
+async function createClan() {
+  const name = document.getElementById('searchClanInput').value.trim().toLowerCase();
+  if(name.length < 3) return alert("🎅 Klan ismi en az 3 harf olmalı!");
+  const ref = db.collection('clans').doc(name);
+  if((await ref.get()).exists) return alert("Bu klan zaten var!");
+  
+  await ref.set({
+    name: name, leader: me, members: [me], admins: [], seniors: [], level: 1, xp: 0, rewardClaimed: false
+  });
+  await db.collection('users').doc(me).update({ clan: name });
+  alert("🎁 Klan Başarıyla Kuruldu!");
+}
+
+async function joinClan() {
+  const name = document.getElementById('searchClanInput').value.trim().toLowerCase();
+  const ref = db.collection('clans').doc(name);
+  if(!(await ref.get()).exists) return alert("🎅 Böyle bir klan bulamadım!");
+  
+  await ref.update({ members: firebase.firestore.FieldValue.arrayUnion(me) });
+  await db.collection('users').doc(me).update({ clan: name });
+}
+
+async function setRank(target, field) {
+  if(!myClan) return;
+  await db.collection('clans').doc(myClan).update({
+    [field]: firebase.firestore.FieldValue.arrayUnion(target)
+  });
+  alert("🎖️ Rütbe başarıyla verildi!");
+}
+
+function renderMarket() {
+  const items = [
+    { id:'p1', name:'Noel Kızağı', p:500, i:'🛷' },
+    { id:'p2', name:'Buzdan Kılıç', p:1500, i:'🗡️' }
+  ];
+  let h = '';
+  items.forEach(x => {
+    h += `
+    <div class="glass p-6 rounded-3xl flex items-center justify-between border-white/5 hover:border-red-500/30 transition-all group">
+      <div class="flex items-center gap-4">
+        <span class="text-4xl group-hover:scale-110 transition-transform">${x.i}</span>
+        <div><h4 class="font-bold text-white">${x.name}</h4><p class="text-xs text-yellow-500 font-black">${x.p} Coin</p></div>
+      </div>
+      <button onclick="buy('${x.id}', ${x.p})" class="bg-white/5 hover:bg-red-600 px-6 py-2 rounded-xl text-xs font-black transition-all">AL</button>
+    </div>`;
+  });
+  document.getElementById('market').innerHTML = h;
+}
+
+window.buy = async (id, price) => {
+    const ref = db.collection('users').doc(me);
+    const snap = await ref.get();
+    if(snap.data().coins < price) return alert("🎅 Yeterli Coinin yok!");
+    await ref.update({ coins: firebase.firestore.FieldValue.increment(-price) });
+    alert("🎁 Eşya Noel çuvalına eklendi!");
+}
+
+function toggleChat() {
+  document.getElementById('chatWin').classList.toggle('chat-hidden');
+  document.getElementById('chatWin').classList.toggle('chat-active');
+}
+</script>
+</body>
+</html>

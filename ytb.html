@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Video Arama</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #0f0f0f;
+        color: #fff;
+    }
+
+    header {
+        padding: 20px;
+        text-align: center;
+        background: #ff0000;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .search-box {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        gap: 10px;
+    }
+
+    input {
+        width: 300px;
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+    }
+
+    button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #ff0000;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button:hover {
+        opacity: 0.9;
+    }
+
+    .videos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .video-card {
+        background: #1f1f1f;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .video-card:hover {
+        transform: scale(1.03);
+    }
+
+    .video-card img {
+        width: 100%;
+        display: block;
+    }
+
+    .video-info {
+        padding: 10px;
+    }
+
+    .video-title {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .channel {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+
+    .player {
+        padding: 20px;
+        display: none;
+        justify-content: center;
+    }
+
+    iframe {
+        width: 100%;
+        max-width: 720px;
+        height: 405px;
+        border-radius: 12px;
+    }
+</style>
+</head>
+<body>
+
+<header>YouTube Video Arama</header>
+
+<div class="search-box">
+    <input type="text" id="query" placeholder="Video ara...">
+    <button onclick="searchVideos()">Ara</button>
+</div>
+
+<div class="player" id="player"></div>
+
+<div class="videos" id="videos"></div>
+
+<script>
+    // 🔑 BURAYA KENDİ API KEY'İNİ GİR
+    const API_KEY = "AIzaSyCyX42rBuWv6xyUp8w-3pRtnkaBu-ZTTUA";
+
+    function searchVideos() {
+        const query = document.getElementById("query").value;
+        if (!query) return;
+
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${encodeURIComponent(query)}&key=AIzaSyCyX42rBuWv6xyUp8w-3pRtnkaBu-ZTTUA`)
+            .then(res => res.json())
+            .then(data => {
+                const videos = document.getElementById("videos");
+                videos.innerHTML = "";
+
+                data.items.forEach(item => {
+                    const videoId = item.id.videoId;
+
+                    const card = document.createElement("div");
+                    card.className = "video-card";
+                    card.innerHTML = `
+                        <img src="${item.snippet.thumbnails.medium.url}">
+                        <div class="video-info">
+                            <div class="video-title">${item.snippet.title}</div>
+                            <div class="channel">${item.snippet.channelTitle}</div>
+                        </div>
+                    `;
+
+                    card.onclick = () => playVideo(videoId);
+                    videos.appendChild(card);
+                });
+            })
+            .catch(err => alert("API hatası veya yanlış key"));
+    }
+
+    function playVideo(videoId) {
+        const player = document.getElementById("player");
+        player.style.display = "flex";
+        player.innerHTML = `
+            <iframe src="https://www.youtube.com/embed/${videoId}" 
+            allowfullscreen></iframe>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+</script>
+
+</body>
+</html>

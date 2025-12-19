@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Duyurular</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Yeni Renk Paleti */
+      --bg: #071122; /* Koyu Lacivert Arka Plan */
+      --card-bg: rgba(14, 34, 51, 0.85); /* Koyu Yarı Saydam Kartlar */
+      --card-border: rgba(230, 240, 255, 0.1); /* Kırık Beyaz Kenarlık */
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      
+      /* Yılbaşı ve Vurgu Renkleri */
+      --accent: #E63946; /* Canlı Yılbaşı Kırmızısı */
+      --gold: #FFD700;   /* Altın Sarısı (Detaylar için) */
+      
+      /* Metin Renkleri */
+      --text-main: #e6f0ff; /* Kırık Beyaz */
+      --text-muted: rgba(230, 240, 255, 0.7); /* Soluk Kırık Beyaz */
+      
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, #030a13 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Kar Yağışı Efekti (Hafif ve Optimize) */
+    .snow-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+    .snowflake {
+      position: absolute;
+      top: -10px;
+      background: rgba(255, 255, 255, 0.8); /* Kırık Beyaz Kar Taneleri */
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      to { transform: translateY(105vh); }
+    }
+
+    .wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Header Tasarımı */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .brand h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 800;
+      margin: 0;
+      /* Kırmızı ve Altın Degrade Başlık */
+      background: -webkit-linear-gradient(45deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .brand .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Kontroller */
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .pill {
+      background: rgba(230, 240, 255, 0.05);
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+    .btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: var(--text-main);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .btn:hover { background: rgba(230, 240, 255, 0.05); }
+    .btn.primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+    }
+    .btn.primary:hover { background: #d32f2f; }
+
+    /* Sticky Alanı */
+    .sticky-area {
+      background: rgba(230, 57, 70, 0.05); /* Çok hafif kırmızı tonlu koyu arka plan */
+      border: 1px solid rgba(230, 57, 70, 0.2);
+      border-left: 4px solid var(--accent);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Süsleme: Sticky arkasına hafif çam ağacı ikonu */
+    .sticky-area::after {
+      content: '🎄';
+      position: absolute;
+      right: -10px;
+      bottom: -15px;
+      font-size: 5rem;
+      opacity: 0.05;
+      filter: grayscale(1) brightness(2); /* Koyu temada daha belirgin olması için */
+      pointer-events: none;
+    }
+    .sticky-badge {
+      background: var(--accent);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Dönen Kart (Rotator) */
+    .rotate-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      position: relative;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+    /* İlerleme Çubuğu */
+    .progress-bar-bg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.05);
+    }
+    #progressFill {
+      height: 100%;
+      width: 0%;
+      /* Kırmızıdan Altına Degrade */
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      transition: width 0.1s linear;
+    }
+
+    .announce-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .announce-msg {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      opacity: 0.8;
+      margin-top: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .meta::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+    /* Liste */
+    .announce-list {
+      margin-top: 40px;
+    }
+    .list-header {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .announce-item {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+      transition: transform 0.2s;
+    }
+    .announce-item:hover { transform: translateX(4px); border-color: rgba(230, 240, 255, 0.2); }
+    
+    .announce-item .left strong { display: block; font-size: 1.05rem; margin-bottom: 4px; color: var(--text-main); }
+    .announce-item .left .small { font-size: 0.95rem; color: var(--text-muted); }
+
+    /* Footer */
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 20px;
+    }
+
+    /* Rotator Animasyonları */
+    .rot-inner { transition: opacity 0.4s ease, transform 0.4s ease; }
+    .rot-inner.hidden { opacity: 0; transform: translateY(10px); }
+
+    /* Overlay / Modal */
+    .fsm-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(3, 10, 19, 0.9); /* Daha koyu arka plan */
+      backdrop-filter: blur(8px);
+      display: none; justify-content: center; align-items: center; padding: 20px;
+    }
+    .fsm-overlay.show { display: flex; }
+    .fsm-box {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid var(--card-border);
+    }
+    .fsm-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
+    .fsm-btn { background: var(--accent); color: white; border:none; padding:12px 24px; border-radius:12px; cursor:pointer; font-weight:600; margin-top:20px; }
+    .fsm-btn:hover { background: #d32f2f; }
+
+    /* Responsive / Mobil Ayarlar */
+    @media (max-width: 768px) {
+      .wrap { padding: 15px; }
+      header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .controls { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+      .controls .btn, .controls .pill { flex: 1; text-align: center; justify-content: center; display: flex; align-items: center; white-space: nowrap; }
+      .announce-item { flex-direction: column; gap: 10px; }
+      .announce-item .right { width: 100%; display: flex; justify-content: flex-end; }
+      .sticky-area { flex-direction: column; align-items: flex-start; }
+      .announce-title { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="snow-container" id="snowContainer"></div>
+
+  <div class="wrap" role="main">
+    <header>
+      <div class="brand">
+        <h1>Duyurular</h1>
+        <div class="subtitle">
+          <span>❄️</span> Bildirim Merkezi
+        </div>
+      </div>
+      <div class="controls" aria-hidden="false">
+        <div class="pill" id="countBadge">Yükleniyor...</div>
+        <button class="btn" id="pauseBtn" aria-pressed="false">Duraklat</button>
+        <button class="btn primary" id="refreshBtn">Yenile</button>
+      </div>
+    </header>
+
+    <div id="stickyArea" class="sticky-area" aria-live="polite" aria-atomic="true" style="display:none">
+      <div class="sticky-badge">ÖNEMLİ</div>
+      <div>
+        <div id="stickyTitle" class="announce-title" style="font-size:1.3rem"></div>
+        <div id="stickyMsg" class="announce-msg"></div>
+        <div id="stickyMeta" class="meta"></div>
+      </div>
+    </div>
+
+    <div class="rotate-card" role="region" aria-label="Dönen duyurular">
+      <div class="rotator" id="rotator">
+        <div class="rot-inner" id="rotInner">
+          <div id="rotTitle" class="announce-title">Yükleniyor...</div>
+          <div id="rotMsg" class="announce-msg"></div>
+          <div id="rotMeta" class="meta"></div>
+        </div>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="announce-list" id="announceList" aria-live="polite" aria-atomic="true">
+      <strong class="list-header">Geçmiş Duyurular</strong>
+      <div id="announceListInner"></div>
+    </div>
+
+    <footer>
+      <div>Sistem gerçek zamanlı güncellenir. <span style="color:var(--accent)">Mutlu Yıllar! 🎄</span></div>
+      <div style="margin-top:8px"><small>Döngü süresi: <span id="cycleSec">6</span>sn</small></div>
+    </footer>
+  </div>
+
+  <div class="fsm-overlay" id="fsmOverlay" aria-hidden="true" role="dialog" aria-live="assertive">
+    <div class="fsm-box" role="document">
+      <div class="fsm-title" id="fsmTitle">Sistem Bildirimi</div>
+      <p id="fsmMessage" style="margin-top:12px;color:var(--text-muted);font-size:1.1rem"></p>
+      <div style="margin-top:16px">
+        <button class="fsm-btn" id="fsmDismiss">Anlaşıldı</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Kar Yağışı Scripti (Hafif ve Performanslı)
+    (function(){
+      const container = document.getElementById('snowContainer');
+      const count = 30; // Kar tanesi sayısı, performansı etkilememesi için düşük tutuldu
+      for(let i=0; i<count; i++){
+        const div = document.createElement('div');
+        div.classList.add('snowflake');
+        div.style.left = Math.random() * 100 + 'vw';
+        div.style.animationDuration = (Math.random() * 3 + 4) + 's'; // 4-7sn arası hız
+        div.style.opacity = Math.random() * 0.7 + 0.3; // Daha belirgin opaklık
+        div.style.width = div.style.height = (Math.random() * 4 + 3) + 'px'; // Biraz daha küçük taneler
+        div.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(div);
+      }
+    })();
+
+    // Firebase Ayarları (Dokunulmadı)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf1",
+      measurementId: "G-CC3033Q4EM"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Utilities
+    function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"'`=\/]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','=':'&#x3D;','`':'&#x60;' }[c])); }
+    function fmtDate(ts){ try{ return new Date(Number(ts)).toLocaleString('tr-TR', { month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' }); }catch(e){ return ''; } }
+
+    // Elements
+    const stickyArea = document.getElementById('stickyArea');
+    const stickyTitle = document.getElementById('stickyTitle');
+    const stickyMsg = document.getElementById('stickyMsg');
+    const stickyMeta = document.getElementById('stickyMeta');
+
+    const rotTitle = document.getElementById('rotTitle');
+    const rotMsg = document.getElementById('rotMsg');
+    const rotMeta = document.getElementById('rotMeta');
+    const rotInner = document.getElementById('rotInner');
+    const progressFill = document.getElementById('progressFill');
+
+    const announceListInner = document.getElementById('announceListInner');
+    const countBadge = document.getElementById('countBadge');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const cycleSec = document.getElementById('cycleSec');
+    const fsmOverlay = document.getElementById('fsmOverlay');
+    const fsmTitle = document.getElementById('fsmTitle');
+    const fsmMessage = document.getElementById('fsmMessage');
+    const fsmDismiss = document.getElementById('fsmDismiss');
+
+    // State
+    let announcements = []; 
+    let visibleAnns = []; 
+    let rotIndex = 0;
+    let rotInterval = null;
+    let rotSeconds = 6;
+    let paused = false;
+    let lastStickyId = null;
+
+    const dismissedKey = 'bildirim_dismissed_v1';
+    function getDismissed(){ try{ return JSON.parse(localStorage.getItem(dismissedKey) || '[]'); }catch(e){ return []; } }
+    function addDismissed(id){ const arr = getDismissed(); if (!arr.includes(id)) { arr.push(id); localStorage.setItem(dismissedKey, JSON.stringify(arr)); } }
+    function isDismissed(id){ return getDismissed().includes(id); }
+
+    function applySettings(s){
+      if (!s) return;
+      const anns = Array.isArray(s.announcements) ? s.announcements.slice() : [];
+      const now = Date.now();
+      announcements = anns.filter(a => a && a.visible !== false && (!a.expiresAt || Number(a.expiresAt) > now));
+      announcements.sort((a,b) => {
+        const sa = a.sticky ? 1 : 0;
+        const sb = b.sticky ? 1 : 0;
+        if (sa !== sb) return sb - sa;
+        return (new Date(b.createdAt || 0)) - (new Date(a.createdAt || 0));
+      });
+      updateUI();
+    }
+
+    function updateUI(){
+      const sticky = announcements.find(a => a.sticky && a.visible !== false);
+      if (sticky) {
+        stickyArea.style.display = 'flex';
+        stickyTitle.textContent = sticky.title || 'Duyuru';
+        stickyMsg.textContent = sticky.message || '';
+        stickyMeta.textContent = sticky.createdAt ? fmtDate(sticky.createdAt) : '';
+        lastStickyId = sticky.id || null;
+      } else {
+        stickyArea.style.display = 'none';
+        lastStickyId = null;
+      }
+
+      visibleAnns = announcements.filter(a => !a.sticky && a.visible !== false);
+      if (visibleAnns.length === 0 && lastStickyId) {
+        const s = announcements.find(a => a.id === lastStickyId);
+        if (s) visibleAnns = [s];
+      }
+
+      visibleAnns = visibleAnns.filter(a => !isDismissed(a.id));
+      countBadge.textContent = `${announcements.length} Mesaj`;
+      renderList();
+      restartRotator();
+    }
+
+    function renderList(){
+      if (!announceListInner) return;
+      if (announcements.length === 0) {
+        announceListInner.innerHTML = '<div style="color:var(--text-muted);padding:10px">Henüz yayınlanmış duyuru yok.</div>';
+        return;
+      }
+      let out = '';
+      announcements.forEach(a => {
+        const expires = a.expiresAt ? ` • Son: ${fmtDate(a.expiresAt)}` : '';
+        const stickyTag = a.sticky ? '<span style="color:var(--accent);font-weight:800;margin-right:6px">★</span>' : '';
+        out += `<div class="announce-item" data-id="${escapeHtml(a.id||'')}" role="article">
+                  <div class="left">
+                    <div><strong>${stickyTag}${escapeHtml(a.title||'Başlıksız')}</strong></div>
+                    <div class="small">${escapeHtml(a.message||'')}</div>
+                    <div class="meta">${a.createdAt?fmtDate(a.createdAt):''}${expires}</div>
+                  </div>
+                  <div class="right">
+                    ${a.sticky ? '<span class="pill" style="font-size:0.7rem; border:none; background:var(--accent); color:white;">SABİT</span>' : `<button class="btn" style="padding:6px 10px;font-size:0.8rem" data-action="dismiss">Okundu</button>`}
+                  </div>
+                </div>`;
+      });
+      announceListInner.innerHTML = out;
+
+      announceListInner.querySelectorAll('button[data-action="dismiss"]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const parent = e.target.closest('.announce-item');
+          const id = parent && parent.getAttribute('data-id');
+          if (!id) return;
+          addDismissed(id);
+          updateUI();
+        });
+      });
+    }
+
+    function showRotItem(i){
+      if (!visibleAnns || visibleAnns.length === 0) {
+        rotTitle.textContent = 'Duyuru yok';
+        rotMsg.textContent = 'Şu anda görüntülenecek duyuru bulunmuyor.';
+        rotMeta.textContent = '';
+        progressFill.style.width = '0%';
+        return;
+      }
+      const a = visibleAnns[i % visibleAnns.length];
+      rotInner.classList.add('hidden');
+      setTimeout(()=>{
+        rotTitle.textContent = a.title || 'Duyuru';
+        rotMsg.textContent = a.message || '';
+        rotMeta.textContent = a.createdAt ? fmtDate(a.createdAt) : '';
+        rotInner.classList.remove('hidden');
+      }, 220);
+    }
+
+    function restartRotator(){
+      clearInterval(rotInterval);
+      rotIndex = 0;
+      if (visibleAnns.length === 0) {
+        showRotItem(0);
+        return;
+      }
+      showRotItem(rotIndex);
+      if (!paused) {
+        let progress = 0;
+        rotInterval = setInterval(()=> {
+          progress += 100 / (rotSeconds * 10);
+          if (progress >= 100) {
+            progress = 0;
+            rotIndex = (rotIndex + 1) % Math.max(1, visibleAnns.length);
+            showRotItem(rotIndex);
+          }
+          if(progressFill) progressFill.style.width = progress + '%';
+        }, 100);
+      }
+    }
+
+    pauseBtn.addEventListener('click', ()=>{
+      paused = !paused;
+      pauseBtn.textContent = paused ? 'Devam' : 'Duraklat';
+      pauseBtn.setAttribute('aria-pressed', String(paused));
+      restartRotator();
+    });
+
+    refreshBtn.addEventListener('click', async ()=>{
+      try{
+        const doc = await db.collection('meta').doc('settings').get();
+        if (doc.exists) applySettings(doc.data());
+        showToast('Yenilendi');
+      }catch(e){ console.warn(e); showToast('Hata', false); }
+    });
+
+    function showToast(message, ok=true){
+      const t = document.createElement('div');
+      t.textContent = message;
+      Object.assign(t.style, {
+        position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: '20px',
+        padding: '12px 24px', borderRadius: '50px',
+        background: ok ? 'var(--accent)' : '#333', color: '#fff',
+        zIndex: 9999, fontWeight: '600', boxShadow: '0 5px 20px rgba(0,0,0,0.5)',
+        transition: 'opacity 0.3s'
+      });
+      document.body.appendChild(t);
+      setTimeout(()=> t.style.opacity = '0', 2000);
+      setTimeout(()=> t.remove(), 2300);
+    }
+
+    function showFsm(title,msg){ fsmTitle.textContent = title; fsmMessage.textContent = msg; fsmOverlay.classList.add('show'); fsmOverlay.setAttribute('aria-hidden','false'); }
+    function hideFsm(){ fsmOverlay.classList.remove('show'); fsmOverlay.setAttribute('aria-hidden','true'); }
+    fsmDismiss.addEventListener('click', hideFsm);
+    fsmOverlay.addEventListener('click', (e)=>{ if (e.target === fsmOverlay) hideFsm(); });
+
+    db.collection('meta').doc('settings').onSnapshot(doc=>{
+      const s = doc.exists ? doc.data() : null;
+      if (!s) { announcements = []; updateUI(); return; }
+      if ((s.maintenance && s.maintenance.enabled) || (s.server && s.server.closed)) {
+        const info = s.maintenance && s.maintenance.enabled ? s.maintenance : s.server;
+        const title = s.server && s.server.closed ? 'SUNUCU KAPALI' : 'BAKIM MODU';
+        const msg = info.reason || 'Sistem şu anda geçici olarak kapalıdır.';
+        showFsm(title, msg);
+      } else {
+        hideFsm();
+      }
+      applySettings(s);
+    }, err => {
+      console.error('Snapshot err', err);
+    });
+
+    window.addEventListener('keydown', (e)=>{
+      if (e.key === 'ArrowRight') { rotIndex = (rotIndex + 1) % Math.max(1, visibleAnns.length); showRotItem(rotIndex); }
+      if (e.key === 'ArrowLeft') { rotIndex = (rotIndex - 1 + Math.max(1,visibleAnns.length)) % Math.max(1,visibleAnns.length); showRotItem(rotIndex); }
+    });
+
+    cycleSec.textContent = String(rotSeconds);
+    restartRotator();
+    
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { clearInterval(rotInterval); rotInterval = null; } else if (!rotInterval && !paused) restartRotator();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Market - VIP / MVP Paketleri</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Inter, sans-serif; background:#071429; color:#e6eef6; margin:0; padding:20px; }
+    .wrap{ max-width:980px; margin:0 auto; }
+    .products{ display:grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-top:18px; }
+    .card{ background:rgba(255,255,255,0.04); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); }
+    .card h3{ margin:0 0 8px 0; }
+    .price{ font-weight:800; margin-bottom:10px; }
+    .btn{ padding:10px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background: linear-gradient(90deg,#06b6d4,#6366f1); color:#071022; }
+    .btn-disabled{ opacity:.5; cursor:not-allowed; }
+    .top { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .login-area { display:flex; gap:8px; align-items:center; }
+    input, button { font:inherit; }
+    .msg{ margin-top:12px; min-height:20px; color:#ffd; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Market - VIP / MVP Paketleri</h1>
+      <div class="login-area">
+        <span id="who">Misafir</span>
+        <button id="openLogin" class="btn btn-primary">Giriş / Kayıt</button>
+        <button id="logoutBtn" class="btn" style="display:none;">Çıkış</button>
+      </div>
+    </div>
+    
+
+    <div style="margin-top:10px;">
+      <div>Hesap: <span id="loggedUser">—</span> • Coin: <b id="myCoins">0</b> • Bakiye: <b id="myBalance">$0.00</b></div>
+      <div class="msg" id="marketMsg"></div>
+    </div>
+
+    <div class="products" id="products"></div>
+  </div>
+
+  <!-- Basit login modal -->
+  <div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+    <form id="loginForm" style="background:#0f1724; padding:20px; border-radius:12px; width:320px;" onsubmit="return false;">
+      <h3 style="margin-top:0;">Giriş / Kayıt</h3>
+      <input id="liUsername" placeholder="Kullanıcı Adı" style="width:100%; padding:8px; margin-bottom:8px;" />
+      <input id="liPassword" type="password" placeholder="Şifre" style="width:100%; padding:8px; margin-bottom:8px;" />
+      <button id="doLogin" class="btn btn-primary" style="width:100%;">Giriş Yap / Kayıt</button>
+      <div id="loginErr" style="color:#ffccd5; margin-top:8px; min-height:18px;"></div>
+    </form>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Firebase config (kendi projenizle aynı)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf1"
+    };
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Ürün tanımları (coin karşılığı VIP paketleri)
+    const PRODUCTS = [
+      { id: 'vip_minus', title: 'VIP-', priceCoins: 5000, desc: 'VIP- paketi (mavi). 1.25x tıklama, %10 çekim bonus', role: 'vip-' , color:'#3b82f6' },
+      { id: 'vip_plus',  title: 'VIP+', priceCoins:10000, desc: 'VIP+ paketi (kırmızı). 1.5x tıklama, %20 çekim bonus', role: 'vip+' , color:'#ef4444' },
+      { id: 'mvp_minus', title: 'MVP-', priceCoins:15000, desc: 'MVP- paketi (sarı). 1.75x tıklama, %30 çekim bonus', role: 'mvp-' , color:'#fbbf24' },
+      { id: 'mvp_plus',  title: 'MVP+', priceCoins:20000, desc: 'MVP+ paketi (RGB). Her tıklama $1, %50 çekim bonus ve öncelik', role: 'mvp+' , color:'rainbow' }
+    ];
+
+    // DOM
+    const productsEl = document.getElementById('products');
+    const whoEl = document.getElementById('who');
+    const loggedUserEl = document.getElementById('loggedUser');
+    const myCoinsEl = document.getElementById('myCoins');
+    const myBalanceEl = document.getElementById('myBalance');
+    const marketMsg = document.getElementById('marketMsg');
+    const loginModal = document.getElementById('loginModal');
+    const openLogin = document.getElementById('openLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const liUsername = document.getElementById('liUsername');
+    const liPassword = document.getElementById('liPassword');
+    const doLogin = document.getElementById('doLogin');
+    const loginErr = document.getElementById('loginErr');
+
+    // local session
+    let currentUser = null; // { uid, ... }
+    let currentUserUnsub = null;
+
+    function renderProducts(){
+      productsEl.innerHTML = '';
+      for(const p of PRODUCTS){
+        const card = document.createElement('div');
+        card.className = 'card';
+        // renk göstergesi
+        const colorTag = p.color === 'rainbow' ? `<span style="background:linear-gradient(90deg,#ff004c,#ffd400,#00ff6a,#00d4ff,#7c3aed); color:#000; padding:6px 8px; border-radius:6px;">${p.priceCoins.toLocaleString()} coin</span>` :
+          `<span style="background:${p.color}; color:${getContrastColor(p.color)}; padding:6px 8px; border-radius:6px;">${p.priceCoins.toLocaleString()} coin</span>`;
+        card.innerHTML = `<h3>${p.title}</h3><div class="price">${p.priceCoins.toLocaleString()} coin</div><div>${p.desc}</div><div style="margin-top:10px;"><button class="buy-btn" data-id="${p.id}">Satın Al</button></div>`;
+        productsEl.appendChild(card);
+      }
+      // attach handlers
+      productsEl.querySelectorAll('button.buy-btn').forEach(b=> b.addEventListener('click', onBuyClick));
+    }
+
+    // utility sha256
+    async function sha256Hex(str){
+      const enc = new TextEncoder();
+      const data = enc.encode(str);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+
+    // login / register by username/password stored in users collection (legacy style)
+    async function signInByUsername(username, password){
+      loginErr.textContent = '';
+      if(!username || !password){ loginErr.textContent = 'Kullanıcı adı ve şifre girin'; return null; }
+      try{
+        const candidateFields=['username','displayName','email'];
+        let doc = null;
+        for(const f of candidateFields){
+          try{
+            const q = await db.collection('users').where(f,'==',username).limit(1).get();
+            if(!q.empty){ doc = q.docs[0]; break; }
+          }catch(e){}
+        }
+        if(!doc){
+          const byId = await db.collection('users').doc(username).get();
+          if(byId.exists) doc = byId;
+        }
+        // auto-register if not found
+        if(!doc){
+          const newRef = db.collection('users').doc();
+          const hashed = await sha256Hex(password);
+          const payload = {
+            username,
+            displayName: username,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            coins: 0,
+            balance: 0,
+            hashedPassword: hashed
+          };
+          await newRef.set(payload);
+          doc = await newRef.get();
+        }
+        const data = doc.data() || {};
+        const passCandidates = ['hashedPassword','passwordHash','password'];
+        let stored=null;
+        for(const pf of passCandidates) if(data[pf]) { stored = String(data[pf]); break; }
+        if(!stored){ loginErr.textContent='Şifre tanımlı değil'; return null; }
+        if(/^[a-f0-9]{64}$/i.test(stored)){
+          const h = await sha256Hex(password);
+          if(h.toLowerCase() !== stored.toLowerCase()){ loginErr.textContent='Şifre yanlış'; return null; }
+        } else {
+          if(password !== stored){ loginErr.textContent='Şifre yanlış'; return null; }
+        }
+        // success
+        startSession(doc.id);
+        loginModal.style.display='none';
+        return true;
+      }catch(e){ console.error(e); loginErr.textContent='Giriş hatası'; return null; }
+    }
+
+    // start session by uid (doc id)
+    function startSession(uid){
+      if(currentUserUnsub) currentUserUnsub();
+      currentUser = { uid };
+      whoEl.textContent = uid;
+      loggedUserEl.textContent = uid;
+      logoutBtn.style.display = 'inline-block';
+      // subscribe user doc
+      currentUserUnsub = db.collection('users').doc(uid).onSnapshot(snap=>{
+        if(!snap.exists) return;
+        const d = snap.data();
+        myCoinsEl.textContent = (d.coins || 0);
+        const bal = d.balance !== undefined ? d.balance : (d.money || 0);
+        myBalanceEl.textContent = '$' + Number(bal||0).toFixed(2);
+      });
+      localStorage.setItem('market_user', uid);
+      marketMsg.textContent = '';
+    }
+
+    function endSession(){
+      if(currentUserUnsub) currentUserUnsub();
+      currentUserUnsub = null;
+      currentUser = null;
+      whoEl.textContent = 'Misafir';
+      loggedUserEl.textContent = '—';
+      myCoinsEl.textContent = '0';
+      myBalanceEl.textContent = '$0.00';
+      logoutBtn.style.display = 'none';
+      localStorage.removeItem('market_user');
+    }
+
+    // on buy click
+    async function onBuyClick(ev){
+      const id = ev.currentTarget.dataset.id;
+      const p = PRODUCTS.find(x=>x.id===id);
+      if(!p){ alert('Ürün bulunamadı'); return; }
+      if(!currentUser){ marketMsg.textContent = 'Önce giriş yapın.'; return; }
+      marketMsg.textContent = 'İşlem yapılıyor...';
+      try{
+        // For these VIP products, cost is in coins -> run transaction
+        await db.runTransaction(async tx=>{
+          const uRef = db.collection('users').doc(currentUser.uid);
+          const uSnap = await tx.get(uRef);
+          if(!uSnap.exists) throw new Error('Kullanıcı dokümanı bulunamadı');
+          const u = uSnap.data();
+          const myCoins = u.coins || 0;
+          if(myCoins < p.priceCoins) throw new Error('Yetersiz coin');
+          // deduct coins
+          tx.update(uRef, { coins: myCoins - p.priceCoins });
+          // set role and bonus fields
+          const update = {};
+          update.role = p.role;
+          // tag object for UI
+          const tagObj = { name: p.title, color: p.color === 'rainbow' ? 'rainbow' : (p.color || null), glow: p.color === 'rainbow' ? true : false };
+          update.tagObjects = firebase.firestore.FieldValue.arrayUnion(tagObj);
+          // set specific multipliers
+          if(p.role === 'vip-'){
+            update.clickMultiplier = 1.25;
+            update.withdrawBonusPercent = 10;
+          } else if(p.role === 'vip+'){
+            update.clickMultiplier = 1.5;
+            update.withdrawBonusPercent = 20;
+          } else if(p.role === 'mvp-'){
+            update.clickMultiplier = 1.75;
+            update.withdrawBonusPercent = 30;
+          } else if(p.role === 'mvp+'){
+            update.perClickDollar = 1.00;
+            update.withdrawBonusPercent = 50;
+            update.priorityWithdraw = true;
+          }
+          // merge update
+          tx.update(uRef, update);
+        });
+        marketMsg.textContent = `✅ ${p.title} başarıyla satın alındı. Rol hesabınıza eklendi.`;
+      }catch(err){
+        console.error(err);
+        marketMsg.textContent = 'Hata: '+(err.message||err);
+      }
+    }
+
+    // login UI handlers
+    openLogin.addEventListener('click', ()=>{ loginModal.style.display='flex'; loginErr.textContent=''; liUsername.focus(); });
+    doLogin.addEventListener('click', async ()=>{ loginErr.textContent=''; await signInByUsername(liUsername.value.trim(), liPassword.value); });
+    logoutBtn.addEventListener('click', ()=>{ endSession(); });
+
+    // start: restore session if any
+    (async function(){
+      renderProducts();
+      const uid = localStorage.getItem('market_user');
+      if(uid){
+        // verify doc exists
+        const doc = await db.collection('users').doc(uid).get();
+        if(doc.exists) startSession(uid);
+        else localStorage.removeItem('market_user');
+      }
+    })();
+
+    // helpers
+    function getContrastColor(hex){
+      if(!hex || hex === 'rainbow') return '#000';
+      const c = hex.replace('#','');
+      const r = parseInt(c.substr(0,2),16);
+      const g = parseInt(c.substr(2,2),16);
+      const b = parseInt(c.substr(4,2),16);
+      const yiq = (r*299 + g*587 + b*114)/1000;
+      return yiq >= 128 ? '#000' : '#fff';
+    }
+  </script>
+</body>
+</html>

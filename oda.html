@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Oda - Modern Chat & Oyun</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --sidebar-bg: rgba(30, 41, 59, 0.7);
+      --card-bg: rgba(51, 65, 85, 0.4);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: blur(12px) saturate(180%);
+      --radius: 16px;
+      --msg-me: #6366f1;
+      --msg-other: rgba(255, 255, 255, 0.05);
+    }
+    * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    .app-container { display: flex; width: 100%; height: 100%; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 320px;
+      background: var(--sidebar-bg);
+      backdrop-filter: var(--glass);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      transition: transform 0.28s ease;
+      z-index: 20;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar.hidden { transform: translateX(-110%); }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+    .brand span { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .sidebar-section { margin-bottom: 18px; flex: 1; overflow-y: auto; min-height: 0; }
+    .sidebar-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; }
+
+    .input-group { position: relative; width: 100%; margin-bottom: 10px; }
+    .input {
+      width: 100%;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-family: inherit;
+      transition: all 0.18s;
+    }
+    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12); }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn.ghost:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .btn.btn-icon { width: 44px; height: 44px; padding: 0; justify-content:center; border-radius:10px; }
+
+    .room-item {
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.16s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .room-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+
+    .room-info h4 { margin: 0; font-size: 0.95rem; }
+    .room-info p { margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted); }
+
+    /* MAIN AREA */
+    .main { flex: 1; display: flex; flex-direction: column; position: relative; background: rgba(0,0,0,0.12); min-width:0; }
+    .header {
+      height: 70px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      background: rgba(15, 23, 42, 0.86);
+    }
+    .room-header-info h2 { margin: 0; font-size: 1.1rem; }
+    .room-header-info span { font-size: 0.85rem; color: var(--text-muted); }
+
+    .chat-area {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+      transition: padding-bottom 0.2s;
+    }
+
+    .msg {
+      max-width: 75%;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      animation: fadeIn 0.24s ease;
+      word-break: break-word;
+    }
+    .msg.me {
+      align-self: flex-end;
+      background: var(--msg-me);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg:not(.me) {
+      align-self: flex-start;
+      background: var(--msg-other);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg .meta {
+      font-size: 0.75rem;
+      margin-bottom: 6px;
+      opacity: 0.8;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+
+    .ban-badge { background: #ef4444; color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; }
+    .chat-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.92);
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      transition: bottom 0.12s;
+    }
+    #chatInput {
+      resize: none;
+      min-height: 44px;
+      max-height: 120px;
+      flex: 1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.16);
+      color: var(--text-main);
+    }
+
+    .members-sidebar {
+      width: 260px;
+      border-left: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.6);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .member-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .member-item:hover { background: rgba(255,255,255,0.02); }
+    .badge-role { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: var(--border); color: var(--text-muted); }
+    .badge-role.owner { background: rgba(234, 179, 8, 0.18); color: #facc15; }
+    .badge-role.mod { background: rgba(99, 102, 241, 0.12); color: #818cf8; }
+
+    .game-card {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.06), rgba(99, 102, 241, 0.06));
+      border: 1px solid rgba(99, 102, 241, 0.12);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .game-status { text-align: center; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .game-choices { display: flex; justify-content: center; gap: 16px; }
+    .game-btn {
+      font-size: 1.4rem;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+    .game-btn:hover { transform: scale(1.08); background: rgba(255,255,255,0.08); }
+    .game-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: #1e293b;
+      width: 100%; max-width: 420px;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      transform: scale(0.98); transition: transform 0.2s;
+    }
+    .modal-overlay.active .modal-box { transform: scale(1); }
+    .modal-title { margin: 0 0 12px 0; font-size: 1.25rem; text-align: center; }
+
+    .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+    .overlay-backdrop {
+      position: fixed; inset: 0; z-index: 18; background: rgba(0,0,0,0.35); opacity: 0; visibility: hidden; transition: opacity .18s;
+    }
+    .overlay-backdrop.show { opacity: 1; visibility: visible; }
+
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #334155; color: #fff;
+      padding: 12px 18px; border-radius: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      opacity: 0; transition: all 0.28s; pointer-events: none; z-index: 2000;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .toast.success { border-left: 4px solid #10b981; }
+    .toast.error { border-left: 4px solid #ef4444; }
+
+    /* Responsive / Mobile adjustments */
+    @media (max-width: 900px) {
+      .members-sidebar { display: none; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; height: 100%; transform: translateX(-110%); width: 280px; left: 0; top: 0; bottom: 0; }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-menu-btn { display: block; }
+      .header { padding: 0 12px; }
+      .chat-area { padding: 12px; padding-bottom: 120px; }
+      .chat-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px; }
+      .main { padding-bottom: 72px; } /* avoid content hidden under footer */
+      .room-header-info h2 { font-size: 1rem; }
+      .room-item { padding: 10px; }
+      .brand { margin-bottom: 14px; }
+      .btn { padding: 10px; }
+      .game-btn { width: 48px; height: 48px; }
+      .input { padding: 10px; }
+    }
+    @media (max-width: 420px) {
+      .room-header-info span { font-size: 0.78rem; }
+      .mobile-menu-btn { font-size: 20px; }
+      .game-btn { width: 46px; height: 46px; font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authModal" class="modal-overlay active">
+    <div class="modal-box">
+      <h2 class="modal-title">Giriş Yap</h2>
+      <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:12px;">
+        Kullanıcı adı yoksa otomatik hesap oluşturulur.
+      </p>
+      <div class="input-group">
+        <input class="input" id="loginUsername" placeholder="Kullanıcı Adı" autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <input class="input" id="loginPassword" type="password" placeholder="Şifre" />
+      </div>
+      <button class="btn" id="loginBtn">
+        <span>Devam Et</span>
+        <span class="material-icons-round">arrow_forward</span>
+      </button>
+      <div id="authError" style="color:#ef4444; margin-top:12px; text-align:center; font-size:0.9rem; min-height:20px;"></div>
+      <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+        <button class="btn ghost" id="toggleAdminAuth" style="font-size:0.85rem;">Admin Girişi (E-posta)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-box">
+      <h2 class="modal-title">Admin Paneli</h2>
+      <div class="input-group">
+        <input class="input" id="adminEmail" type="email" placeholder="admin@domain.com" />
+      </div>
+      <div class="input-group">
+        <input class="input" id="adminPassword" type="password" placeholder="Şifre" />
+      </div>
+      <button class="btn" id="adminLoginBtn">Giriş</button>
+      <button class="btn ghost" id="toggleUserAuth" style="margin-top:10px;">Kullanıcı Girişine Dön</button>
+      <div id="adminError" style="color:#ef4444; margin-top:12px; text-align:center;"></div>
+    </div>
+  </div>
+
+  <div class="overlay-backdrop" id="mobileOverlay"></div>
+
+  <div class="app-container">
+    <div class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="material-icons-round" style="color:var(--primary)">chat_bubble</span>
+        <span>OdaChat</span>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Odalar</div>
+        <div id="roomsList">
+          <div style="padding:10px; color:var(--text-muted); text-align:center;">Yükleniyor...</div>
+        </div>
+      </div>
+
+      <div style="margin-top: auto;">
+        <div class="sidebar-title">Yeni Oda</div>
+        <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; border:1px solid var(--border);">
+          <input id="newRoomName" class="input" placeholder="Oda Adı" style="margin-bottom:8px; font-size:0.9rem; padding:8px;" />
+          <select id="newRoomType" class="input" style="margin-bottom:8px; font-size:0.9rem; padding:8px;">
+            <option value="Genel">Genel Sohbet</option>
+            <option value="Oyun">Oyun</option>
+            <option value="Müzik">Müzik</option>
+          </select>
+          <button id="createRoomBtn" class="btn" style="padding:8px; font-size:0.9rem;">Oluştur</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:18px; padding-top:12px; border-top:1px solid var(--border);">
+          <div style="flex:1;">
+            <div id="meName" style="font-weight:600; font-size:0.95rem;">Misafir</div>
+            <div id="userBadge" style="font-size:0.78rem; color:var(--accent);"></div>
+          </div>
+          <button id="logoutBtn" class="btn ghost btn-icon" title="Çıkış"><span class="material-icons-round">logout</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="header">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menü">
+          <span class="material-icons-round">menu</span>
+        </button>
+        <div class="room-header-info" style="margin-left:12px;">
+          <h2 id="roomTitle">Oda Seçimi</h2>
+          <span id="roomMeta">Sohbete başlamak için bir odaya katılın</span>
+        </div>
+        <div style="display:flex; gap:10px;">
+           <button id="leaveRoomBtn" class="btn ghost" style="padding:8px 16px; display:none;">Ayrıl</button>
+        </div>
+      </div>
+
+      <div class="chat-area" id="chatMessages">
+        <div style="text-align:center; margin-top:40px; color:var(--text-muted);">
+          <span class="material-icons-round" style="font-size:48px; opacity:0.5;">forum</span>
+          <p>Sol menüden bir oda seçin veya oluşturun.</p>
+        </div>
+      </div>
+
+      <!-- Game area (Taş-Kağıt-Makas) -->
+      <div id="gameContainer" style="padding:0 16px 12px 16px; display:none;">
+        <div class="game-card">
+           <div class="game-status" id="tkgmStatus">Taş-Kağıt-Makas: Başlamak için hamle yap</div>
+           <div class="game-choices" id="tkgmChoices">
+             <button class="game-btn" data-choice="rock">🪨</button>
+             <button class="game-btn" data-choice="paper">📄</button>
+             <button class="game-btn" data-choice="scissors">✂️</button>
+           </div>
+        </div>
+      </div>
+
+      <div class="chat-footer">
+        <textarea id="chatInput" class="input" placeholder="Bir mesaj yaz..." disabled></textarea>
+        <button id="sendBtn" class="btn btn-icon" disabled>
+          <span class="material-icons-round">send</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="members-sidebar" id="membersSidebar">
+      <div class="sidebar-title" style="display:flex; justify-content:space-between;">
+        <span>Üyeler</span>
+        <span id="membersCount">0</span>
+      </div>
+      <div id="membersList" style="overflow-y:auto; flex:1;"></div>
+    </div>
+  </div>
+
+  <div id="toastWrapper"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+  // --- CONFIG ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+    authDomain: "lilemir-new.firebaseapp.com",
+    projectId: "lilemir-new",
+    storageBucket: "lilemir-new.firebasestorage.app",
+    messagingSenderId: "339863121380",
+    appId: "1:339863121380:web:123195552e821b085e6bf1"
+  };
+
+  // init
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // helper el()
+  const el = id => document.getElementById(id);
+
+  // elements
+  const authModal = el('authModal');
+  const adminModal = el('adminModal');
+  const loginBtn = el('loginBtn');
+  const authError = el('authError');
+  const adminError = el('adminError');
+  const chatInput = el('chatInput');
+  const sendBtn = el('sendBtn');
+  const chatMessages = el('chatMessages');
+  const roomTitle = el('roomTitle');
+  const roomMeta = el('roomMeta');
+  const leaveRoomBtn = el('leaveRoomBtn');
+  const gameContainer = el('gameContainer');
+  const mobileMenuBtn = el('mobileMenuBtn');
+  const sidebar = el('sidebar');
+  const mobileOverlay = el('mobileOverlay');
+  const roomsList = el('roomsList');
+
+  // state
+  let currentUser = null; // { uid, username, displayName, ... }
+  let currentRoomId = null;
+  let currentRoomData = null;
+  let unsubMessages = null;
+  let unsubRoomDoc = null;
+  let unsubRoomList = null;
+
+  // SHA256 helper
+  async function sha256Hex(str){
+    const enc = new TextEncoder();
+    const data = enc.encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // utilities
+  const showToast = (msg, type='success') => {
+    const w = el('toastWrapper');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span class="material-icons-round">${type==='success'?'check_circle':'error'}</span> ${msg}`;
+    w.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300); }, 3000);
+  };
+  const escapeHtml = s => (s||'').replace(/[&<"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]);
+
+  // ROOM LISTENERS (real-time)
+  function subscribeRoomList() {
+    if(unsubRoomList) { unsubRoomList(); unsubRoomList = null; }
+    unsubRoomList = db.collection('rooms').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+      if (snapshot.empty) {
+        roomsList.innerHTML = '<div style="padding:10px;color:var(--text-muted);text-align:center;">Oda yok</div>';
+        return;
+      }
+      roomsList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const room = doc.data();
+        const div = document.createElement('div');
+        div.className = 'room-item';
+        div.innerHTML = `<div class="room-info"><h4>${escapeHtml(room.name || doc.id)}</h4></div>`;
+        div.onclick = () => {
+          subscribeToRoom(doc.id);
+          roomTitle.textContent = room.name || doc.id;
+          showToast('Odaya katıldınız: ' + (room.name || doc.id));
+          // close sidebar on mobile
+          if(window.innerWidth <= 768){
+            sidebar.classList.remove('open');
+            mobileOverlay.classList.remove('show');
+          }
+        };
+        roomsList.appendChild(div);
+      });
+    }, err=>{
+      roomsList.innerHTML = `<div style="padding:10px;color:#ef4444;text-align:center;">Liste yüklenemedi</div>`;
+      console.error('subscribeRoomList error', err);
+    });
+  }
+
+  // --- AUTH (username/password using users collection) ---
+  async function signInByUsername(username, password){
+    authError.textContent = '';
+    if(!username || !password) { authError.textContent = 'Kullanıcı adı ve şifre girin.'; return null; }
+    try{
+      const candidateFields = ['username','userName','user','displayName','email'];
+      let doc = null;
+      for(const f of candidateFields){
+        try{
+          const q = await db.collection('users').where(f,'==',username).limit(1).get();
+          if(!q.empty){ doc = q.docs[0]; break; }
+        }catch(e){}
+      }
+      if(!doc){
+        const byId = await db.collection('users').doc(username).get();
+        if(byId.exists) doc = byId;
+      }
+      if(!doc){
+        const newRef = db.collection('users').doc();
+        const hashed = await sha256Hex(password);
+        const payload = {
+          username,
+          displayName: username,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          balance: 0,
+          hashedPassword: hashed
+        };
+        await newRef.set(payload);
+        const snap = await newRef.get();
+        doc = snap;
+      }
+      const data = doc.data() || {};
+      const passCandidates = ['hashedPassword','passwordHash','passHash','pwdHash','password','pwHash','pass','hashed_password','hashed'];
+      let stored = null;
+      for(const pf of passCandidates){
+        if(data[pf] !== undefined && data[pf] !== null){ stored = String(data[pf]).trim(); break; }
+      }
+      if(!stored){ authError.textContent = 'Bu kullanıcı için şifre tanımlı değil'; return null; }
+      const isHex64 = /^[a-f0-9]{64}$/i.test(stored);
+      if(isHex64){
+        const provided = await sha256Hex(password);
+        if(provided.toLowerCase() !== stored.toLowerCase()){ authError.textContent = 'Şifre yanlış'; return null; }
+      } else {
+        if(password !== stored){ authError.textContent = 'Şifre yanlış'; return null; }
+      }
+      currentUser = Object.assign({}, data, { uid: doc.id, username: doc.id });
+      authModal.classList.remove('active');
+      el('meName').textContent = currentUser.displayName || currentUser.username || 'Kullanıcı';
+      el('userBadge').textContent = currentUser.role || '';
+      gameContainer.style.display = 'block';
+      localStorage.setItem('oc_user', doc.id);
+      initUserListeners();
+      return currentUser;
+    }catch(err){
+      console.error('signIn error', err);
+      authError.textContent = 'Giriş hatası';
+      return null;
+    }
+  }
+
+  if(loginBtn){
+    loginBtn.addEventListener('click', async ()=>{
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value;
+      await signInByUsername(u,p);
+    });
+  }
+
+  // attempt auto-login
+  (async function tryAuto(){
+    const uid = localStorage.getItem('oc_user');
+    if(!uid) return;
+    try{
+      const doc = await db.collection('users').doc(uid).get();
+      if(doc.exists){
+        currentUser = Object.assign({}, doc.data(), { uid: doc.id, username: doc.id });
+        el('meName').textContent = currentUser.displayName || currentUser.username;
+        gameContainer.style.display = 'block';
+        initUserListeners();
+      }
+    }catch(e){ console.warn('auto login failed', e); }
+  })();
+
+  // --- Rooms & Game logic helpers ---
+  async function initUserListeners(){
+    subscribeRoomList();
+    initTkgmUI();
+  }
+
+  const choiceMap = { rock: 0, paper: 1, scissors: 2 };
+  const choiceNames = ['Taş','Kağıt','Makas'];
+
+  function decideWinner(aChoice, bChoice){
+    if(aChoice === bChoice) return 0;
+    if((aChoice === 'rock' && bChoice === 'scissors') ||
+       (aChoice === 'scissors' && bChoice === 'paper') ||
+       (aChoice === 'paper' && bChoice === 'rock')) return 1;
+    return -1;
+  }
+
+  function initTkgmUI(){
+    const buttons = Array.from(document.querySelectorAll('#tkgmChoices .game-btn'));
+    if(!buttons.length) return;
+    buttons.forEach(btn=>{
+      btn.removeEventListener('click', onGameChoice);
+      btn.addEventListener('click', onGameChoice);
+    });
+  }
+
+  const tkgmStatusEl = el('tkgmStatus');
+
+  async function onGameChoice(ev){
+    if(!currentUser || !currentRoomId){
+      showToast('Önce odaya katılın.', 'error');
+      return;
+    }
+    const choice = ev.currentTarget.dataset.choice;
+    if(!choice) return;
+    try{
+      await db.runTransaction(async tx => {
+        const roomRef = db.collection('rooms').doc(currentRoomId);
+        const roomDoc = await tx.get(roomRef);
+        const now = firebase.firestore.FieldValue.serverTimestamp();
+
+        let tkgm = (roomDoc.exists && roomDoc.data() && roomDoc.data().tkgm) ? roomDoc.data().tkgm : {};
+        tkgm = Object.assign({}, tkgm);
+        tkgm[currentUser.uid] = { choice, ts: new Date().toISOString() };
+
+        tx.update(roomRef, { tkgm });
+
+        const participantIds = Object.keys(tkgm);
+        if(participantIds.length >= 2){
+          const opponentId = participantIds.find(id => id !== currentUser.uid);
+          if(opponentId){
+            const my = tkgm[currentUser.uid];
+            const opp = tkgm[opponentId];
+            if(my && opp && my.choice && opp.choice){
+              const result = decideWinner(my.choice, opp.choice);
+              const amt = 0.30;
+              const roomMessagesRef = db.collection('rooms').doc(currentRoomId).collection('messages');
+
+              if(result === 0){
+                tx.update(roomRef, { tkgm: {} });
+                tx.set(roomMessagesRef.doc(), {
+                  type: 'tkgm_result',
+                  text: `Berabere: ${currentUser.displayName||currentUser.username} (${my.choice}) vs ${opponentId} (${opp.choice})`,
+                  createdAt: now
+                });
+              } else {
+                const winnerUid = (result === 1) ? currentUser.uid : opponentId;
+                const loserUid = (result === 1) ? opponentId : currentUser.uid;
+                tx.update(db.collection('users').doc(winnerUid), { balance: firebase.firestore.FieldValue.increment(amt) });
+                tx.update(db.collection('users').doc(loserUid), { balance: firebase.firestore.FieldValue.increment(-amt) });
+                tx.set(roomMessagesRef.doc(), {
+                  type: 'tkgm_result',
+                  text: `${winnerUid} kazandı! (${my.choice} > ${opp.choice}) — Kazanç: +$${amt.toFixed(2)}, Kaybeden: -$${amt.toFixed(2)}`,
+                  winner: winnerUid,
+                  loser: loserUid,
+                  amount: amt,
+                  createdAt: now
+                });
+                tx.update(roomRef, { tkgm: {} });
+              }
+            }
+          }
+        }
+      });
+      tkgmStatusEl.textContent = `Seçiminiz kaydedildi: ${choiceNames[choiceMap[choice]]}. Bekleniyor...`;
+    }catch(err){
+      console.error('tkgm transaction error', err);
+      showToast('Oyun başlatılırken hata oluştu', 'error');
+    }
+  }
+
+  function subscribeRoomMessages(roomId) {
+    if(unsubMessages) { unsubMessages(); unsubMessages = null; }
+    const messagesRef = db.collection('rooms').doc(roomId).collection('messages').orderBy('createdAt', 'asc');
+    unsubMessages = messagesRef.onSnapshot(snapshot => {
+      const chatBox = el('chatMessages');
+      if (snapshot.empty) {
+        chatBox.innerHTML = '<div style="text-align:center; color:var(--text-muted); opacity:0.7; margin-top:40px;">Henüz mesaj yok.</div>';
+        return;
+      }
+      chatBox.innerHTML = '';
+      snapshot.forEach(doc => {
+        const msg = doc.data();
+        const div = document.createElement('div');
+        let isMe = (msg.userId === currentUser?.uid);
+        let meta = '';
+        if(msg.displayName) meta += '<span>'+escapeHtml(msg.displayName)+'</span>';
+        if(msg.createdAt && msg.createdAt.toDate) meta += '<span>'+msg.createdAt.toDate().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+'</span>';
+        div.className = 'msg' + (isMe ? ' me' : '');
+        if(msg.type==='tkgm_result') {
+          div.innerHTML = '<span style="font-size: .92em; color: var(--accent); opacity:.9;">'+escapeHtml(msg.text)+'</span>';
+        } else {
+          div.innerHTML = (meta?'<div class="meta">'+meta+'</div>':'') + escapeHtml(msg.text||'');
+        }
+        chatBox.appendChild(div);
+      });
+      // always scroll to newest
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }, err=>{
+      console.error('subscribe messages error', err);
+    });
+  }
+
+  sendBtn.addEventListener('click', sendChatMessage);
+  chatInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  function subscribeToRoom(roomId){
+    if(unsubRoomDoc) { unsubRoomDoc(); unsubRoomDoc = null; }
+    currentRoomId = roomId;
+    const roomRef = db.collection('rooms').doc(roomId);
+    // subscribe room doc (for tkgm and metadata)
+    unsubRoomDoc = roomRef.onSnapshot(doc=>{
+      if(!doc.exists) return;
+      const data = doc.data() || {};
+      const tkgm = data.tkgm || {};
+      // update header meta
+      roomMeta.textContent = data.type ? String(data.type) : '';
+      // subscribe messages
+      subscribeRoomMessages(roomId);
+      // show leave button
+      leaveRoomBtn.style.display = 'inline-flex';
+      // enable chat input & send
+      chatInput.disabled = false;
+      sendBtn.disabled = false;
+      chatInput.focus();
+      // ensure sidebar closed on mobile
+      if(window.innerWidth <= 768){
+        sidebar.classList.remove('open');
+        mobileOverlay.classList.remove('show');
+      }
+    }, err=>{
+      console.error('room snapshot error', err);
+    });
+  }
+
+  async function sendChatMessage(){
+    if(!currentUser || !currentRoomId) { showToast('Önce odaya katılın', 'error'); return; }
+    const text = chatInput.value.trim();
+    if(!text) return;
+    try{
+      const roomMessagesRef = db.collection('rooms').doc(currentRoomId).collection('messages');
+      await roomMessagesRef.add({
+        userId: currentUser.uid,
+        displayName: currentUser.displayName || currentUser.username || '',
+        text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      chatInput.value = '';
+      // small safety: ensure chat scrolls after sending if subscription slow
+      setTimeout(()=> { chatMessages.scrollTop = chatMessages.scrollHeight; }, 200);
+    }catch(e){
+      console.error('sendChatMessage error', e);
+      showToast('Mesaj gönderilemedi', 'error');
+    }
+  }
+
+  async function createAndJoinRoom(name = 'Genel') {
+    const roomRef = db.collection('rooms').doc();
+    await roomRef.set({ name, type: 'Genel', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    subscribeToRoom(roomRef.id);
+    roomTitle.textContent = name;
+    showToast('Odaya katıldınız: ' + name);
+    // close sidebar on mobile
+    if(window.innerWidth <= 768){
+      sidebar.classList.remove('open');
+      mobileOverlay.classList.remove('show');
+    }
+  }
+
+  const createRoomBtn = el('createRoomBtn');
+  if(createRoomBtn){
+    createRoomBtn.addEventListener('click', async ()=>{
+      const nm = document.getElementById('newRoomName').value.trim() || 'Genel';
+      await createAndJoinRoom(nm);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initTkgmUI);
+
+  window.addEventListener('beforeunload', ()=>{
+    if(unsubRoomDoc) unsubRoomDoc();
+    if(unsubMessages) unsubMessages();
+    if(unsubRoomList) unsubRoomList();
+  });
+
+  (async function autoDemoJoin(){
+    setTimeout(async ()=>{
+      if(currentUser && !currentRoomId){
+        try{
+          const q = await db.collection('rooms').where('name','==','Public Demo').limit(1).get();
+          if(!q.empty){
+            subscribeToRoom(q.docs[0].id);
+            roomTitle.textContent = q.docs[0].data().name || 'Public Demo';
+          } else {
+            await createAndJoinRoom('Public Demo');
+          }
+        }catch(e){ console.warn('auto demo join failed', e); }
+      }
+    }, 700);
+  })();
+
+  // --- MOBILE / SIDEBAR TOGGLE HANDLERS ---
+  if(mobileMenuBtn){
+    mobileMenuBtn.addEventListener('click', ()=>{
+      if(sidebar.classList.contains('open')){
+        sidebar.classList.remove('open');
+        mobileOverlay.classList.remove('show');
+      } else {
+        sidebar.classList.add('open');
+        mobileOverlay.classList.add('show');
+      }
+    });
+  }
+  if(mobileOverlay){
+    mobileOverlay.addEventListener('click', ()=>{
+      sidebar.classList.remove('open');
+      mobileOverlay.classList.remove('show');
+    });
+  }
+
+  // when chat input focused on mobile, scroll to bottom so input is visible
+  chatInput.addEventListener('focus', ()=> {
+    setTimeout(()=> { chatMessages.scrollTop = chatMessages.scrollHeight; }, 300);
+  });
+
+  // quick logout (clear session)
+  const logoutBtnEl = el('logoutBtn');
+  if(logoutBtnEl){
+    logoutBtnEl.addEventListener('click', ()=>{
+      localStorage.removeItem('oc_user');
+      location.reload();
+    });
+  }
+
+  // leave room
+  leaveRoomBtn.addEventListener('click', ()=>{
+    if(unsubMessages){ unsubMessages(); unsubMessages = null; }
+    if(unsubRoomDoc){ unsubRoomDoc(); unsubRoomDoc = null; }
+    currentRoomId = null;
+    roomTitle.textContent = 'Oda Seçimi';
+    roomMeta.textContent = 'Sohbete başlamak için bir odaya katılın';
+    el('chatMessages').innerHTML = '<div style="text-align:center; margin-top:40px; color:var(--text-muted);"><span class="material-icons-round" style="font-size:48px; opacity:0.5;">forum</span><p>Sol menüden bir oda seçin veya oluşturun.</p></div>';
+    leaveRoomBtn.style.display = 'none';
+    // disable chat input
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+  });
+
+  // initialize UI: subscribe rooms even if not logged (listening open to anyone)
+  subscribeRoomList();
+  </script>
+</body>
+</html>

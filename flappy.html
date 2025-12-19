@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobil Uyumlu Flappy Bird</title>
+    <style>
+        /* CSS Başlangıç */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Mobil cihazlarda tam ekran yapmak için min-height kullanılır */
+            min-height: 100vh; 
+            margin: 0;
+            background-color: #333;
+            font-family: Arial, sans-serif;
+            overflow: hidden; 
+            touch-action: manipulation; /* Dokunma gecikmesini engelleme */
+        }
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            /* Mobil cihazlarda daha iyi görünüm için genişlik ve yükseklik kısıtlamaları */
+            max-width: 400px;
+            width: 100%;
+            height: 100vh; /* Mobil dikey ekranı kapla */
+            max-height: 600px;
+        }
+        #gameCanvas {
+            background-color: #70c5ce;
+            display: block;
+            width: 100%; /* Kapsayıcıya sığdır */
+            height: 100%; /* Kapsayıcıya sığdır */
+        }
+        #score {
+            position: absolute;
+            top: 5%; /* Mobil için yüzde olarak konumlandırma */
+            width: 100%;
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 10;
+        }
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border-radius: 10px;
+            font-size: 26px; /* Mobil cihazlar için daha büyük font */
+            text-align: center;
+            z-index: 20;
+            display: none; 
+        }
+        /* CSS Bitiş */
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">0</div>
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div id="message">
+            **OYUN BİTTİ!**<br>
+            Zıplamak Veya Yeniden Başlatmak İçin **Ekrana Dokunun** Veya **Boşluk** Tuşuna Basın.
+        </div>
+    </div>
+
+  <!-- Firebase (kullanılıyor ise) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase config - uygulamanızda zaten kullanılan config ile aynı
+        const firebaseConfig = {
+          apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+          authDomain: "lilemir-new.firebaseapp.com",
+          projectId: "lilemir-new",
+          storageBucket: "lilemir-new.firebasestorage.app",
+          messagingSenderId: "339863121380",
+          appId: "1:339863121380:web:123195552e821b085e6bf1"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+
+    <script>
+        // JavaScript Başlangıç
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const messageDisplay = document.getElementById('message');
+        const gameContainer = document.getElementById('gameContainer');
+
+        // Oyun Ayarları
+        let CANVAS_WIDTH = 400; // Başlangıç/Referans değeri
+        let CANVAS_HEIGHT = 600; // Başlangıç/Referans değeri
+        const GRAVITY = 0.25;
+        const JUMP_VELOCITY = -5;
+        const PIPE_SPEED = 2;
+        const PIPE_WIDTH = 50;
+        const PIPE_GAP = 120; 
+        const PIPE_FREQUENCY = 90; 
+
+        // Kuş Nesnesi
+        let bird = { x: 50, y: 150, size: 20, velocity: 0 };
+        let pipes = [];
+        let score = 0;
+        let frameCount = 0;
+        let gameRunning = true;
+        let creditedThisRound = false; // double credit koruması
+
+        // --- RESIZE VE BOYUT YÖNETİMİ ---
+
+        function resizeCanvas() {
+            // Container boyutunu al
+            CANVAS_WIDTH = gameContainer.clientWidth;
+            CANVAS_HEIGHT = gameContainer.clientHeight;
+            
+            // Canvas elementinin kendi width/height özelliklerini güncelle
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+        }
+
+        // --- ÇİZİM FONKSİYONLARI ---
+
+        function drawBird() {
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = 'green';
+            pipes.forEach(p => {
+                // Üst boru
+                ctx.fillRect(p.x, 0, PIPE_WIDTH, p.topHeight);
+                // Alt boru
+                ctx.fillRect(p.x, p.topHeight + PIPE_GAP, PIPE_WIDTH, CANVAS_HEIGHT - (p.topHeight + PIPE_GAP));
+            });
+        }
+
+        // --- GÜNCELLEME VE ÇARPIŞMA (Öncekiyle aynı mantık) ---
+
+        function updateBird() {
+            bird.velocity += GRAVITY;
+            bird.y += bird.velocity;
+        }
+
+        function updatePipes() {
+            pipes.forEach(p => {
+                p.x -= PIPE_SPEED;
+            });
+            if (frameCount % PIPE_FREQUENCY === 0) {
+                const minHeight = 50;
+                const maxHeight = CANVAS_HEIGHT - PIPE_GAP - 50;
+                const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+                pipes.push({ x: CANVAS_WIDTH, topHeight: topHeight, passed: false });
+            }
+            pipes = pipes.filter(p => p.x > -PIPE_WIDTH);
+        }
+
+        function checkCollision() {
+            // Zemin ve Tavan
+            if (bird.y + bird.size >= CANVAS_HEIGHT || bird.y <= 0) {
+                return true;
+            }
+
+            // Borular
+            for (let i = 0; i < pipes.length; i++) {
+                let p = pipes[i];
+                if (bird.x + bird.size > p.x && bird.x < p.x + PIPE_WIDTH) {
+                    if (bird.y < p.topHeight || bird.y + bird.size > p.topHeight + PIPE_GAP) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function checkScore() {
+            pipes.forEach(p => {
+                if (p.x + PIPE_WIDTH < bird.x && !p.passed) {
+                    score++;
+                    p.passed = true;
+                    scoreDisplay.innerText = score;
+                }
+            });
+        }
+
+        // --- OYUN YÖNETİMİ ---
+        async function creditFlappyUsd(amountUsd) {
+            // her puan flappy için 1 USD -> amountUsd bekleniyor
+            if (!auth || !auth.currentUser) return;
+            if (amountUsd <= 0) return;
+            try {
+                const uid = auth.currentUser.uid;
+                const userRef = db.collection("users").doc(uid);
+                await db.runTransaction(async (transaction) => {
+                    const doc = await transaction.get(userRef);
+                    if (!doc.exists) {
+                        transaction.set(userRef, { balance: amountUsd, moneyEarned: amountUsd }, { merge: true });
+                    } else {
+                        const curBal = Number(doc.data().balance || 0);
+                        const curEarn = Number(doc.data().moneyEarned || 0);
+                        transaction.update(userRef, { balance: curBal + amountUsd, moneyEarned: curEarn + amountUsd });
+                    }
+                });
+                // küçük toast / alert
+                try { showToast && showToast(`+${amountUsd}$ bakiyene eklendi.`, true, 4000); } catch(e){}
+            } catch (e) {
+                console.error("Flappy kredi hatası:", e);
+            }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            messageDisplay.style.display = 'block';
+
+            // kredi verme: her puan 1 dolar
+            if (!creditedThisRound && score > 0) {
+                creditedThisRound = true;
+                // kredi işlemini başlat (asenkron)
+                creditFlappyUsd(score).catch(e => console.warn(e));
+            }
+        }
+
+        function resetGame() {
+            bird = { x: 50, y: 150, size: 20, velocity: 0 };
+            pipes = [];
+            score = 0;
+            frameCount = 0;
+            scoreDisplay.innerText = 0;
+            messageDisplay.style.display = 'none';
+            gameRunning = true;
+            creditedThisRound = false;
+            gameLoop(); 
+        }
+
+        // --- ANA OYUN DÖNGÜSÜ ---
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            // Güncelleme
+            updateBird();
+            updatePipes();
+            frameCount++;
+
+            // Çarpışma ve Skor
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            checkScore();
+
+            // Çizim
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            drawPipes();
+            drawBird();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- ETKİLEŞİM (KLAVYE VE DOKUNMATİK) ---
+
+        function handleJump(e) {
+            if (e && e.preventDefault) e.preventDefault(); 
+            if (gameRunning) {
+                bird.velocity = JUMP_VELOCITY;
+            } else {
+                resetGame(); 
+            }
+        }
+
+        // 1. KLAVYE Desteği (Masaüstü için)
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                handleJump(e);
+            }
+        });
+
+        // 2. MOBİL Desteği (Dokunmatik ekran için)
+        canvas.addEventListener('touchstart', handleJump);
+        canvas.addEventListener('click', handleJump); // Bazı tarayıcılar click'i de kullanabilir
+
+        // Pencere yeniden boyutlandırıldığında canvas boyutunu ayarla
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Oyunu Başlat
+        resizeCanvas(); // İlk başta boyutlandırma
+        gameLoop();
+
+        // Auth state: eğer kullanıcı yoksa yönlendiriyorsanız buraya logic ekleyebilirsiniz.
+        // Örneğin: auth.onAuthStateChanged(user => { if (!user) { alert('Giriş yapın'); /* veya yönlendir */ } });
+        auth.onAuthStateChanged(user => {
+          // sadece arayüz güncellemesi; zaten kredi işlemi auth kontrolü içeriyor
+        });
+        // JavaScript Bitiş
+    </script>
+</body>
+</html>

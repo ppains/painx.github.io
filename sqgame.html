@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kırmızı Işık Yeşil Işık - Squid Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap');
+
+        /* GENEL AYARLAR */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Roboto Mono', monospace;
+            overflow: hidden; /* Kaydırmayı engelle */
+            touch-action: none; /* Mobilde yakınlaştırma/kaydırmayı kapat */
+            user-select: none;
+            color: white;
+        }
+
+        /* OYUN ALANI (Kumlu Zemin) */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #e0c9a6; /* Kum rengi */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* BİTİŞ ÇİZGİSİ VE BEBEK ALANI */
+        #finish-line {
+            position: absolute;
+            top: 100px;
+            width: 100%;
+            height: 5px;
+            background-color: #a83232;
+            z-index: 1;
+        }
+
+        #doll-area {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* ÜRKÜTÜCÜ BEBEK KAFA SİMÜLASYONU */
+        #doll-head {
+            width: 60px;
+            height: 60px;
+            background-color: #333;
+            border-radius: 50%;
+            margin: 0 auto;
+            border: 4px solid #fff;
+            position: relative;
+            transition: transform 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #doll-head.green-light {
+            background-color: #2ecc71; /* Yeşil */
+            transform: rotate(180deg); /* Arkası dönük */
+            border-color: #2ecc71;
+        }
+
+        #doll-head.red-light {
+            background-color: #e74c3c; /* Kırmızı */
+            transform: rotate(0deg); /* Bize bakıyor */
+            border-color: #e74c3c;
+            box-shadow: 0 0 20px #e74c3c;
+        }
+
+        #status-text {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* OYUNCULAR */
+        .character {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: left 0.2s ease;
+        }
+
+        /* BİZİM KARAKTERİMİZ (YEŞİL EŞOFMAN) */
+        #player {
+            background-color: #009d7a; /* Oyuncu Yeşili */
+            border: 2px solid white;
+            z-index: 100;
+            bottom: 20px;
+            left: 50%;
+        }
+        
+        /* Oyuncunun numarası */
+        #player::after {
+            content: "456";
+            font-size: 10px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* YAN KARAKTERLER (BOTLAR) */
+        .bot {
+            background-color: #004d40; /* Daha koyu yeşil */
+            border: 1px solid #ccc;
+            z-index: 50;
+        }
+
+        /* KAN EFEKTİ */
+        .dead {
+            background-color: #8a0b0b !important;
+            transform: scale(0.8) translateX(-50%);
+            border: none !important;
+        }
+
+        /* UI GÖSTERGELERİ */
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 200;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .timer-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ff007a;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        /* OYUN SONU EKRANI */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+        }
+
+        h1 {
+            color: #ff007a; /* Squid Game Pembesi */
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+
+        button {
+            background: transparent;
+            color: white;
+            border: 2px solid #fff;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            transition: 0.3s;
+            touch-action: manipulation;
+        }
+
+        button:hover {
+            background: #ff007a;
+            border-color: #ff007a;
+        }
+
+        /* MOBİL KONTROL ALANI UYARISI */
+        #mobile-hint {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            text-align: center;
+            color: rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            pointer-events: none;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        /* ---------- EKLENEN AZ MİKTARDA STİLLER (OVERLAY'LAR) ---------- */
+        .modal {
+            position: fixed;
+            z-index: 800;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            background: rgba(7,18,36,0.98);
+            color: #fff;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.04);
+            min-width: 280px;
+            max-width: 94%;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+        }
+        .modal h3 { margin:0 0 8px 0; font-size:1.1rem; }
+        .modal small { color:#aaa; display:block; margin-bottom:8px; }
+        .modal .row { margin-bottom:8px; }
+        .modal input[type="text"], .modal input[type="password"], .modal input[type="number"] {
+            width:100%; padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff;
+            font-size: 1rem;
+        }
+        .modal button { margin-right:8px; padding:8px 12px; font-size:1rem; }
+        .badge-line { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+
+        .lobby-list { max-height:220px; overflow:auto; margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+        .lobby-item { display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); }
+
+        /* Kısa toast */
+        #sq-toast { position: fixed; right: 12px; bottom: 12px; z-index: 900; }
+        .sq-toast-item { background: rgba(0,0,0,0.75); color:#fff; padding:8px 12px; border-radius:8px; margin-top:8px; }
+
+        /* Küçük kullanıcı satırı */
+        #sq-userline { margin-top:8px; color:#fff; font-size:0.9rem; display:flex; gap:8px; align-items:center; }
+        #sq-userline button { padding:6px 10px; font-size:0.85rem; }
+
+        /* Responsive küçük ekranlarda modal'ları geniş göster */
+        @media (max-width:420px) {
+          .modal { left: 50%; top: 50%; transform: translate(-50%,-50%); padding:12px; }
+          button { padding:12px 18px; font-size:1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <div id="finish-line"></div>
+        
+        <div id="ui-layer">
+            <div class="timer-box">SÜRE: <span id="timer">01:30</span></div>
+
+            <!-- Kullanıcı / Lobby kontrolleri (oyunun görünümünü değiştirmeyecek şekilde küçük) -->
+            <div id="sq-userline">
+                <span id="sq-username">Misafir</span>
+                <button id="sq-auth-btn" aria-haspopup="dialog">Giriş / Kayıt</button>
+                <button id="sq-lobby-btn" aria-haspopup="dialog">Lobby</button>
+            </div>
+        </div>
+
+        <div id="doll-area">
+            <div id="doll-head" class="red-light"></div>
+            <div id="status-text" style="color:#e74c3c">HAZIRLAN</div>
+        </div>
+
+        <div id="player" class="character"></div>
+        
+        <div id="mobile-hint">YÜRÜMEK İÇİN BASILI TUT</div>
+
+    </div>
+
+    <div id="overlay">
+        <h1 id="overlay-title">SQUID GAME</h1>
+        <p id="overlay-desc" style="color:#ccc; margin-bottom:30px; text-align:center; padding:0 20px;">
+            Yeşil ışıkta basılı tutarak ilerle.<br>
+            Kırmızı ışıkta parmağını hemen çek!<br>
+            Hareket edersen elenirsin.
+        </p>
+        <button id="overlay-start-btn">OYUNA BAŞLA</button>
+    </div>
+
+    <!-- AUTH ve LOBBY MODALLARI (Küçük, oyun görünümünü bozmaz) -->
+    <div id="sq-auth-modal" class="modal" style="display:none;">
+        <h3>Kullanıcı Adı / Şifre ile Giriş</h3>
+        <small>Giriş ve kayıt /users koleksiyonundan yönetilir. (Not: Basit client-side örnek — sunucu doğrulaması önerilir.)</small>
+        <div class="row">
+            <input id="sq-username-input" type="text" placeholder="Kullanıcı adı (örnek: emir123)">
+        </div>
+        <div class="row">
+            <input id="sq-password-input" type="password" placeholder="Şifre">
+        </div>
+        <div style="display:flex; justify-content:flex-end;">
+            <button id="sq-signin-btn">Giriş</button>
+            <button id="sq-register-btn">Kayıt Ol</button>
+            <button id="sq-auth-close">Kapat</button>
+        </div>
+    </div>
+
+    <div id="sq-lobby-modal" class="modal" style="display:none;">
+        <h3>Squid Game Lobby</h3>
+        <small id="lobby-hint">Tekli veya online oynayın. Lobby oluşturup başkalarının katılmasını sağlayabilirsiniz.</small>
+
+        <div class="row">
+            <label>Oyun modu:</label>
+            <div class="badge-line">
+                <button id="mode-single" class="mode-btn">Tekli</button>
+                <button id="mode-online" class="mode-btn">Online</button>
+            </div>
+        </div>
+
+        <div class="row" id="create-area" style="display:none;">
+            <input id="lobby-name" type="text" placeholder="Lobby adı (opsiyonel)">
+            <div style="margin-top:6px; display:flex; justify-content:flex-end;">
+                <button id="create-lobby-btn">Lobby Oluştur</button>
+            </div>
+        </div>
+
+        <div id="available-lobbies-area" style="margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong>Mevcut Lobby'ler</strong>
+                <button id="refresh-lobbies">Yenile</button>
+            </div>
+            <div class="lobby-list" id="lobby-list"></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+            <button id="leave-lobby-btn" style="display:none;">Lobby'den Çık</button>
+            <button id="sq-lobby-close">Kapat</button>
+        </div>
+    </div>
+
+    <div id="sq-toast" role="status" aria-live="polite"></div>
+
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+      /***********************
+       * Firebase & Lobby API (username/password using /users)
+       * - Kullanıcı adı/şifre kontrolü /users koleksiyonundan yapılır.
+       * - Mobil uyumluluk için butonlar touch-friendly.
+       * - Kazanınca kullanıcıya +$15 eklenir (Firestore transaction).
+       *
+       * Güvenlik notu: Bu örnek client-side parola kontrolü gösterir.
+       * Production için parolaları server-side (hash + salt) ve/veya Firebase Auth kullanın.
+       ***********************/
+      const firebaseConfig = {
+        apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+        authDomain: "lilemir-new.firebaseapp.com",
+        projectId: "lilemir-new",
+        storageBucket: "lilemir-new.firebasestorage.app",
+        messagingSenderId: "339863121380",
+        appId: "1:339863121380:web:123195552e821b085e6bf1"
+      };
+      if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      const sqDb = firebase.firestore();
+
+      // Local durum (custom /users based)
+      let sqCurrentUser = null; // { uid, data }
+      let sqCurrentLobbyId = null;
+      let sqPlayMode = 'single';
+
+      // UI refs
+      const sqAuthModal = document.getElementById('sq-auth-modal');
+      const sqLobbyModal = document.getElementById('sq-lobby-modal');
+      const sqUsernameSpan = document.getElementById('sq-username');
+      const sqToastRoot = document.getElementById('sq-toast');
+
+      // Buttons
+      document.getElementById('sq-auth-btn').addEventListener('click', ()=> sqAuthModal.style.display = 'block');
+      document.getElementById('sq-auth-close').addEventListener('click', ()=> sqAuthModal.style.display = 'none');
+      document.getElementById('sq-lobby-btn').addEventListener('click', ()=> {
+        sqLobbyModal.style.display = 'block';
+        refreshLobbies();
+      });
+      document.getElementById('sq-lobby-close').addEventListener('click', ()=> sqLobbyModal.style.display = 'none');
+
+      // Helper toast
+      function showToast(msg, timeout=2800){
+        const el = document.createElement('div');
+        el.className = 'sq-toast-item';
+        el.textContent = msg;
+        sqToastRoot.appendChild(el);
+        setTimeout(()=> { el.style.opacity = 0; setTimeout(()=> el.remove(),400); }, timeout);
+      }
+
+      // --- AUTH (username / password stored in /users) ---
+      // Improved sign-in: trims, tries exact username then usernameLower, gives console debug info on mismatch.
+      async function signInWithUsername(username, password){
+        username = (username || '').trim();
+        const usernameLower = username.toLowerCase();
+        if(!username) throw new Error('Kullanıcı adı gerekli');
+
+        // try exact username first
+        let q = await sqDb.collection('users').where('username','==', username).limit(1).get();
+        if(q.empty){
+          // fallback: try usernameLower field (if older users saved lowercase or we stored usernameLower during registration)
+          q = await sqDb.collection('users').where('usernameLower','==', usernameLower).limit(1).get();
+          if(q.empty){
+            // As final fallback, try searching by lowercase on username field by scanning a small set (costly) - avoid in production
+            // For now, throw user not found
+            throw new Error('Kullanıcı bulunamadı');
+          }
+        }
+
+        const doc = q.docs[0];
+        const data = doc.data();
+
+        if(!data.password){
+          throw new Error('Bu hesap parola ile kayıtlı değil (farklı yöntemle oluşturulmuş olabilir).');
+        }
+
+        const stored = (data.password || '').toString();
+
+        // Compare trimmed stored and provided password
+        if(stored.trim() !== (password || '').toString()){
+          // provide console debug info (no sensitive data sent to server)
+          console.warn('Parola uyuşmuyor. Girdi uzunluğu:', (password||'').length, 'kaydedilen uzunluk:', stored.length, 'dokümanId:', doc.id);
+          throw new Error('Hatalı şifre');
+        }
+
+        // success
+        sqCurrentUser = { uid: doc.id, data };
+        // persist as market_user so index.html (varsa) can pick it up
+        try { localStorage.setItem('market_user', doc.id); } catch(e){}
+        sqUsernameSpan.textContent = data.displayName || data.username || 'Kullanıcı';
+        showToast('Giriş başarılı');
+        sqAuthModal.style.display = 'none';
+      }
+
+      // registration saves usernameLower to help case-insensitive lookups later
+      async function registerWithUsername(username, password, displayName){
+        username = (username || '').trim();
+        if(!username || !password) throw new Error('Kullanıcı adı ve şifre gerekli');
+
+        const usernameLower = username.toLowerCase();
+        // Ensure unique username (check both username and usernameLower collision)
+        let q1 = await sqDb.collection('users').where('username','==', username).limit(1).get();
+        if(!q1.empty) throw new Error('Bu kullanıcı adı zaten alınmış');
+        let q2 = await sqDb.collection('users').where('usernameLower','==', usernameLower).limit(1).get();
+        if(!q2.empty) throw new Error('Bu kullanıcı adı zaten alınmış');
+
+        // Create user doc (client-side). In production create via trusted server.
+        const newDocRef = await sqDb.collection('users').add({
+          username,
+          usernameLower,
+          password, // WARNING: plaintext password stored — not secure. Use server-side hashing in production.
+          displayName: displayName || username,
+          balance: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        sqCurrentUser = { uid: newDocRef.id, data: { username, displayName: displayName || username, balance: 0 } };
+        try { localStorage.setItem('market_user', newDocRef.id); } catch(e){}
+        sqUsernameSpan.textContent = sqCurrentUser.data.displayName;
+        showToast('Kayıt başarılı');
+        sqAuthModal.style.display = 'none';
+      }
+
+      // Bind auth UI
+      document.getElementById('sq-signin-btn').addEventListener('click', async ()=>{
+        const username = document.getElementById('sq-username-input').value.trim();
+        const password = document.getElementById('sq-password-input').value;
+        try{
+          await signInWithUsername(username, password);
+        }catch(e){
+          showToast('Giriş hatası: ' + (e.message || e));
+        }
+      });
+      document.getElementById('sq-register-btn').addEventListener('click', async ()=>{
+        const username = document.getElementById('sq-username-input').value.trim();
+        const password = document.getElementById('sq-password-input').value;
+        try{
+          await registerWithUsername(username, password, username);
+        }catch(e){
+          showToast('Kayıt hatası: ' + (e.message || e));
+        }
+      });
+
+      // restore saved market_user (so index.html / market integration works)
+      (async function tryRestoreLocalUser(){
+        const savedUid = localStorage.getItem('market_user');
+        if(!savedUid) return;
+        try{
+          const doc = await sqDb.collection('users').doc(savedUid).get();
+          if(doc.exists){
+            sqCurrentUser = { uid: doc.id, data: doc.data() };
+            sqUsernameSpan.textContent = sqCurrentUser.data.displayName || sqCurrentUser.data.username || 'Kullanıcı';
+          } else {
+            localStorage.removeItem('market_user');
+          }
+        }catch(e){ console.error(e); }
+      })();
+
+      // Lobby logic (same as earlier but using sqCurrentUser.uid)
+      document.getElementById('mode-single').addEventListener('click', ()=>{
+        sqPlayMode = 'single';
+        document.getElementById('create-area').style.display = 'none';
+      });
+      document.getElementById('mode-online').addEventListener('click', ()=>{
+        sqPlayMode = 'online';
+        document.getElementById('create-area').style.display = 'block';
+      });
+      document.getElementById('mode-single').click();
+
+      async function refreshLobbies(){
+        const listEl = document.getElementById('lobby-list');
+        listEl.innerHTML = 'Yükleniyor...';
+        try{
+          const q = await sqDb.collection('sq_lobbies')
+            .where('started','==', false)
+            .orderBy('createdAt','desc')
+            .limit(30)
+            .get();
+          listEl.innerHTML = '';
+          if(q.empty) listEl.innerHTML = '<div style="color:#aaa">Hiç lobby yok.</div>';
+          q.forEach(doc=>{
+            const d = doc.data();
+            const item = document.createElement('div');
+            item.className = 'lobby-item';
+            const playersCount = (d.players && d.players.length) || 0;
+            item.innerHTML = `<div><strong>${d.name || 'Lobby'}</strong><div style="font-size:0.85rem; color:#aaa;">Host: ${d.hostName || '—'}</div></div>
+                              <div style="display:flex; gap:8px; align-items:center;">
+                                <div style="font-size:0.9rem; color:#fff;">${playersCount}/${d.maxPlayers||4}</div>
+                                <button data-id="${doc.id}" class="join-lobby-btn">Katıl</button>
+                              </div>`;
+            listEl.appendChild(item);
+          });
+          listEl.querySelectorAll('.join-lobby-btn').forEach(b=> b.addEventListener('click', ev=> {
+            const id = ev.currentTarget.dataset.id;
+            joinLobby(id);
+          }));
+        }catch(e){
+          listEl.innerHTML = '<div style="color:#faa">Listeleme hatası</div>';
+          console.error(e);
+        }
+      }
+      document.getElementById('refresh-lobbies').addEventListener('click', refreshLobbies);
+
+      // Create lobby
+      document.getElementById('create-lobby-btn').addEventListener('click', async ()=>{
+        if(!sqCurrentUser){ showToast('Önce giriş yapın'); return; }
+        const name = document.getElementById('lobby-name').value || ('Lobby-' + Math.floor(Math.random()*9000+1000));
+        const docRef = await sqDb.collection('sq_lobbies').add({
+          name,
+          hostUid: sqCurrentUser.uid,
+          hostName: sqCurrentUser.data.displayName || sqCurrentUser.data.username || 'Host',
+          players: [{ uid: sqCurrentUser.uid, name: sqCurrentUser.data.displayName || sqCurrentUser.data.username || 'Player', joinedAt: firebase.firestore.FieldValue.serverTimestamp() }],
+          maxPlayers: 8,
+          started: false,
+          paidOut: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('Lobby oluşturuldu');
+        sqCurrentLobbyId = docRef.id;
+        listenToLobby(docRef.id);
+        document.getElementById('leave-lobby-btn').style.display = 'inline-block';
+        createStartButtonForHost(docRef.id);
+        refreshLobbies();
+      });
+
+      // Join lobby
+      async function joinLobby(lobbyId){
+        if(!sqCurrentUser){ showToast('Önce giriş yapın'); return; }
+        try{
+          await sqDb.runTransaction(async tx => {
+            const ref = sqDb.collection('sq_lobbies').doc(lobbyId);
+            const snap = await tx.get(ref);
+            if(!snap.exists) throw new Error('Lobby bulunamadı');
+            const d = snap.data();
+            if(d.started) throw new Error('Oyun zaten başlamış');
+            const players = d.players || [];
+            if(players.find(p=> p.uid === sqCurrentUser.uid)) {
+              // already in lobby
+            } else {
+              if(players.length >= (d.maxPlayers || 8)) throw new Error('Lobby dolu');
+              players.push({ uid: sqCurrentUser.uid, name: sqCurrentUser.data.displayName || sqCurrentUser.data.username || 'Player', joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+              tx.update(ref, { players });
+            }
+          });
+          showToast('Lobbyye katıldınız');
+          sqCurrentLobbyId = lobbyId;
+          listenToLobby(lobbyId);
+          document.getElementById('leave-lobby-btn').style.display = 'inline-block';
+        }catch(e){
+          showToast('Katılma hatası: ' + (e.message || e));
+        }
+      }
+
+      // Leave lobby
+      document.getElementById('leave-lobby-btn').addEventListener('click', async ()=>{
+        if(!sqCurrentLobbyId || !sqCurrentUser) { sqCurrentLobbyId = null; return; }
+        try{
+          await sqDb.runTransaction(async tx=>{
+            const ref = sqDb.collection('sq_lobbies').doc(sqCurrentLobbyId);
+            const snap = await tx.get(ref);
+            if(!snap.exists) return;
+            const d = snap.data();
+            const players = (d.players || []).filter(p => p.uid !== sqCurrentUser.uid);
+            if(players.length === 0) {
+              tx.delete(ref);
+            } else {
+              tx.update(ref, { players });
+            }
+          });
+          showToast('Lobbyden çıktınız');
+          sqCurrentLobbyId = null;
+          stopListeningLobby();
+          document.getElementById('leave-lobby-btn').style.display = 'none';
+          refreshLobbies();
+        }catch(e){
+          showToast('Çıkış hatası');
+        }
+      });
+
+      // Lobby listener
+      let lobbyUnsub = null;
+      function listenToLobby(lobbyId){
+        stopListeningLobby();
+        lobbyUnsub = sqDb.collection('sq_lobbies').doc(lobbyId).onSnapshot(doc=>{
+          if(!doc.exists) { showToast('Lobby kapatıldı'); stopListeningLobby(); sqCurrentLobbyId = null; document.getElementById('leave-lobby-btn').style.display = 'none'; return; }
+          const d = doc.data();
+          document.getElementById('lobby-hint').textContent = `Lobby: ${d.name} • Oyuncular: ${(d.players||[]).length}/${d.maxPlayers||8}`;
+          if(d.started){
+            sqLobbyModal.style.display = 'none';
+            showToast('Lobby başladı — oyun başlıyor');
+            sqPlayMode = 'online';
+            sqCurrentLobbyId = lobbyId;
+            if(typeof startGame === 'function') {
+              document.getElementById('overlay').style.display = 'none';
+              setTimeout(()=> startGame(), 250);
+            }
+          }
+        });
+      }
+      function stopListeningLobby(){
+        if(lobbyUnsub) { lobbyUnsub(); lobbyUnsub = null; }
+      }
+
+      // Host start button
+      function createStartButtonForHost(lobbyId){
+        let existing = document.getElementById('host-start-area');
+        if(existing) existing.remove();
+        const hostArea = document.createElement('div');
+        hostArea.id = 'host-start-area';
+        hostArea.style = 'display:flex; justify-content:flex-end; margin-top:8px;';
+        const startBtn = document.createElement('button');
+        startBtn.textContent = 'Host: Oyunu Başlat';
+        startBtn.addEventListener('click', async ()=>{
+          try{
+            await sqDb.collection('sq_lobbies').doc(lobbyId).update({ started: true, startedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            showToast('Oyun başlatıldı');
+          }catch(e){ showToast('Başlatma hatası'); }
+        });
+        hostArea.appendChild(startBtn);
+        document.getElementById('sq-lobby-modal').appendChild(hostArea);
+      }
+
+      // ÖDÜL VERME: +15$ index.html'de kullanılan users koleksiyonuna eklenir
+      async function awardWinnerToUser(uid, lobbyId=null){
+        try{
+          if(!uid) throw new Error('Uid yok');
+          if(lobbyId){
+            const lobbyRef = sqDb.collection('sq_lobbies').doc(lobbyId);
+            await sqDb.runTransaction(async tx=>{
+              const lSnap = await tx.get(lobbyRef);
+              if(!lSnap.exists) throw new Error('Lobby bulunamadı');
+              const l = lSnap.data();
+              if(l.paidOut) throw new Error('Ödül zaten verildi');
+              const userRef = sqDb.collection('users').doc(uid);
+              const userSnap = await tx.get(userRef);
+              const currentBal = (userSnap.exists && Number(userSnap.data().balance || 0)) || 0;
+              tx.set(userRef, { balance: currentBal + 15 }, { merge: true });
+              tx.update(lobbyRef, { paidOut: true, winnerUid: uid, paidAt: firebase.firestore.FieldValue.serverTimestamp() });
+            });
+            showToast('Kazandınız! Hesabınıza $15 eklendi (online).');
+          } else {
+            const userRef = sqDb.collection('users').doc(uid);
+            await sqDb.runTransaction(async tx=>{
+              const uSnap = await tx.get(userRef);
+              const currentBal = (uSnap.exists && Number(uSnap.data().balance || 0)) || 0;
+              tx.set(userRef, { balance: currentBal + 15 }, { merge: true });
+            });
+            showToast('Kazandınız! Hesabınıza $15 eklendi (tekli).');
+          }
+        }catch(e){
+          if(e.message && e.message.includes('Ödül zaten verildi')) {
+            showToast('Ödül zaten verilmiş (başka oyuncu önce kazandı).');
+          } else {
+            console.error('award error', e);
+            showToast('Ödül verme sırasında hata: '+ (e.message || e));
+          }
+        }
+      }
+
+      // Expose award function globally for the game's gameOver to call
+      window.sq_awardWinner = async function(win){
+        if(!win) return;
+        if(!sqCurrentUser){
+          showToast('Kazandınız fakat giriş yapılmadığı için ödül verilemedi.');
+          return;
+        }
+        const uid = sqCurrentUser.uid;
+        if(sqPlayMode === 'online' && sqCurrentLobbyId){
+          await awardWinnerToUser(uid, sqCurrentLobbyId);
+        } else {
+          await awardWinnerToUser(uid, null);
+        }
+      };
+
+      // Clean up on unload
+      window.addEventListener('beforeunload', ()=> {
+        stopListeningLobby();
+      });
+
+      // initial refresh
+      setTimeout(()=> refreshLobbies(), 600);
+
+    </script>
+
+    <script>
+        /* ORİJİNAL OYUN KODU - Görünüm/oyun mantığı değiştirilmedi.
+           Tek fark: gameOver(win, message) içinde kazanınca window.sq_awardWinner(true) çağrılır.
+        */
+        // DOM Elementleri
+        const player = document.getElementById('player');
+        const gameContainer = document.getElementById('game-container');
+        const dollHead = document.getElementById('doll-head');
+        const statusText = document.getElementById('status-text');
+        const overlay = document.getElementById('overlay');
+        const title = document.getElementById('overlay-title');
+        const desc = document.getElementById('overlay-desc');
+        const timerEl = document.getElementById('timer');
+
+        // Oyun Ayarları
+        const GAME_DURATION = 90; // Saniye
+        const PLAYER_SPEED = 1.2; // Yavaş hız
+        const FINISH_LINE_Y = 110; // Bitiş çizgisi pozisyonu (px cinsinden yukarıdan)
+        
+        // Oyun Durumu
+        let isGameActive = false;
+        let isGreenLight = false; // False = Kırmızı, True = Yeşil
+        let isHolding = false;
+        let playerY = 0; // % cinsinden alttan uzaklık veya px hesaplaması
+        let playerPosPixels = 0; // Px cinsinden alttan mesafe
+        let gameTime = GAME_DURATION;
+        let timerInterval;
+        let gameLoop;
+        let lightTimer;
+        
+        // Botlar
+        let bots = [];
+        const BOT_COUNT = 6;
+
+        // Başlatma
+        function startGame() {
+            // Sıfırla
+            isGameActive = true;
+            isHolding = false;
+            isGreenLight = false;
+            gameTime = GAME_DURATION;
+            playerPosPixels = 20; // Başlangıç (bottom: 20px)
+            
+            // UI Güncelle
+            overlay.style.display = 'none';
+            updateTimerDisplay();
+            statusText.innerText = "HAZIRLAN...";
+            statusText.style.color = "#e74c3c";
+            dollHead.className = "red-light";
+
+            // Botları Oluştur
+            createBots();
+
+            // Oyuncu Konumunu Sıfırla
+            player.style.bottom = playerPosPixels + 'px';
+            player.classList.remove('dead');
+            player.style.backgroundColor = "#009d7a";
+
+            // Süreyi Başlat
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // Döngüyü Başlat
+            requestAnimationFrame(updateGame);
+
+            // İlk Işık Döngüsünü Başlat (Biraz bekletip)
+            setTimeout(cycleLight, 2000);
+        }
+
+        // Işık Döngüsü (Yeşil - Kırmızı arası geçiş)
+        function cycleLight() {
+            if (!isGameActive) return;
+
+            if (isGreenLight) {
+                // Yeşilden Kırmızıya Geçiş
+                isGreenLight = false;
+                dollHead.className = "red-light";
+                statusText.innerText = "DUR (KIRMIZI)";
+                statusText.style.color = "#e74c3c";
+                
+                // Rastgele bir süre Kırmızı kal (2 - 4 sn)
+                let randomTime = Math.random() * 2000 + 2000; 
+                lightTimer = setTimeout(cycleLight, randomTime);
+            } else {
+                // Kırmızıdan Yeşile Geçiş
+                isGreenLight = true;
+                dollHead.className = "green-light";
+                statusText.innerText = "KOŞ (YEŞİL)";
+                statusText.style.color = "#2ecc71"; // Yeşil
+
+                // Rastgele bir süre Yeşil kal (2 - 4 sn)
+                let randomTime = Math.random() * 2000 + 2000;
+                lightTimer = setTimeout(cycleLight, randomTime);
+            }
+        }
+
+        // Oyun Döngüsü
+        function updateGame() {
+            if (!isGameActive) return;
+
+            // Oyuncu Hareketi
+            if (isHolding) {
+                if (isGreenLight) {
+                    // Güvenli hareket
+                    movePlayer();
+                } else {
+                    // Kırmızı ışıkta hareket = ÖLÜM
+                    gameOver(false, "KIPIRDADIN!");
+                    return;
+                }
+            }
+
+            // Botların Hareketi
+            updateBots();
+
+            requestAnimationFrame(updateGame);
+        }
+
+        function movePlayer() {
+            // Ekran yüksekliğini al
+            const containerHeight = gameContainer.clientHeight;
+            
+            // Yukarı doğru hareket
+            playerPosPixels += PLAYER_SPEED;
+            player.style.bottom = playerPosPixels + 'px';
+
+            // Kazanma Kontrolü
+            if (playerPosPixels >= (containerHeight - FINISH_LINE_Y)) {
+                gameOver(true, "TEBRİKLER! KURTULDUN.");
+            }
+        }
+
+        // Bot Mantığı
+        function createBots() {
+            document.querySelectorAll('.bot').forEach(e => e.remove());
+            bots = [];
+
+            for (let i = 0; i < BOT_COUNT; i++) {
+                let botEl = document.createElement('div');
+                botEl.classList.add('character', 'bot');
+                let leftPos = 10 + Math.random() * 80; 
+                botEl.style.left = leftPos + '%';
+                botEl.style.bottom = '20px';
+                gameContainer.appendChild(botEl);
+
+                bots.push({
+                    el: botEl,
+                    pos: 20,
+                    speed: 0.8 + Math.random() * 0.5,
+                    isDead: false,
+                    reactionTime: Math.random() * 30
+                });
+            }
+        }
+
+        function updateBots() {
+            const containerHeight = gameContainer.clientHeight;
+
+            bots.forEach(bot => {
+                if (bot.isDead) return;
+
+                if (isGreenLight) {
+                    bot.pos += bot.speed;
+                    bot.el.style.bottom = bot.pos + 'px';
+                } else {
+                    if (Math.random() < 0.005) {
+                        bot.isDead = true;
+                        bot.el.classList.add('dead');
+                    }
+                }
+
+                if (bot.pos >= (containerHeight - FINISH_LINE_Y)) {
+                    bot.pos = containerHeight - FINISH_LINE_Y;
+                }
+            });
+        }
+
+        // Süre Sayacı
+        function updateTimer() {
+            gameTime--;
+            updateTimerDisplay();
+
+            if (gameTime <= 0) {
+                gameOver(false, "SÜRE DOLDU!");
+            }
+        }
+
+        function updateTimerDisplay() {
+            let minutes = Math.floor(gameTime / 60);
+            let seconds = gameTime % 60;
+            timerEl.innerText = `0${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // Oyun Sonu
+        function gameOver(win, message) {
+            isGameActive = false;
+            clearInterval(timerInterval);
+            clearTimeout(lightTimer);
+
+            if (!win) {
+                player.classList.add('dead');
+                player.style.backgroundColor = "#8a0b0b";
+            }
+
+            setTimeout(() => {
+                overlay.style.display = 'flex';
+                title.innerText = win ? "KAZANDIN" : "ELENDİN";
+                title.style.color = win ? "#2ecc71" : "#e74c3c";
+                desc.innerHTML = `Durum: ${message}<br>${win ? '45.6 Milyar Won Senin!' : 'Bir dahaki sefere...'}`;
+
+                // ÖDÜL ÇAĞRISI (15$)
+                if(win){
+                  if(window.sq_awardWinner) {
+                    window.sq_awardWinner(true).catch(e=> console.error('award err', e));
+                  }
+                }
+            }, 1000);
+        }
+
+        // Girdi Kontrolleri (Mobil ve PC)
+        document.addEventListener('mousedown', () => { if(isGameActive) isHolding = true; });
+        document.addEventListener('mouseup', () => { if(isGameActive) isHolding = false; });
+        document.addEventListener('touchstart', (e) => { 
+            e.preventDefault();
+            if(isGameActive) isHolding = true; 
+        }, {passive: false});
+        document.addEventListener('touchend', (e) => { 
+            e.preventDefault();
+            if(isGameActive) isHolding = false; 
+        });
+
+        // overlay start button handler (safe — no recursive dispatch)
+        document.getElementById('overlay-start-btn').addEventListener('click', ()=> {
+          // Eğer kullanıcı online modu seçtiyse lobby aç
+          if (sqPlayMode === 'online') {
+            sqLobbyModal.style.display = 'block';
+            refreshLobbies();
+            return;
+          }
+
+          // Tekli mod
+          if (!sqCurrentUser) {
+            // kullanıcı girişli değil — uyar ve giriş modalını göster
+            const ok = confirm('Kazananlar için giriş yapmalısınız. Giriş yapmadan kazanırsanız ödül verilemez. Şimdi giriş yapmak ister misiniz?');
+            if (ok) {
+              sqAuthModal.style.display = 'block';
+              return;
+            }
+            // kullanıcı giriş yapmak istemezse yine de başlat
+          }
+
+          // Oyunu başlat
+          try {
+            startGame();
+            document.getElementById('overlay').style.display = 'none';
+          } catch (err) {
+            console.error('startGame hata:', err);
+            showToast('Oyun başlatılamadı: ' + (err.message || err));
+          }
+        });
+
+    </script>
+</body>
+</html>

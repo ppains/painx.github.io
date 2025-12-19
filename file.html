@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SurveyMonkey × PAİNDEX | Mutlu Yıllar 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+font-family:'Poppins', sans-serif;
+background:linear-gradient(135deg, #0b1129, #16205a, #0f1b4a);
+color:#fff;
+min-height:100vh;
+overflow-x:hidden;
+position:relative;
+}
+/* SADECE YAĞIŞ ALANI */
+.emoji-rain{
+position:fixed;
+top:0;left:0;right:0;bottom:0;
+pointer-events:none;
+z-index:5;
+}
+.rain-element{ /* Ortak sınıf adı (Emoji veya Kar) */
+position:absolute;
+user-select:none;
+pointer-events:none;
+/* Genel düşüş animasyonu: Orta hızda düşüş ve salınım */
+animation:fall linear infinite, sway 8s ease-in-out infinite alternate; 
+filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+}
+@keyframes fall{
+to{transform:translateY(110vh);}
+}
+@keyframes sway{
+from{transform:translateX(-40px);}
+to{transform:translateX(40px);}
+}
+/* KAR EFEKTİ (Daha hafif ve beyaz noktalar) */
+.snowflake{
+background-color:#ffffff;
+border-radius:50%;
+opacity:0.7;
+filter:drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+animation:fall linear infinite, sway 10s ease-in-out infinite alternate, spin 15s linear infinite; /* Yavaş düşüş ve dönüş */
+}
+@keyframes spin{
+to{transform:rotate(360deg);}
+}
+/* PARA YAĞIŞI EFEKTLERİ */
+.money{
+font-size:3rem;
+animation:fall linear infinite, rotate-y 4s linear infinite;
+filter:drop-shadow(0 0 15px rgba(255, 255, 0, 0.5));
+}
+@keyframes rotate-y{
+0%{transform:perspective(500px) rotateY(0deg);}
+50%{transform:perspective(500px) rotateY(180deg);}
+100%{transform:perspective(500px) rotateY(360deg);}
+}
+/* Ana içerik (Korundu) */
+.container{
+max-width:1100px;
+margin:0 auto;
+padding:50px 20px;
+text-align:center;
+position:relative;
+z-index:10;
+}
+h1{
+font-family:'Mountains of Christmas', cursive;
+font-size:6.8rem;
+color:#ff3366;
+text-shadow:0 0 30px #ff3366, 0 0 60px #c00;
+animation:glow 4s ease-in-out infinite alternate;
+margin:30px 0;
+}
+@keyframes glow{from{text-shadow:0 0 30px #ff3366, 0 0 60px #c00;}to{text-shadow:0 0 50px #ff3366, 0 0 100px #ff6699;}}
+@media (max-width: 768px){h1{font-size:4.8rem;}}
+@media (max-width: 480px){h1{font-size:3.6rem;}}
+.subtitle{font-size:2rem;color:#e6f9ff;margin:30px 0 60px;}
+.btn{display:inline-block;padding:22px 70px;margin:15px;font-size:1.9rem;font-weight:700;border-radius:60px;text-decoration:none;transition:all 0.4s;box-shadow:0 10px 40px rgba(255,51,102,0.6);}
+.btn.red{background:linear-gradient(45deg, #ff1744, #ff6b8a);color:white;border:4px solid #fff;}
+.btn.red:hover{transform:translateY(-12px) scale(1.08);box-shadow:0 20px 60px rgba(255,23,68,0.8);}
+.features{display:flex;flex-wrap:wrap;justify-content:center;gap:35px;margin:100px 0;}
+.card{background:rgba(255,255,255,0.1);backdrop-filter:blur(15px);border:2px solid rgba(255,255,255,0.25);border-radius:25px;padding:45px 35px;width:340px;transition:0.5s;}
+.card:hover{transform:translateY(-20px);border-color:#ff3366;box-shadow:0 25px 70px rgba(255,51,102,0.5);}
+</style>
+</head>
+<body>
+<div class="emoji-rain" id="emojiRain"></div>
+<div class="container">
+<div style="margin:40px 0">
+<img src="https://logo.clearbit.com/surveymonkey.com" alt="SurveyMonkey" style="height:85px; filter:drop-shadow(0 0 20px #ff3366);">
+<span style="color:#ff3366;font-size:6.5rem;font-weight:900;text-shadow:0 0 50px #ff3366;">×</span>
+<img src="https://paindex.io/logo.png" alt="PAİNDEX" style="height:85px; filter:drop-shadow(0 0 20px #ff3366);"
+onerror="this.src='https://via.placeholder.com/300x90/ffffff/c00?text=PAINDEX'">
+</div>
+<h1>Mutlu Yıllar!</h1>
+<p class="subtitle">
+SurveyMonkey × PAİNDEX’ten sana<br>
+<strong style="color:#ff3366; font-size:2.4rem;">2026₺ YILBAŞI HEDİYESİ</strong>
+</p>
+<a href="index.html" class="btn red">2026₺ Bonusumu Al!</a>
+<div class="features">
+<div class="card"><h3 style="color:#ff3366">2026₺ anında hesabında</h3></div>
+<div class="card"><h3 style="color:#ff3366">Özel yılbaşı anketleri</h3></div>
+<div class="card"><h3 style="color:#ff3366">Anında çekim – Papara & Banka</h3></div>
+</div>
+</div>
+<script>
+// Sadece Para Birimleri için emojiler
+const moneyEmojis = ['💰', '€', '€']; 
+function createRainElement() {
+const rain = document.getElementById('emojiRain');
+const e = document.createElement('div');
+e.classList.add('rain-element'); // Genel sınıf
+// Kar mı Para mı?
+const isSnow = Math.random() < 0.6; // %60 kar, %40 para
+if (isSnow) {
+// *** KAR EFEKTİ ***
+e.classList.add('snowflake');
+e.style.width = e.style.height = (Math.random() * 0.5 + 0.3) + 'rem';
+// Orta Hızda Düşüş (Kar): 8–16 saniye
+e.style.animationDuration = (Math.random() * 8 + 8) + 's'; 
+// Spawn olduğu an düşüş başlasın
+e.style.animationDelay = (Math.random() * 0.1) + 's'; 
+} else {
+// *** PARA EFEKTİ ***
+const emoji = moneyEmojis[Math.floor(Math.random() * moneyEmojis.length)];
+e.innerText = emoji;
+e.classList.add('money');
+// Orta Hızda Düşüş (Para): 7–13 saniye
+e.style.animationDuration = (Math.random() * 6 + 7) + 's'; 
+// Spawn olduğu an düşüş başlasın
+e.style.animationDelay = (Math.random() * 0.1) + 's'; 
+e.style.fontSize = (Math.random() * 1.5 + 1.5) + 'rem';
+}
+e.style.left = Math.random() * 100 + 'vw';
+rain.appendChild(e);
+// Performans için temizle
+setTimeout(() => e.remove(), 20000);
+}
+// YENİ AYAR: Sürekli akış için aralık kısaltıldı ve tek kontrol noktası yapıldı.
+// Her 400 milisaniyede (0.4 saniye) bir yeni öğe oluşturulur.
+setInterval(createRainElement, 400);
+// Başlangıç yoğunluğunu kontrol eden for döngüsü kaldırıldı.
+</script>
+</body>
+</html>

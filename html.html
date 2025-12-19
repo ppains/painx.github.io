@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>PAİNDEX | 3.0 Güncelleme Lansmanı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Oxanium:wght@700&family=Rubik+Mono+One&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS'in KRALI: Kök Değişkenler ve Temel Stiller */
+        :root { 
+            --dark-blue: #0A192F; 
+            --off-white: #F0F8FF; 
+            --neon-green: #39FF14; 
+            --accent-red: #FF456E; 
+            --accent-gold: #FFD700; 
+            --font-display: 'Rubik Mono One', sans-serif;
+            --font-mono: 'Oxanium', monospace;
+            --font-body: 'Inter', sans-serif;
+            --card-bg: rgba(10, 25, 47, 0.95);
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: var(--font-body);
+            color: var(--off-white);
+            background: var(--dark-blue);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        /* ------------------------------------------- */
+        /* 1. YENİ GİRİŞ ANİMASYONU: CRASH LOADER */
+        /* ------------------------------------------- */
+        #loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-blue);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease-out;
+        }
+        
+        .logo-crash-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px; /* Harflerin oturacağı yükseklik */
+            width: 90%;
+            max-width: 650px;
+            gap: 10px; /* Harfler arası boşluk */
+        }
+
+        .crash-letter {
+            font-family: var(--font-display);
+            font-size: 4rem; /* Tüm harfler aynı boyutta */
+            color: var(--neon-green);
+            opacity: 0;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.8);
+            transform: translateY(-500px); /* Başlangıç pozisyonu (yukarıda) */
+            transition: color 0.3s;
+        }
+        
+        /* P harfi için özel renk */
+        .crash-letter[data-letter="P"] {
+            color: var(--accent-gold); 
+            text-shadow: 0 0 15px var(--accent-gold), 0 0 5px var(--accent-red);
+        }
+
+        /* UNİFORM DÜŞÜŞ VE ÇARPIŞMA ANİMASYONU */
+        @keyframes uniform-fall {
+            0% { opacity: 0; transform: translateY(-500px) rotateX(0deg); }
+            50% { opacity: 1; transform: translateY(0px) rotateX(0deg); }
+            70% { transform: translateY(-30px); } /* Sekme */
+            100% { opacity: 1; transform: translateY(0px); box-shadow: 0 0 20px rgba(57, 255, 20, 0.5); }
+        }
+
+        /* Devam Butonu */
+        .continue-btn-loader {
+            opacity: 0;
+            margin-top: 50px;
+            animation: fadeIn 0.8s forwards;
+            animation-delay: 2.5s; /* Animasyon bittikten sonra belirsin */
+            /* Stil geri kalanı: close-btn ile aynı */
+            padding: 20px 40px;
+            font-size: 1.4rem;
+            font-family: var(--font-display);
+            color: var(--dark-blue);
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-gold));
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 69, 110, 0.9);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        
+        /* ------------------------------------------- */
+        /* 2. DUYURU MENÜSÜ VE DİĞER STİLLER */
+        /* ------------------------------------------- */
+        /* ... (Duyuru Menüsü, Feature List, P-Cube stilleri önceki mükemmeliyetçi koddan korunmuştur) ... */
+        #mainMenu button {
+            opacity: 0;
+            margin-top: 50px;
+            animation: fadeIn 0.8s forwards;
+            animation-delay: 2.5s; /* Animasyon bittikten sonra belirsin */
+            /* Stil geri kalanı: close-btn ile aynı */
+            padding: 20px 40px;
+            font-size: 1.4rem;
+            font-family: var(--font-display);
+            color: var(--dark-blue);
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-gold));
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 69, 110, 0.9);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        
+        #announcement-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 9900; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.5s ease-out;
+        }
+        .announcement-card {
+            position: relative; z-index: 10; width: 90%; max-width: 750px; max-height: 90vh; background: var(--card-bg); border: 3px solid var(--neon-green); border-radius: 20px; box-shadow: 0 0 40px rgba(57, 255, 20, 0.8), 0 20px 50px rgba(0, 0, 0, 0.9); padding: 40px; overflow-y: auto; transform: scale(0.9); animation: slideIn 0.8s forwards;
+        }
+        .close-btn {
+            position: relative; overflow: hidden; padding: 20px; font-size: 1.4rem; background: linear-gradient(90deg, var(--accent-red), var(--accent-gold)); border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 5px 20px rgba(255, 69, 110, 0.9); transition: transform 0.2s;
+        }
+        /* SHINE EFEKTİ */
+        .close-btn::after {
+            content: ''; position: absolute; top: 0; left: -150%; width: 50%; height: 100%; background: rgba(255, 255, 255, 0.4); transform: skewX(-20deg); transition: left 0.7s ease;
+        }
+        .close-btn:hover::after { left: 150%; }
+
+        /* ------------------------------------------- */
+        /* 3. ARKA PLAN ANİMASYONLARI (BUG FIX) */
+        /* ------------------------------------------- */
+        .snow, .money-rain-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; /* Z-index'i düşürerek crash loader'ın arkasında kalmasını sağladık */
+        }
+        
+        .snow-dot { /* Kar Tanesi */
+            position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; opacity: 0.6; animation: snowFall linear infinite;
+        }
+
+        .coin { /* Para/Ödül */
+            position: absolute; font-size: 1.5rem; animation: fall linear infinite; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);
+        }
+        
+        /* Düşme Keyframes'leri daha sade ve stabil hale getirildi */
+        @keyframes fall {
+            0% { transform: translate3d(var(--x), -10vh, 0); opacity: 0.9; }
+            100% { transform: translate3d(var(--x-end), 110vh, 0); opacity: 0; }
+        }
+        @keyframes snowFall {
+            0% { transform: translate3d(var(--initial-x), -100px, 0); opacity: 0.8;}
+            100% { transform: translate3d(var(--final-x), 100vh, 0); opacity: 0.2;}
+        }
+
+        /* ------------------------------------------- */
+        /* MOBİL UYUMLULUK */
+        /* ------------------------------------------- */
+        @media (max-width: 768px) {
+            .crash-letter { font-size: 2.5rem; }
+            .logo-crash-container { gap: 5px; height: 100px; }
+            .announcement-card { padding: 20px; }
+            .card-header h1 { font-size: 2.2rem; }
+            .card-header h2 { font-size: 1rem; }
+            .feature-list { grid-template-columns: 1fr; gap: 15px; }
+        }
+        
+        /* Diğer keyframes'ler */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.8) translateY(100px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes neonPulse {
+            from { text-shadow: 0 0 5px var(--neon-green), 0 0 15px rgba(57, 255, 20, 0.8); }
+            to { text-shadow: 0 0 10px var(--neon-green), 0 0 30px rgba(57, 255, 20, 1); }
+        }
+        @keyframes rotateCube {
+            from { transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            to { transform: translate(-50%, -50%) rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="snow" id="snow-effect"></div>
+    
+    <div class="money-rain-container" id="coinRain"></div>
+    
+    <div class="p-cube" id="pCube" style="opacity: 0.05;">
+        <div class="cube-face face1 face-P"></div>
+        <div class="cube-face face2 face-I"></div>
+        <div class="cube-face face3 face-P"></div>
+        <div class="cube-face face4 face-I"></div>
+        <div class="cube-face face5 face-P"></div>
+        <div class="cube-face face6 face-I"></div>
+    </div>
+
+
+    <div id="loader-overlay">
+        <div class="logo-crash-container" id="logoCrash">
+            <span class="crash-letter" data-letter="P">P</span>
+            <span class="crash-letter" data-letter="A">A</span>
+            <span class="crash-letter" data-letter="I">I</span>
+            <span class="crash-letter" data-letter="N">N</span>
+            <span class="crash-letter" data-letter="D">D</span>
+            <span class="crash-letter" data-letter="E">E</span>
+            <span class="crash-letter" data-letter="X">X</span>
+        </div>
+        
+        <button class="continue-btn continue-btn-loader" onclick="finishIntro()">
+            PAİNDEX 3.0 GİRİŞ
+        </button>
+    </div>
+    
+    <div id="announcement-modal">
+        <div class="announcement-card">
+            <div class="card-header">
+                <h1>PAİNDEX 3.0 🎉 YAYINDA!</h1>
+                <h2>YILBAŞI VE NEON DEVRİM BAŞLADI</h2>
+            </div>
+            
+            <ul class="feature-list">
+                <li class="feature-item major">
+                    <strong>Menü & Arayüz Değişti ⚙️</strong>
+                    <span>Sıfırdan tasarlanan fütüristik arayüz ve mobil uyumlu menü sizi bekliyor.</span>
+                </li>
+                <li class="feature-item major">
+                    <strong>Renkli İsim (Flashy Name) ✨</strong>
+                    <span>Artık şöhretinize uygun özel renkli, parlayan (neon) isimler kullanabilirsiniz.</span>
+                </li>
+                <li class="feature-item major">
+                    <strong>Moderator Rolü & Panel 🛡️</strong>
+                    <span>Sitenin düzenini sağlamak için özel moderatör rolleri ve kontrol paneli eklendi.</span>
+                </li>
+                <li class="feature-item">
+                    <strong>Sıralama Eklendi 🏆</strong>
+                    <span>Bakiye ve aktivite bazlı global sıralamalar ile rekabet en üst seviyede!</span>
+                </li>
+                <li class="feature-item christmas">
+                    <strong>Yılbaşı Etkinlikleri! 🎁</strong>
+                    <span>Sınırlı süreli özel görevler ve ödüllerle dolu Yılbaşı Etkinlikleri başladı.</span>
+                </li>
+                <li class="feature-item">
+                    <strong>Oyunlar Eklendi 🕹️</strong>
+                    <span>Yeni mini oyunlar ve bahis sistemleri ile bakiyenizi katlayabilirsiniz.</span>
+                </li>
+                <li class="feature-item">
+                    <strong>Duyuru Menüsü Eklendi 📢</strong>
+                    <span>Büyük güncellemelerden artık bu özel menü ile anında haberdar olacaksınız.</span>
+                </li>
+                <li class="feature-item">
+                    <strong>Tasarım İyileştirmeleri 🎨</strong>
+                    <span>Performans ve görsel detaylarda kapsamlı iyileştirmeler yapıldı.</span>
+                </li>
+                <li class="feature-item">
+                    <strong>Kapsamlı Bug Düzeltmeleri ✅</strong>
+                    <span>Sistem daha stabil ve sorunsuz çalışması için tüm kritik hatalar giderildi.</span>
+                      <li class="feature-item major">
+                    <strong>SoundCloud Erişimi getirildi ☁</strong>
+                    <span>Artık Bir Yandan kendinize farklı apiden dinlenme kazanabilir ve ya müzik dinleyebilirsiniz.</span>
+                      <li class="feature-item major">
+                    <strong>BezmiBOT </strong>
+                    <span>Ai ile sohbet ve sorularınızı sağlayabilirsiniz..</span>
+                     <li class="feature-item">
+                    <strong>Kutu açma özelliği geldi 🎁.</strong>
+                    <span>Ödüllerinizin tadına varın.</span>
+                </li>
+                </li>
+                </li>
+                </li>
+            </ul>
+            
+            <button class="close-btn" onclick="closeAnnouncement()">
+                PAİNDEX 3.0 GİRİŞ
+            </button>
+        </div>
+    </div>
+
+
+    <div id="main-content" style="padding: 20px; text-align: center; opacity: 0; visibility: hidden; transition: opacity 1s ease-in; min-height: 150vh;">
+        <h1 style="font-family: var(--font-display); color: var(--neon-green); margin-top: 100px;">PAİNDEX AKTİF</h1>
+        <p>Tebrikler! Lansman sürecini tamamladınız. Artık ana içeriğiniz buraya geliyor.</p>
+        <a href="index.html" class="mainMenu"><button>Ana Sayfaya git
+        </button></a>
+        <div style="height: 1000px; color: var(--off-white);">Kaydırma Alanı</div>
+    </div>
+    
+    <div class="scroll-indicator" style="opacity: 0; transition: opacity 0.5s;"></div>
+
+
+    <script>
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const announcementModal = document.getElementById('announcement-modal');
+        const mainContent = document.getElementById('main-content');
+        const snowEffect = document.getElementById('snow-effect');
+        const coinRainContainer = document.getElementById('coinRain');
+        const logoCrashContainer = document.getElementById('logoCrash');
+        
+        const letters = logoCrashContainer.querySelectorAll('.crash-letter');
+        
+        // Yılbaşı Teması: Kar Yağışı Oluşturucu (Stabil)
+        function createSnowflakes(count) {
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('snow-dot');
+                const startX = Math.random() * 100;
+                const duration = Math.random() * 10 + 8; // Daha yavaş ve uzun animasyon
+                const size = Math.random() * 2 + 1; 
+                const endXOffset = Math.random() * 20 - 10; // Daha az yatay kayma
+                dot.style.setProperty('--initial-x', `${startX}vw`);
+                dot.style.setProperty('--final-x', `${startX + endXOffset}vw`);
+                dot.style.animationDuration = `${duration}s`;
+                dot.style.animationDelay = `-${Math.random() * duration}s`;
+                dot.style.width = `${size}px`;
+                dot.style.height = `${size}px`;
+                snowEffect.appendChild(dot);
+            }
+        }
+        // Sayfanın en altındaki <script> etiketinin içine ekleyin
+document.addEventListener('DOMContentLoaded', function() {
+    const splashScreen = document.getElementById('splash-screen');
+    const hasVisited = localStorage.getItem('hasVisitedSplash');
+
+    // 1. Kontrol: Kullanıcı daha önce ziyaret etmiş mi?
+    if (hasVisited === 'true') {
+        // Evet, ziyaret etmiş. Ekranı hemen gizle.
+        splashScreen.classList.add('hidden');
+    } else {
+        // Hayır, ilk ziyareti. Ekranı göster.
+        splashScreen.classList.remove('hidden');
+        
+        // 2. İşaretleme: Kullanıcının ziyaret ettiğini LocalStorage'a kaydet.
+        // LocalStorage, tarayıcı kapansa bile veriyi saklar.
+        localStorage.setItem('hasVisitedSplash', 'true');
+
+        // 3. Geçiş Efekti (Opsiyonel): Belirli bir süre sonra ekranı gizle.
+        setTimeout(() => {
+            // Önce saydamlaştır (CSS transition çalışır)
+            splashScreen.style.opacity = '0'; 
+
+            // Geçiş bittikten sonra tamamen DOM'dan kaldır (veya display: none yap)
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+            }, 1000); // CSS'teki transition süresi (1 saniye) kadar bekler
+            
+        }, 3000); // 3 saniye gösterim süresi
+    }
+});
+        // Para Yağmuru Oluşturucu (Stabil)
+        function createCoins(count) {
+            const symbols = ['💰', '💎', '⭐', '🪙', '✨', '🎁']; 
+            for (let i = 0; i < count; i++) {
+                const coin = document.createElement('div');
+                coin.classList.add('coin');
+                coin.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+                const startX = Math.random() * 100;
+                const duration = Math.random() * 10 + 8; // Daha yavaş ve uzun animasyon
+                const endXOffset = Math.random() * 20 - 10; // Daha az yatay kayma
+                coin.style.setProperty('--x', `${startX}vw`);
+                coin.style.setProperty('--x-end', `${startX + endXOffset}vw`);
+                coin.style.animationDuration = `${duration}s`;
+                coin.style.animationDelay = `-${Math.random() * duration}s`;
+                coin.style.fontSize = `${Math.random() * 0.7 + 1.0}rem`;
+                coinRainContainer.appendChild(coin);
+            }
+        }
+
+        // ------------------------------------
+        // CRASH ANİMASYONUNU BAŞLATMA FONKSİYONU
+        // ------------------------------------
+        function startCrashAnimation() {
+            // Harfleri sırayla ve aynı animasyonla düşür
+            letters.forEach((letter, index) => {
+                const delay = index * 0.15; // Her harf 150ms arayla düşecek
+                letter.style.animation = `uniform-fall 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards ${delay}s`;
+            });
+        }
+        
+        // Loader biter, Duyuru Menüsü Başlar
+        function finishIntro() {
+            loaderOverlay.style.opacity = '0';
+            
+            setTimeout(() => {
+                loaderOverlay.style.display = 'none';
+                announcementModal.style.display = 'flex';
+                setTimeout(() => {
+                    announcementModal.style.opacity = '1';
+                }, 50);
+            }, 800); 
+        }
+
+        // Duyuru Menüsü Biter, Ana İçerik Başlar
+        function closeAnnouncement() {
+            announcementModal.style.opacity = '0';
+            
+            setTimeout(() => {
+                announcementModal.style.display = 'none';
+                mainContent.style.opacity = '1';
+                mainContent.style.visibility = 'visible';
+                document.body.style.overflow = 'auto'; 
+                
+                if (window.innerWidth > 768) { 
+                    document.querySelector('.scroll-indicator').style.opacity = '1';
+                }
+            }, 500); 
+        }
+
+        // Sayfa Yüklenince Başlat
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.style.overflow = 'hidden'; 
+            createSnowflakes(30); // Parça sayısını düşürdük
+            createCoins(50); // Parça sayısını düşürdük
+            
+            // Animasyonu başlat
+            startCrashAnimation();
+        });
+    </script>
+</body>
+</html>

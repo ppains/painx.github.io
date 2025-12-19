@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profil Düzenle</title>
+
+  <style>
+    :root{
+      --bg:#061022;
+      --muted:#98a6b3;
+      --accent:#00D4FF;
+      --accent2:#FF4080;
+    }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: linear-gradient(180deg,#031021 0%, #071428 100%);
+      color:#eaf6ff;
+      -webkit-font-smoothing:antialiased;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .card{
+      width:960px;
+      max-width:100%;
+      background:linear-gradient(180deg,#071428,#062235);
+      border-radius:12px;
+      padding:18px;
+      border:1px solid rgba(255,255,255,0.06);
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:18px;
+    }
+
+    .left{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+    }
+
+    .avatar-preview{
+      width:220px;
+      height:220px;
+      border-radius:12px;
+      overflow:hidden;
+      background:linear-gradient(90deg,#0b2b40,#07364e);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      font-size:36px;
+      color:#fff;
+      border:1px solid rgba(255,255,255,0.04);
+      background-size:cover;
+      background-position:center;
+    }
+
+    .avatar-controls{ display:flex; gap:8px; width:100%; justify-content:center; }
+    .btn{
+      background:transparent; color:var(--muted);
+      border:1px solid rgba(255,255,255,0.06);
+      padding:8px 10px; border-radius:8px; cursor:pointer;
+    }
+    .primary{
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      color:#001; border:0; font-weight:700;
+    }
+
+    .form{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    label{ font-size:0.85rem; color:var(--muted); }
+    input[type="text"], input[type="password"], textarea {
+      background: rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.04);
+      color:#eaf6ff;
+      padding:10px;
+      border-radius:8px;
+      width:100%;
+      box-sizing:border-box;
+    }
+    textarea{ resize:vertical; min-height:100px; }
+
+    .row{ display:flex; gap:8px; }
+    .muted{ color:var(--muted); font-size:0.9rem; }
+
+    .small{ font-size:0.85rem; color:var(--muted); }
+    .meta{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .system-field{
+      background: rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.04);
+      padding:8px;
+      border-radius:8px;
+      color:var(--muted);
+    }
+
+    #toast{ position:fixed; right:18px; bottom:18px; background:#0b2b40; padding:12px 16px; border-radius:8px; display:none; color:#fff; border:1px solid rgba(255,255,255,0.04); z-index:9999; }
+
+    .debug {
+      margin-top:12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
+      padding:10px;
+      border-radius:8px;
+      color:var(--muted);
+      font-size:0.85rem;
+      max-height:220px;
+      overflow:auto;
+    }
+
+    @media (max-width:900px){
+      .card{ grid-template-columns:1fr; }
+      .avatar-preview{ width:160px; height:160px; }
+    }
+
+    .note { font-size:0.85rem; color:var(--muted); margin-top:6px; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="app">
+    <div class="left">
+      <div class="avatar-preview" id="avatarPreview">US</div>
+      <div class="avatar-controls">
+        <input id="avatarFile" type="file" accept="image/*" style="display:none;">
+        <button id="chooseAvatarBtn" class="btn">Resim Seç</button>
+        <button id="removeAvatarBtn" class="btn">Kaldır</button>
+      </div>
+
+      <div style="width:100%; margin-top:6px;">
+        <div class="small">3D Model (isteğe bağlı)</div>
+        <input id="model3dUrl" type="text" placeholder="3D model iframe/link (ör. sketchfab/iframe)"/>
+      </div>
+
+      <div style="width:100%; margin-top:8px;">
+        <div class="small">Hesap</div>
+        <div id="userId" class="muted"></div>
+        <div style="margin-top:8px;">
+          <button id="logoutBtn" class="btn">Çıkış Yap</button>
+        </div>
+      </div>
+
+      <div class="debug" id="debugBox" style="display:none;"></div>
+    </div>
+
+    <div class="right">
+      <!-- If user not signed in we show auth form instead -->
+      <div id="signedOutView" style="display:none;">
+        <h2>Giriş Yap</h2>
+        <p class="muted">Profilinizi düzenlemek için e-posta veya kullanıcı adı ile giriş yapabilirsiniz.</p>
+
+        <!-- Username/password form -->
+        <div style="margin-top:12px; display:flex; gap:8px; flex-direction:column;">
+          <label style="color:var(--muted); font-size:0.9rem;">Kullanıcı adı ile giriş</label>
+          <input id="usernameLogin" type="text" placeholder="Kullanıcı Adı" />
+          <input id="usernamePassword" type="password" placeholder="Şifre" />
+          <div style="display:flex; gap:8px;">
+            <button id="signInUsernameBtn" class="primary">Kullanıcı Adı ile Giriş</button>
+            <button id="clearUsernameBtn" class="btn">Temizle</button>
+            <button id="showDocBtn" class="btn" title="Kullanıcı dokümanını debug için göster">Doküman Göster</button>
+          </div>
+        </div>
+
+        <hr style="opacity:0.06; margin:12px 0;" />
+
+        <!-- Email/password form (Firebase auth) -->
+        <div style="margin-top:6px; display:flex; gap:8px; flex-direction:column;">
+          <label style="color:var(--muted); font-size:0.9rem;">E-posta ile giriş</label>
+          <input id="email" type="text" placeholder="Email" />
+          <input id="password" type="password" placeholder="Şifre" />
+          <div style="display:flex; gap:8px;">
+            <button id="signInBtn" class="primary">E-posta ile Giriş</button>
+          </div>
+        </div>
+
+        <div style="margin-top:8px;" class="small">Not: Kullanıcı adı ile giriş için users koleksiyonunda username ve passwordHash (SHA-256 hex) veya password (düz) alanları olmalıdır. (Bu sayfada debug açarak dokümanı görebilirsiniz.)</div>
+      </div>
+
+      <div id="editorView" style="display:none;">
+        <h2>Profil Düzenle</h2>
+
+        <!-- SYSTEM-CONTROLLED FIELDS (read-only) -->
+        <div style="margin-bottom:12px;">
+          <label>Seviye (sistem tarafından)</label>
+          <div id="sysLevel" class="system-field">—</div>
+
+          <div class="row" style="margin-top:8px;">
+            <div style="flex:1;">
+              <label>Günlük Tıklama (sistem tarafından)</label>
+              <div id="sysDaily" class="system-field">0</div>
+            </div>
+            <div style="width:180px;">
+              <label>Toplam Tıklama (sistem tarafından)</label>
+              <div id="sysTotal" class="system-field">0</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:8px;">
+            <div style="flex:1;">
+              <label>Bakiye (sistem tarafından)</label>
+              <div id="sysBalance" class="system-field">$0.00</div>
+            </div>
+            <div style="width:180px;">
+              <label>Çekim Miktarı (sistem tarafından)</label>
+              <div id="sysWithdraw" class="system-field">$0.00</div>
+            </div>
+          </div>
+
+          <div class="note">Not: Seviye, günlük/toplam tıklama, bakiye ve çekim miktarı sistem tarafından yönetilir. Bu alanları kendiniz değiştiremezsiniz.</div>
+        </div>
+
+        <!-- USER-EDITABLE FIELDS -->
+        <form id="profileForm" class="form" onsubmit="return false;">
+          <div>
+            <label>İsim (görünen)</label>
+            <input id="displayName" type="text" placeholder="Görünen isim" />
+          </div>
+
+          <div>
+            <label>Hakkında (bio)</label>
+            <textarea id="about" placeholder="Hakkında kısa bilgi..."></textarea>
+          </div>
+
+          <div class="row">
+            <div style="flex:1;">
+              <label>Etiketler (virgülle ayır)</label>
+              <input id="tagsInput" type="text" placeholder="ör: VİP, oyuncu, geliştirici" />
+              <div class="note">Etiketler istediğiniz gibi girilebilir (örn: VİP). Maksimum 12 etiket alınır.</div>
+            </div>
+            <div style="width:180px;">
+              <label>&nbsp;</label>
+              <div style="height:36px;"></div>
+            </div>
+          </div>
+
+          <div id="saveRow" style="display:flex; gap:8px; margin-top:6px;">
+            <button id="saveBtn" class="primary">Kaydet</button>
+            <button id="cancelBtn" class="btn" type="button">İptal</button>
+            <div id="uploadProgress" class="muted" style="margin-left:auto; align-self:center; display:none;"></div>
+          </div>
+        </form>
+
+        <div style="margin-top:12px;">
+          <div class="small">Canlı güncellemeler: bu sayfada yaptığınız değişiklikler (etiket, bio, 3D model, avatar, görünen isim) gerçek zamanlı olarak kaydedilip kullanıcılar listesindeki profilde görünecektir. Sistem tarafından yönetilen alanlar burada düzenlenemez.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <script>
+    // Aynı config'i kullanıyoruz (index.html ile uyumlu)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+      authDomain: "lilemir-new.firebaseapp.com",
+      projectId: "lilemir-new",
+      storageBucket: "lilemir-new.firebasestorage.app",
+      messagingSenderId: "339863121380",
+      appId: "1:339863121380:web:123195552e821b085e6bf1"
+    };
+    const app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // DOM
+    const signedOutView = document.getElementById('signedOutView');
+    const editorView = document.getElementById('editorView');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const chooseAvatarBtn = document.getElementById('chooseAvatarBtn');
+    const avatarFile = document.getElementById('avatarFile');
+    const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+    const model3dUrlInput = document.getElementById('model3dUrl');
+
+    const displayNameInput = document.getElementById('displayName');
+    const aboutInput = document.getElementById('about');
+    const tagsInput = document.getElementById('tagsInput');
+
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const signInBtn = document.getElementById('signInBtn'); // email sign-in
+    const signInUsernameBtn = document.getElementById('signInUsernameBtn'); // username sign-in
+    const clearUsernameBtn = document.getElementById('clearUsernameBtn');
+    const showDocBtn = document.getElementById('showDocBtn');
+    const debugBox = document.getElementById('debugBox');
+    const usernameInput = document.getElementById('usernameLogin');
+    const usernamePasswordInput = document.getElementById('usernamePassword');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const userIdEl = document.getElementById('userId');
+    const uploadProgressEl = document.getElementById('uploadProgress');
+
+    // System fields (read-only)
+    const sysLevel = document.getElementById('sysLevel');
+    const sysDaily = document.getElementById('sysDaily');
+    const sysTotal = document.getElementById('sysTotal');
+    const sysBalance = document.getElementById('sysBalance');
+    const sysWithdraw = document.getElementById('sysWithdraw');
+
+    const toastEl = document.getElementById('toast');
+
+    let currentUser = null; // firebase.User or custom { uid, username, isCustom:true }
+    let currentUserIsFirebase = false;
+    let userDocUnsub = null;
+    let localAvatarFile = null;
+    let currentAvatarUrl = '';
+
+    const LOCAL_STORAGE_KEY = 'custom_username_auth_uid';
+    let lastLoadedDoc = null; // for debug / showDocBtn
+
+    function showToast(msg, time = 3000){
+      toastEl.textContent = msg;
+      toastEl.style.display = 'block';
+      setTimeout(()=> toastEl.style.display = 'none', time);
+    }
+
+    // --- Helper: SHA-256 hashing (returns hex) ---
+    async function sha256Hex(str){
+      const enc = new TextEncoder();
+      const data = enc.encode(str);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      const bytes = Array.from(new Uint8Array(hash));
+      return bytes.map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    // Utility to pretty debug JSON
+    function showDebug(obj){
+      debugBox.style.display = 'block';
+      debugBox.textContent = JSON.stringify(obj, null, 2);
+    }
+
+    // --- Custom username/password sign-in (uses users collection) ---
+    async function signInWithUsername(username, password){
+      if(!username || !password) { showToast('Kullanıcı adı ve şifre girin'); return false; }
+      try{
+        debugBox.style.display = 'none';
+        console.log('Attempting username sign-in for:', username);
+
+        // Candidate fields to query (try both original and lowercase)
+        const candidateFields = ['username','userName','user','email','displayName','usernameLower'];
+        let doc = null;
+
+        for(const field of candidateFields){
+          try{
+            // try exact match
+            let q = await db.collection('users').where(field,'==',username).limit(1).get();
+            if(!q.empty){ doc = q.docs[0]; console.log('Found by', field); break; }
+            // try lowercase match if not found
+            if(username.toLowerCase() !== username){
+              q = await db.collection('users').where(field,'==',username.toLowerCase()).limit(1).get();
+              if(!q.empty){ doc = q.docs[0]; console.log('Found by', field, '(lowercase)'); break; }
+            }
+          }catch(e){
+            console.warn('where failed for', field, e);
+          }
+        }
+
+        // fallback: doc id
+        if(!doc){
+          try{
+            const byId = await db.collection('users').doc(username).get();
+            if(byId.exists){ doc = byId; console.log('Found by doc id'); }
+          }catch(e){ console.warn('doc lookup failed', e); }
+        }
+
+        // last-resort fallback: fetch a reasonable chunk and search client-side (helps when fields are inconsistent)
+        if(!doc){
+          try{
+            const snap = await db.collection('users').limit(500).get();
+            snap.forEach(d=>{
+              const data = d.data() || {};
+              const fieldsToCheck = [data.username, data.userName, data.email, data.displayName, d.id];
+              for(const v of fieldsToCheck){
+                if(!v) continue;
+                if(String(v).toLowerCase() === username.toLowerCase()){
+                  doc = d;
+                  console.log('Found by scanning documents, docId:', d.id);
+                  break;
+                }
+              }
+              if(doc) return;
+            });
+          }catch(e){
+            console.warn('scan fallback failed', e);
+          }
+        }
+
+        if(!doc){
+          console.log('No user doc found for:', username);
+          showToast('Kullanıcı bulunamadı');
+          return false;
+        }
+
+        // store last loaded doc for debug
+        lastLoadedDoc = { id: doc.id, data: doc.data() };
+
+        const data = doc.data() || {};
+        const passFields = ['hashedPassword','passwordHash','passHash','pwdHash','password_hash','password','pwHash','pass'];
+
+        let stored = null, usedField = null;
+        for(const f of passFields){
+          if(data[f] !== undefined && data[f] !== null){
+            stored = String(data[f]).trim();
+            usedField = f;
+            break;
+          }
+        }
+
+        // If not found, try checking common nested structures (safety)
+        if(!stored){
+          // try data.auth?.password etc
+          const nested = data.auth || data.credentials || null;
+          if(nested){
+            for(const f of passFields){
+              if(nested[f]){
+                stored = String(nested[f]).trim();
+                usedField = 'auth.' + f;
+                break;
+              }
+            }
+          }
+        }
+
+        if(!stored){
+          console.warn('No password field on doc:', doc.id, data);
+          showToast('Bu kullanıcı için şifre tanımlı değil');
+          showDebug({ docId: doc.id, docData: data, note: 'Şifre alanı bulunamadı. Görüntülemek için "Doküman Göster" butonuna basın.' });
+          return false;
+        }
+
+        // detect hex sha256
+        const isHex64 = /^[a-f0-9]{64}$/.test(stored.toLowerCase());
+        if(isHex64){
+          const providedHash = await sha256Hex(password);
+          if(providedHash.toLowerCase() !== stored.toLowerCase()){
+            console.log('SHA256 mismatch for', doc.id);
+            showToast('Şifre yanlış');
+            showDebug({ docId: doc.id, usedField, storedPreview: stored.slice(0,8) + '...', providedHashPreview: providedHash.slice(0,8) + '...' });
+            return false;
+          }
+          console.log('SHA256 match, user authenticated:', doc.id);
+        }else{
+          // fallback plaintext compare (insecure)
+          if(password !== stored){
+            console.log('Plaintext mismatch for', doc.id);
+            showToast('Şifre yanlış');
+            showDebug({ docId: doc.id, usedField, storedPreview: stored.slice(0,20) + (stored.length>20?'...':'') });
+            return false;
+          }
+          console.log('Plaintext match (insecure), user authenticated:', doc.id);
+        }
+
+        // success
+        currentUser = { uid: doc.id, username: data.username || username, displayName: data.displayName || data.username || username, isCustom: true };
+        currentUserIsFirebase = false;
+        localStorage.setItem(LOCAL_STORAGE_KEY, doc.id);
+
+        signedOutView.style.display = 'none';
+        editorView.style.display = 'block';
+        userIdEl.textContent = 'UID: ' + doc.id;
+        subscribeToUserDoc(doc.id);
+        showToast('Giriş başarılı (username)');
+        return true;
+
+      }catch(err){
+        console.error('signInWithUsername error', err);
+        showToast('Giriş sırasında hata oluştu');
+        return false;
+      }
+    }
+
+    // Unified sign out (handles firebase and custom)
+    async function unifiedSignOut(){
+      try{
+        if(currentUserIsFirebase && auth.currentUser){
+          await auth.signOut();
+        }
+      }catch(e){ console.error('firebase signout error', e); }
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      currentUser = null;
+      currentUserIsFirebase = false;
+      if(userDocUnsub){ userDocUnsub(); userDocUnsub = null; }
+      signedOutView.style.display = 'block';
+      editorView.style.display = 'none';
+      userIdEl.textContent = '';
+      showToast('Çıkış yapıldı');
+    }
+
+    // Attach sign-in handlers
+    if(signInUsernameBtn){
+      signInUsernameBtn.addEventListener('click', async ()=>{
+        const username = usernameInput.value.trim();
+        const password = usernamePasswordInput.value;
+        await signInWithUsername(username, password);
+      });
+      clearUsernameBtn.addEventListener('click', ()=>{
+        usernameInput.value = '';
+        usernamePasswordInput.value = '';
+        debugBox.style.display = 'none';
+      });
+      showDocBtn.addEventListener('click', ()=>{
+        if(lastLoadedDoc){
+          showDebug(lastLoadedDoc);
+        }else{
+          debugBox.style.display = 'block';
+          debugBox.textContent = 'Henüz doküman yüklenmedi. Önce kullanıcıyı yükleyin (giriş denemesi veya load).';
+        }
+      });
+    }
+
+    // Email/password Firebase sign-in
+    if(signInBtn){
+      signInBtn.addEventListener('click', async ()=>{
+        const email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+        const password = (passwordInput && passwordInput.value) ? passwordInput.value : '';
+        if(!email || !password){ showToast('Email ve şifre girin'); return; }
+        try{
+          await auth.signInWithEmailAndPassword(email, password);
+          // auth.onAuthStateChanged will handle UI
+        }catch(err){
+          console.error('email signIn error', err);
+          showToast('E-posta ile giriş hatası: ' + (err.message || err));
+        }
+      });
+    }
+
+    // Logout
+    if(logoutBtn) logoutBtn.addEventListener('click', unifiedSignOut);
+
+    // Avatar file selection
+    chooseAvatarBtn.addEventListener('click', ()=> avatarFile.click());
+    avatarFile.addEventListener('change', (e)=>{
+      const f = e.target.files[0];
+      if(!f) return;
+      localAvatarFile = f;
+      const url = URL.createObjectURL(f);
+      avatarPreview.style.backgroundImage = `url(${url})`;
+      avatarPreview.textContent = '';
+    });
+
+    removeAvatarBtn.addEventListener('click', ()=>{
+      localAvatarFile = null;
+      currentAvatarUrl = '';
+      avatarPreview.style.backgroundImage = '';
+      avatarPreview.textContent = (displayNameInput.value || 'U').toString().split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+    });
+
+    // Subscribe to user's doc realtime and fill form + system fields
+    function subscribeToUserDoc(uid){
+      if(userDocUnsub) { userDocUnsub(); userDocUnsub = null; }
+      const docRef = db.collection('users').doc(uid);
+      userDocUnsub = docRef.onSnapshot(doc=>{
+        if(!doc.exists){
+          displayNameInput.value = (currentUser && currentUser.displayName) || '';
+          aboutInput.value = '';
+          tagsInput.value = '';
+          model3dUrlInput.value = '';
+          currentAvatarUrl = '';
+          avatarPreview.style.backgroundImage = '';
+          avatarPreview.textContent = (displayNameInput.value || 'U').toString().split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+
+          sysLevel.textContent = '—';
+          sysDaily.textContent = '0';
+          sysTotal.textContent = '0';
+          sysBalance.textContent = '$0.00';
+          sysWithdraw.textContent = '$0.00';
+          return;
+        }
+        const data = doc.data();
+        displayNameInput.value = data.displayName || data.username || '';
+        aboutInput.value = data.about || data.hakkinda || data.bio || '';
+        tagsInput.value = (data.tags || data.profilEtiketleri || []).join(', ');
+        model3dUrlInput.value = data.model3dUrl || '';
+
+        currentAvatarUrl = data.avatarUrl || '';
+        if(currentAvatarUrl){
+          avatarPreview.style.backgroundImage = `url(${currentAvatarUrl})`;
+          avatarPreview.textContent = '';
+        }else{
+          avatarPreview.style.backgroundImage = '';
+          avatarPreview.textContent = (displayNameInput.value || 'U').toString().split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+        }
+
+        sysLevel.textContent = data.level || '—';
+        sysDaily.textContent = (data.dailyClicks ?? data.daily_clicks ?? 0);
+        sysTotal.textContent = (data.totalClicks ?? data.total_clicks ?? data.clicks ?? 0);
+        sysBalance.textContent = (data.balance ?? data.bakiye ?? 0) !== undefined ? ('$' + Number(data.balance ?? data.bakiye ?? 0).toLocaleString('tr-TR', {minimumFractionDigits:2})) : '$0.00';
+        sysWithdraw.textContent = (data.withdrawAmount ?? data.cekim ?? 0) !== undefined ? ('$' + Number(data.withdrawAmount ?? data.cekim ?? 0).toLocaleString('tr-TR', {minimumFractionDigits:2})) : '$0.00';
+      }, err=>{
+        console.error('user doc snapshot error:', err);
+      });
+    }
+
+    // Save handler — IMPORTANT: do NOT write system-controlled fields here.
+    saveBtn.addEventListener('click', async ()=>{
+      if(!currentUser){ showToast('Önce giriş yapın'); return; }
+      saveBtn.disabled = true;
+      uploadProgressEl.style.display = 'none';
+      try{
+        const uid = currentUser.uid;
+        const docRef = db.collection('users').doc(uid);
+
+        let avatarUrl = currentAvatarUrl || '';
+        if(localAvatarFile){
+          uploadProgressEl.style.display = 'block';
+          uploadProgressEl.textContent = 'Resim yükleniyor...';
+          const ext = localAvatarFile.name.split('.').pop();
+          const storageRef = storage.ref().child(`avatars/${uid}.${ext}`);
+          const uploadTask = storageRef.put(localAvatarFile);
+          uploadTask.on('state_changed', snap=>{
+            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+            uploadProgressEl.textContent = `Yükleniyor: ${pct}%`;
+          }, err=>{
+            console.error('upload error', err);
+            uploadProgressEl.textContent = 'Resim yüklenirken hata.';
+          }, async ()=>{
+            avatarUrl = await uploadTask.snapshot.ref.getDownloadURL();
+            uploadProgressEl.textContent = 'Resim yüklendi.';
+            await performDocUpdate(uid, docRef, avatarUrl);
+            uploadProgressEl.style.display = 'none';
+            showToast('Profil güncellendi');
+            localAvatarFile = null;
+            if(currentUserIsFirebase && auth.currentUser){
+              try{ await auth.currentUser.updateProfile({ displayName: displayNameInput.value, photoURL: avatarUrl }); }catch(e){/*ignore*/ }
+            }
+            saveBtn.disabled = false;
+          });
+          return;
+        }else{
+          await performDocUpdate(uid, docRef, avatarUrl);
+          showToast('Profil güncellendi');
+        }
+      }catch(err){
+        console.error('save error', err);
+        showToast('Kaydetme hatası: ' + (err.message || err));
+      }finally{
+        uploadProgressEl.style.display = 'none';
+        saveBtn.disabled = false;
+      }
+    });
+
+    // perform the actual Firestore update (only user-editable fields)
+    async function performDocUpdate(uid, docRef, avatarUrl){
+      const tagsRaw = tagsInput.value || '';
+      const tags = tagsRaw.split(',').map(s=>s.trim()).filter(Boolean).slice(0,12);
+
+      const payload = {
+        displayName: displayNameInput.value || null,
+        about: aboutInput.value || null,
+        tags: tags,
+        model3dUrl: model3dUrlInput.value || null,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if(avatarUrl) payload.avatarUrl = avatarUrl;
+
+      await docRef.set(payload, { merge: true });
+    }
+
+    // Cancel: reload fields from Firestore
+    cancelBtn.addEventListener('click', async ()=>{
+      if(!currentUser) return;
+      showToast('Değişiklikler iptal edildi');
+      localAvatarFile = null;
+    });
+
+    // Auto-login from localStorage (custom username auth)
+    async function autoLoginFromLocal(){
+      const storedUid = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if(!storedUid) return;
+      try{
+        const doc = await db.collection('users').doc(storedUid).get();
+        if(!doc.exists){ localStorage.removeItem(LOCAL_STORAGE_KEY); return; }
+        const data = doc.data();
+        currentUser = { uid: storedUid, username: data.username || null, displayName: data.displayName || data.username, isCustom: true };
+        currentUserIsFirebase = false;
+        signedOutView.style.display = 'none';
+        editorView.style.display = 'block';
+        userIdEl.textContent = 'UID: ' + storedUid;
+        subscribeToUserDoc(storedUid);
+        showToast('Oturum geri yüklendi');
+      }catch(e){ console.error('autoLogin error', e); }
+    }
+
+    // Firebase auth state handling
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        currentUser = user;
+        currentUserIsFirebase = true;
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        signedOutView.style.display = 'none';
+        editorView.style.display = 'block';
+        userIdEl.textContent = 'UID: ' + user.uid;
+        subscribeToUserDoc(user.uid);
+      }else{
+        if(currentUser && currentUser.isCustom){
+          return;
+        }
+        currentUser = null;
+        currentUserIsFirebase = false;
+        if(userDocUnsub){ userDocUnsub(); userDocUnsub = null; }
+        signedOutView.style.display = 'block';
+        editorView.style.display = 'none';
+        userIdEl.textContent = '';
+      }
+    });
+
+    // Try auto-login custom session on load
+    autoLoginFromLocal();
+
+    // Cleanup when leaving
+    window.addEventListener('beforeunload', ()=>{ if(userDocUnsub) userDocUnsub(); });
+
+    // Initial UI state
+    // show sign-in view by default until auth state resolves
+    signedOutView.style.display = 'block';
+    editorView.style.display = 'none';
+
+    // Helpful note
+    console.log('Username/password auth available. Use debug panel to inspect loaded user doc if login fails.');
+  </script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Panel — Yönetim (Mobil & Masaüstü)</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    :root{
+      --bg:#071026; --card:#0f1724; --accent:#6366f1; --danger:#ef4444;
+      --muted:#94a3b8; --success:#10b981; --glass: rgba(255,255,255,0.03);
+      --radius:10px; --max-width:1100px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,var(--bg),#020412);color:#e6eef6;min-height:100vh}
+    .wrap{max-width:var(--max-width);margin:12px auto;padding:12px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    h1{margin:0;font-size:1.2rem}
+    .subtitle{color:var(--muted);font-size:0.86rem}
+    .top-actions{display:flex;gap:8px;align-items:center}
+    button.btn{background:var(--accent);border:0;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+    button.ghost{background:transparent;border:1px solid var(--glass);color:var(--muted);padding:7px 10px;border-radius:8px}
+    .layout{display:grid;grid-template-columns:220px 1fr;gap:12px;margin-top:12px}
+    .panel{background:var(--card);border-radius:10px;padding:10px;border:1px solid var(--glass)}
+    .nav{display:flex;flex-direction:column;gap:6px}
+    .nav button{background:transparent;border:0;color:var(--muted);text-align:left;padding:8px;border-radius:8px;cursor:pointer}
+    .nav button.active{background:linear-gradient(90deg,var(--accent),#4f46e5);color:#fff}
+    .content{min-height:320px}
+    .section{display:none}
+    .section.open{display:block}
+    table{width:100%;border-collapse:collapse;font-size:0.9rem}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+    th{color:var(--muted);text-align:left}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    input,select,textarea{background:transparent;border:1px solid var(--glass);padding:8px;border-radius:8px;color:#fff;width:100%}
+    textarea{min-height:80px}
+    .small{font-size:0.82rem;color:var(--muted)}
+    .danger{background:var(--danger);border:none;color:white;padding:6px 8px;border-radius:8px;cursor:pointer}
+    .pill{background:var(--glass);padding:6px 10px;border-radius:999px;color:var(--muted);font-weight:700}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+    .muted{color:var(--muted)}
+    .online-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:8px}
+    .online{background:var(--success)}
+    .offline{background:#64748b}
+    .mini{padding:6px 8px;font-size:0.82rem}
+    .log{max-height:200px;overflow:auto;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;font-size:0.82rem;color:var(--muted)}
+    .notice{background:linear-gradient(90deg,#0f1724,#0b1220);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);color:var(--muted)}
+    footer{margin-top:12px;color:var(--muted);font-size:0.82rem;text-align:center}
+    @media (max-width:900px){
+      .layout{grid-template-columns:1fr}
+      .nav{flex-direction:row;overflow:auto}
+      .nav button{white-space:nowrap;padding:8px 12px}
+      header{flex-direction:column;align-items:flex-start}
+      th,td{font-size:0.82rem;padding:6px}
+      .panel{padding:8px}
+    }
+    .hidden{display:none!important}
+    .success-badge{background:var(--success);padding:6px 8px;border-radius:8px;color:#001;font-weight:700}
+    .tag{padding:4px 8px;border-radius:8px;background:rgba(255,255,255,0.03);font-weight:700}
+    .flex-between{display:flex;justify-content:space-between;align-items:center}
+    .tools{display:flex;gap:8px;flex-wrap:wrap}
+    .spinner{border:3px solid rgba(255,255,255,0.06);border-top:3px solid var(--accent);border-radius:50%;width:18px;height:18px;animation:spin 0.9s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    /* small chips for tags */
+    .chip{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.04);margin:2px;font-size:0.82rem}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="application" aria-label="Admin Paneli">
+    <header>
+      <div>
+        <h1>Admin Panel</h1>
+        <div class="subtitle">Gerçek zamanlı yönetim — kullanıcılar, odalar, chat, market, duyurular, bakım</div>
+      </div>
+      <div class="top-actions">
+        <span id="adminPresence" class="pill">Çevrimdışı</span>
+        <button id="btnTogglePresence" class="ghost" aria-pressed="false">Çevrimiçi Yap</button>
+        <button id="signOutBtn" class="ghost hidden">Çıkış</button>
+      </div>
+    </header>
+
+    <div class="layout" id="layoutRoot">
+      <aside class="panel" aria-label="Sol menü">
+        <nav class="nav" role="navigation" id="nav">
+          <button data-tab="users" class="active">Kullanıcılar</button>
+          <button data-tab="rooms">Odalar & Mesajlar</button>
+          <button data-tab="market">Market</button>
+          <button data-tab="coupons">Kuponlar</button>
+          <button data-tab="announcements">Duyurular</button>
+          <button data-tab="maintenance">Bakım</button>
+          <button data-tab="scheduler">Zamanlayıcı</button>
+          <button data-tab="logs">Loglar</button>
+        </nav>
+      </aside>
+
+      <main class="panel content" id="main">
+        <!-- USERS -->
+        <section id="tab-users" class="section open" aria-live="polite">
+          <div class="flex-between">
+            <div style="flex:1;min-width:160px" class="row">
+              <input id="userSearchInput" placeholder="Ara: isim / uid / rol" />
+              <button id="refreshUsers" class="mini">Yenile</button>
+            </div>
+            <div class="small">Kayıtlı: <span id="usersCount">0</span></div>
+          </div>
+
+          <div style="margin-top:8px;overflow:auto;max-height:300px">
+            <table id="usersTable" aria-live="polite">
+              <thead><tr><th>#</th><th>Kullanıcı</th><th>Rol</th><th>Coins / Bakiye</th><th>Online</th><th>İşlemler</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <h4>Hızlı İşlem — Seçili Kullanıcı</h4>
+              <div class="form-grid">
+                <input id="selUserId" placeholder="UID seçin ya da tabloda seç" />
+                <select id="selRole"><option value="">Rol Ata</option><option value="admin">Admin</option><option value="moderator">Moderator</option><option value="vip-">VIP-</option><option value="vip+">VIP+</option><option value="mvp-">MVP-</option><option value="mvp+">MVP+</option><option value="user">Üye</option></select>
+                <input id="addCoins" placeholder="Eklenecek coin (poz/neg)" />
+                <input id="addBalance" placeholder="Eklenecek bakiye $" />
+                <div class="row">
+                  <button id="applyUserChanges" class="btn">Uygula</button>
+                  <button id="banUserBtn" class="danger">Ban / Unban</button>
+                  <button id="deleteUserBtn" class="danger">Sil</button>
+                </div>
+
+                <!-- Rainbow + Tag -->
+                <div>
+                  <label class="small">Rengarenk isim & Etiket</label>
+                  <div class="row">
+                    <button id="setRainbowBtn" class="mini">Rengarenk Ata</button>
+                    <input id="tagInput" placeholder="Etiket (örn: VIP, STAFF)" />
+                    <button id="addTagBtn" class="mini">Etiket Ekle</button>
+                  </div>
+                  <div id="userTagsArea" style="margin-top:8px"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex:1;min-width:220px">
+              <h4>Kütük & Hızlı İşlemler</h4>
+              <div class="notice">İşlemler admin_logs koleksiyonuna yazılır. Son işlemi geri al (undo) desteklenir.</div>
+              <div style="margin-top:8px" class="row">
+                <button id="exportCsvBtn" class="mini">CSV Dışa Aktar</button>
+                <button id="bulkCoinBtn" class="mini">Toplu Coin Ver</button>
+                <button id="tempRoleBtn" class="mini">Zamanlı Rol Ver</button>
+              </div>
+              <div style="margin-top:8px">
+                <label class="small">İmperonasyon (Preview):</label>
+                <div class="row"><input id="impersonateUserId" placeholder="UID" /><button id="impersonateBtn" class="mini">İmperonasyon Başlat</button><button id="stopImpersonateBtn" class="mini hidden">Durdur</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ROOMS -->
+        <section id="tab-rooms" class="section" aria-live="polite">
+          <div class="flex-between">
+            <div style="flex:1;min-width:160px" class="row">
+              <input id="roomSearch" placeholder="Oda adı ara" />
+              <button id="refreshRooms" class="mini">Yenile</button>
+            </div>
+            <div class="small">Odalar: <span id="roomsCount">0</span></div>
+          </div>
+
+          <div style="margin-top:8px;display:grid;grid-template-columns:1fr;gap:8px">
+            <div class="panel" style="overflow:auto;max-height:220px">
+              <h4>Odalar</h4>
+              <div id="roomsList"></div>
+            </div>
+
+            <div class="panel">
+              <h4>Mesajlar — Oda: <span id="activeRoomName">Seçili yok</span></h4>
+              <div id="roomMessages" style="max-height:200px;overflow:auto"></div>
+              <div class="row" style="margin-top:8px">
+                <input id="clearMsgConfirm" placeholder="Type DELETE to confirm" />
+                <button id="clearRoomMsgsBtn" class="danger">Temizle</button>
+                <button id="deleteRoomBtn" class="danger">Odayı Sil</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MARKET -->
+        <section id="tab-market" class="section">
+          <div class="flex-between">
+            <h3 style="margin:0">Market (collection: market_products)</h3>
+            <div class="row">
+              <button id="refreshMarket" class="mini">Yenile</button>
+              <button id="openAddProduct" class="btn">Yeni Ürün</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;display:grid;grid-template-columns:1fr;gap:8px">
+            <div class="panel" style="overflow:auto;max-height:300px">
+              <h4>Ürün Listesi</h4>
+              <table id="marketTable"><thead><tr><th>ID</th><th>Başlık</th><th>Fiyat</th><th>Rol</th><th>İşlemler</th></tr></thead><tbody></tbody></table>
+            </div>
+
+            <div id="addProductPanel" class="panel hidden">
+              <h4>Yeni Ürün Ekle</h4>
+              <div class="form-grid">
+                <input id="prodId" placeholder="id (unique)" />
+                <input id="prodTitle" placeholder="Başlık" />
+                <input id="prodPrice" placeholder="Fiyat (coin)" type="number" />
+                <input id="prodRole" placeholder="Verilecek rol / etiket (ör: vip+ veya TAG_NAME)" />
+                <select id="prodColor"><option value="">Etiket rengi (hex) veya 'rainbow'</option><option value="">(hiç)</option><option value="rainbow">rainbow</option><option value="#3b82f6">#3b82f6 (mavi)</option></select>
+                <textarea id="prodDesc" placeholder="Açıklama (opsiyonel)"></textarea>
+                <div class="row">
+                  <button id="saveProductBtn" class="btn">Kaydet</button>
+                  <button id="cancelProductBtn" class="mini">İptal</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Hızlı — Ürünü Kullanıcıya Ver / Coin Gönder</h4>
+              <div class="form-grid">
+                <input id="giveUserId" placeholder="UID" />
+                <select id="giveProductSelect"><option value="">Ürün seç</option></select>
+                <button id="giveProductBtn" class="btn">Ürünü Ver</button>
+
+                <input id="giveCoinsUser" placeholder="UID — coin gönder" />
+                <input id="giveCoinsAmount" placeholder="Miktar" type="number" />
+                <button id="giveCoinsBtn" class="btn">Coin Gönder</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- COUPONS -->
+        <section id="tab-coupons" class="section">
+          <div class="flex-between">
+            <h3>Kuponlar</h3>
+            <div class="row">
+              <button id="refreshCoupons" class="mini">Yenile</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px" class="form-grid">
+            <input id="couponCode" placeholder="Kod (UNIQUE)" />
+            <input id="couponAmount" placeholder="Coin miktarı" type="number" />
+            <input id="couponUses" placeholder="Max kullanım (0 sınırsız)" type="number" />
+            <button id="createCouponBtn" class="btn">Kupon Oluştur</button>
+          </div>
+
+          <div style="margin-top:12px" class="panel">
+            <h4>Mevcut Kuponlar</h4>
+            <div id="couponsList" style="max-height:220px;overflow:auto"></div>
+          </div>
+        </section>
+
+        <!-- ANNOUNCEMENTS -->
+        <section id="tab-announcements" class="section">
+          <div class="flex-between">
+            <h3>Duyurular</h3>
+            <div class="row">
+              <button id="refreshAnns" class="mini">Yenile</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px" class="form-grid">
+            <input id="annTitle" placeholder="Başlık" />
+            <input id="annWhen" placeholder="plan zamanı (ISO ya da boş)" />
+            <textarea id="annMsg" placeholder="Mesaj"></textarea>
+            <div class="row">
+              <button id="postAnnBtn" class="btn">Yayınla</button>
+              <button id="scheduleAnnBtn" class="mini">Planla</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px" class="panel">
+            <h4>Geçmiş Duyurular</h4>
+            <div id="annList" style="max-height:220px;overflow:auto"></div>
+          </div>
+        </section>
+
+        <!-- MAINTENANCE -->
+        <section id="tab-maintenance" class="section">
+          <div class="flex-between">
+            <h3>Sunucu Bakım</h3>
+            <div class="row">
+              <button id="refreshSettings" class="mini">Yenile</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px" class="form-grid">
+            <label class="small">Bakım Modu</label>
+            <select id="maintenanceMode"><option value="off">Kapalı</option><option value="on">Açık</option></select>
+            <input id="maintenanceReason" placeholder="Sebep (opsiyonel)" />
+            <input id="maintenanceUntil" placeholder="Bitiş zamanı (ISO veya boş)" />
+            <div class="row">
+              <button id="applyMaintenanceBtn" class="btn">Uygula</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px" class="panel">
+            <h4>Sunucu Durumu</h4>
+            <pre id="serverStatus" class="log">Yükleniyor...</pre>
+          </div>
+        </section>
+
+        <!-- SCHEDULER -->
+        <section id="tab-scheduler" class="section">
+          <h3>Zamanlanmış Görevler</h3>
+          <div class="form-grid" style="margin-top:8px">
+            <input id="schedName" placeholder="İsim" />
+            <input id="schedWhen" placeholder="ISO zamanı (örn: 2025-12-31T12:00:00Z)" />
+            <select id="schedAction"><option value="announce">Duyuru</option><option value="maintenance">Bakım</option><option value="give_coins">Coin Dağıt</option></select>
+            <input id="schedPayload" placeholder='Payload JSON (örn: {"title":"x","msg":"y"})' />
+            <div class="row">
+              <button id="createSchedBtn" class="btn">Zamanla</button>
+              <button id="refreshSchedBtn" class="mini">Yenile</button>
+            </div>
+          </div>
+          <div style="margin-top:12px" class="panel">
+            <h4>Planlar</h4>
+            <div id="schedulesList" style="max-height:220px;overflow:auto"></div>
+          </div>
+        </section>
+
+        <!-- LOGS -->
+        <section id="tab-logs" class="section">
+          <div class="flex-between">
+            <h3>Admin Loglar</h3>
+            <div class="row"><button id="refreshLogs" class="mini">Yenile</button><button id="undoLastBtn" class="mini">Geri Al (undo)</button></div>
+          </div>
+          <div id="logsArea" class="log" style="margin-top:8px">Yükleniyor...</div>
+        </section>
+
+      </main>
+    </div>
+
+    <footer>Admin Panel • Sağ tıklama yerine buton kullanın • Güvenlik: gerçek sunucuda güvenli auth & kuralları zorunludur.</footer>
+  </div>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+  // ---------- FIREBASE INIT ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+    authDomain: "lilemir-new.firebaseapp.com",
+    projectId: "lilemir-new",
+    storageBucket: "lilemir-new.firebasestorage.app",
+    messagingSenderId: "339863121380",
+    appId: "1:339863121380:web:123195552e821b085e6bf1"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const FieldValue = firebase.firestore.FieldValue;
+
+  // ---------- UTILS ----------
+  const $ = id => document.getElementById(id);
+  function q(sel){ return document.querySelectorAll(sel); }
+  function toast(msg){ console.log('TOAST:', msg); /* simple fallback */ }
+
+  function logAction(admin, action, meta){
+    const rec = { admin: admin||'admin', action, meta: meta||{}, ts: Date.now() };
+    db.collection('admin_logs').add(rec).catch(e=>console.error('log err',e));
+  }
+
+  // ---------- NAV ----------
+  document.querySelectorAll('.nav button').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.section').forEach(s=>s.classList.remove('open'));
+      const sel = $('tab-'+tab) || document.getElementById('tab-'+tab);
+      if(sel) sel.classList.add('open');
+    });
+  });
+
+  // ---------- STATE ----------
+  let usersUnsub = null, marketUnsub = null, roomsUnsub = null, announcementsUnsub = null, couponsUnsub = null, logsUnsub = null, schedulesUnsub=null;
+  let lastLogDoc = null; // for undo
+  const adminName = 'web-admin'; // in real life: fetch current admin user
+
+  // ---------- USERS: subscribe & render ----------
+  async function subscribeUsers(){
+    if(usersUnsub) usersUnsub();
+    const tbody = document.querySelector('#usersTable tbody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center"><div class="spinner"></div></td></tr>';
+    usersUnsub = db.collection('users').onSnapshot(snap=>{
+      const rows = [];
+      snap.forEach((doc, idx)=>{
+        const d = doc.data();
+        const id = doc.id;
+        rows.push({ id, idx: idx+1, d });
+      });
+      renderUsers(rows);
+      $('usersCount').textContent = rows.length;
+    }, err=>{
+      console.error('users sub err', err);
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#f88">Kullanıcı yüklenemiyor</td></tr>';
+    });
+  }
+
+  function renderUsers(rows){
+    const tbody = document.querySelector('#usersTable tbody');
+    tbody.innerHTML = '';
+    rows.forEach(r=>{
+      const d = r.d;
+      const tr = document.createElement('tr');
+      const online = d.lastSeen && (Date.now() - (Number(d.lastSeen)||0) < 60_000*5);
+      tr.innerHTML = `
+        <td>${r.idx}</td>
+        <td>
+          <strong>${escapeHtml(d.displayName||d.username||r.id)}</strong>
+          <div class="muted" style="font-size:0.78rem">${escapeHtml(r.id)}</div>
+        </td>
+        <td>${escapeHtml(d.role||d.roles?.join(',')||'Üye')}</td>
+        <td>${Number(d.coins||0).toLocaleString()} / $${Number(d.balance||d.money||0).toFixed(2)}</td>
+        <td><span class="online-dot ${online? 'online':'offline'}"></span>${online? 'online':'offline'}</td>
+        <td class="actions">
+          <button class="mini" data-uid="${r.id}" data-act="select">Seç</button>
+          <button class="mini" data-uid="${r.id}" data-act="imp">İmper</button>
+          <button class="mini" data-uid="${r.id}" data-act="ban">Ban</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // actions
+    tbody.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', async (e)=>{
+        const act = b.dataset.act;
+        const uid = b.dataset.uid;
+        if(act === 'select'){
+          $('selUserId').value = uid;
+          loadUserTags(uid);
+        } else if(act === 'imp'){
+          $('impersonateUserId').value = uid;
+        } else if(act === 'ban'){
+          toggleBan(uid);
+        }
+      });
+    });
+  }
+
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"'`=\/]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','=':'&#x3D;','`':'&#x60;'}[c])); }
+
+  // ---------- USER ACTIONS ----------
+  $('refreshUsers').addEventListener('click', subscribeUsers);
+
+  async function applyUserChanges(){
+    const uid = $('selUserId').value.trim();
+    if(!uid) return alert('UID girin');
+    const role = $('selRole').value || null;
+    const addCoins = Number($('addCoins').value||0);
+    const addBalance = Number($('addBalance').value||0);
+    const ref = db.collection('users').doc(uid);
+
+    try{
+      await db.runTransaction(async tx=>{
+        const snap = await tx.get(ref);
+        if(!snap.exists) throw new Error('Kullanıcı yok');
+        const data = snap.data();
+        const update = {};
+        if(role){
+          update.role = role;
+          // also update tagObjects if role maps to tag (basic)
+          update.tagObjects = FieldValue.arrayUnion(String(role).toUpperCase());
+        }
+        if(addCoins !== 0) update.coins = (Number(data.coins||0) + addCoins);
+        if(addBalance !== 0) update.balance = (Number(data.balance||data.money||0) + addBalance);
+        tx.set(ref, update, { merge: true });
+      });
+      toast('Güncellendi');
+      logAction(adminName, 'applyUserChanges', { uid, role, addCoins, addBalance });
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  }
+  $('applyUserChanges').addEventListener('click', applyUserChanges);
+
+  async function toggleBan(uid){
+    if(!uid) return alert('UID girin');
+    const ref = db.collection('users').doc(uid);
+    try{
+      const snap = await ref.get();
+      if(!snap.exists) return alert('Kullanıcı bulunamadı');
+      const isBanned = snap.data().banned;
+      await ref.update({ banned: !isBanned });
+      logAction(adminName, isBanned? 'unban':'ban', { uid });
+      toast(isBanned? 'Ban kaldırıldı' : 'Banlandı');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  }
+  $('banUserBtn').addEventListener('click', ()=> toggleBan($('selUserId').value.trim()));
+
+  $('deleteUserBtn').addEventListener('click', async ()=>{
+    const uid = $('selUserId').value.trim();
+    if(!uid) return alert('UID girin');
+    if(!confirm('Kullanıcı kalıcı silinecek. Onaylıyor musunuz?')) return;
+    try{
+      await db.collection('users').doc(uid).delete();
+      logAction(adminName,'deleteUser',{uid});
+      toast('Silindi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- RAINBOW NAME & TAG ----------
+  $('setRainbowBtn').addEventListener('click', async ()=>{
+    const uid = $('selUserId').value.trim(); if(!uid) return alert('UID girin');
+    try{
+      await db.collection('users').doc(uid).set({ flashyColor: 'rgb', flashyAnimated: true, nameColor: 'rainbow' }, { merge: true });
+      logAction(adminName, 'setRainbow', { uid });
+      toast('Rengarenk isim verildi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  $('addTagBtn').addEventListener('click', async ()=>{
+    const uid = $('selUserId').value.trim(); if(!uid) return alert('UID girin');
+    const tag = $('tagInput').value.trim(); if(!tag) return alert('Etiket girin');
+    try{
+      await db.collection('users').doc(uid).update({ tagObjects: FieldValue.arrayUnion({ name: tag, color: null }) });
+      logAction(adminName, 'addTag', { uid, tag });
+      toast('Etiket eklendi');
+      loadUserTags(uid);
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  async function loadUserTags(uid){
+    if(!uid) return;
+    try{
+      const snap = await db.collection('users').doc(uid).get();
+      if(!snap.exists) return;
+      const data = snap.data() || {};
+      const tags = data.tagObjects || data.tags || [];
+      const el = $('userTagsArea');
+      el.innerHTML = '';
+      tags.forEach(t=>{
+        const name = (typeof t === 'string')? t : (t.name || JSON.stringify(t));
+        const chip = document.createElement('span'); chip.className='chip'; chip.textContent = name;
+        el.appendChild(chip);
+      });
+    }catch(e){ console.error(e); }
+  }
+
+  // ---------- IMPERSONATION (preview only) ----------
+  let impersonating = null;
+  $('impersonateBtn').addEventListener('click', async ()=>{
+    const uid = $('impersonateUserId').value.trim(); if(!uid) return alert('UID girin');
+    impersonating = uid;
+    $('impersonateBtn').classList.add('hidden');
+    $('stopImpersonateBtn').classList.remove('hidden');
+    toast('İmperonasyon moduna geçildi: ' + uid);
+    logAction(adminName,'impersonate_start',{uid});
+  });
+  $('stopImpersonateBtn').addEventListener('click', ()=>{
+    logAction(adminName,'impersonate_stop',{uid:impersonating});
+    impersonating = null;
+    $('impersonateBtn').classList.remove('hidden');
+    $('stopImpersonateBtn').classList.add('hidden');
+    toast('İmperonasyon sonlandırıldı');
+  });
+
+  // ---------- MARKET: subscribe, add product, give product, give coins ----------
+  async function subscribeMarket(){
+    if(marketUnsub) marketUnsub();
+    const tbody = $('marketTable').querySelector('tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center"><div class="spinner"></div></td></tr>';
+    marketUnsub = db.collection('market_products').onSnapshot(snap=>{
+      tbody.innerHTML = '';
+      const options = $('giveProductSelect');
+      options.innerHTML = '<option value="">Ürün seç</option>';
+      snap.forEach(doc=>{
+        const d = doc.data(); const id = doc.id;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(id)}</td><td>${escapeHtml(d.title||'')}</td><td>${Number(d.price||0)}</td><td>${escapeHtml(d.role||'')}</td><td>
+          <button class="mini" data-id="${id}" data-act="del">Sil</button>
+        </td>`;
+        tbody.appendChild(tr);
+        const opt = document.createElement('option'); opt.value = id; opt.textContent = d.title || id;
+        options.appendChild(opt);
+      });
+
+      // attach product delete handlers
+      tbody.querySelectorAll('button[data-act="del"]').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          if(!confirm('Ürün silinsin mi?')) return;
+          const id = b.dataset.id;
+          await db.collection('market_products').doc(id).delete();
+          logAction(adminName,'delete_product',{id});
+          toast('Ürün silindi');
+        });
+      });
+    }, err=>{
+      console.error('market sub err', err);
+    });
+  }
+
+  $('openAddProduct').addEventListener('click', ()=> $('addProductPanel').classList.toggle('hidden'));
+  $('cancelProductBtn')?.addEventListener('click', ()=> $('addProductPanel').classList.add('hidden'));
+
+  $('saveProductBtn').addEventListener('click', async ()=>{
+    const id = $('prodId').value.trim(); if(!id) return alert('id girin');
+    const title = $('prodTitle').value.trim() || id;
+    const price = Number($('prodPrice').value||0);
+    const role = $('prodRole').value.trim() || '';
+    const color = $('prodColor').value || '';
+    const desc = $('prodDesc').value || '';
+    try{
+      await db.collection('market_products').doc(id).set({ title, price, role, color, desc });
+      logAction(adminName,'create_product',{id,title,price,role});
+      toast('Ürün kaydedildi');
+      $('addProductPanel').classList.add('hidden');
+      ['prodId','prodTitle','prodPrice','prodRole','prodDesc'].forEach(i=>$(i).value='');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  $('giveProductBtn').addEventListener('click', async ()=>{
+    const uid = $('giveUserId').value.trim(); if(!uid) return alert('UID girin');
+    const prodId = $('giveProductSelect').value; if(!prodId) return alert('Ürün seçin');
+    try{
+      const snap = await db.collection('market_products').doc(prodId).get();
+      if(!snap.exists) return alert('Ürün bulunamadı');
+      const p = snap.data();
+      const userRef = db.collection('users').doc(uid);
+      await db.runTransaction(async tx=>{
+        const u = (await tx.get(userRef)).data() || {};
+        if(p.role){
+          tx.update(userRef, { role: p.role, tagObjects: FieldValue.arrayUnion({ name: p.title, color: p.color || null }) });
+        } else {
+          tx.update(userRef, { tagObjects: FieldValue.arrayUnion({ name: p.title, color: p.color || null }) });
+        }
+      });
+      logAction(adminName,'give_product',{uid,prodId});
+      toast('Ürünü verdim');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  $('giveCoinsBtn').addEventListener('click', async ()=>{
+    const uid = $('giveCoinsUser').value.trim(); const amt = Number($('giveCoinsAmount').value||0);
+    if(!uid || !amt) return alert('UID ve miktar girin');
+    try{
+      await db.collection('users').doc(uid).update({ coins: FieldValue.increment(amt) });
+      logAction(adminName,'give_coins',{uid,amt});
+      toast('Coin gönderildi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- ROOMS: subscribe & manage ----------
+  async function subscribeRooms(){
+    if(roomsUnsub) roomsUnsub();
+    const el = $('roomsList');
+    el.innerHTML = '<div class="spinner"></div>';
+    roomsUnsub = db.collection('rooms').onSnapshot(snap=>{
+      el.innerHTML = '';
+      snap.forEach(doc=>{
+        const d = doc.data(); const id = doc.id;
+        const row = document.createElement('div'); row.className='row';
+        row.innerHTML = `<div style="flex:1"><strong>${escapeHtml(d.name||id)}</strong><div class="muted">${escapeHtml(id)}</div></div>
+          <div class="tools"><button class="mini" data-id="${id}" data-act="open">Aç</button><button class="mini" data-id="${id}" data-act="del">Sil</button></div>`;
+        el.appendChild(row);
+      });
+
+      // attach handlers
+      el.querySelectorAll('button[data-act]').forEach(b=>{
+        b.addEventListener('click', e=>{
+          const id = b.dataset.id; const act=b.dataset.act;
+          if(act==='open') openRoom(id);
+          else if(act==='del') deleteRoom(id);
+        });
+      });
+    }, err=>{ console.error(err); el.innerHTML='Hata'; });
+  }
+
+  function openRoom(roomId){
+    $('activeRoomName').textContent = roomId;
+    // subscribe to messages (last 200)
+    const cm = $('roomMessages'); cm.innerHTML = '<div class="spinner"></div>';
+    if(window.roomMsgUnsub) window.roomMsgUnsub();
+    window.roomMsgUnsub = db.collection('rooms').doc(roomId).collection('messages').orderBy('createdAt','asc').limitToLast(500).onSnapshot(snap=>{
+      cm.innerHTML = '';
+      snap.forEach(doc=>{
+        const m = doc.data();
+        const div = document.createElement('div');
+        div.innerHTML = `<div style="padding:6px;border-bottom:1px solid rgba(255,255,255,0.02)"><strong>${escapeHtml(m.displayName||m.userId||'')}</strong> <span class="muted">${m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleString() : ''}</span><div>${escapeHtml(m.text||'')}</div></div>`;
+        cm.appendChild(div);
+      });
+    }, e=>{ console.error(e); cm.innerHTML='Hata'; });
+  }
+
+  async function deleteRoom(roomId){
+    if(!confirm('Odayı tamamen silmek istediğinize emin misiniz?')) return;
+    // caution: deleting subcollection messages manually
+    try{
+      // delete messages in batches
+      const msgsRef = db.collection('rooms').doc(roomId).collection('messages');
+      const snap = await msgsRef.limit(500).get();
+      const batch = db.batch();
+      snap.forEach(d=> batch.delete(d.ref));
+      await batch.commit().catch(()=>{/* continue */});
+      // delete room doc
+      await db.collection('rooms').doc(roomId).delete();
+      logAction(adminName,'delete_room',{roomId});
+      toast('Oda silindi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  }
+
+  $('clearRoomMsgsBtn').addEventListener('click', async ()=>{
+    const roomId = $('activeRoomName').textContent; if(!roomId) return alert('Önce oda seçin');
+    if($('clearMsgConfirm').value !== 'DELETE') return alert('Onay için DELETE yazın');
+    try{
+      const msgsRef = db.collection('rooms').doc(roomId).collection('messages');
+      const snap = await msgsRef.get();
+      const batch = db.batch();
+      snap.forEach(d=> batch.delete(d.ref));
+      await batch.commit();
+      logAction(adminName,'clear_room_messages',{roomId});
+      toast('Mesajlar temizlendi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- ANNOUNCEMENTS ----------
+  $('postAnnBtn').addEventListener('click', async ()=>{
+    const title = $('annTitle').value.trim(); const msg = $('annMsg').value.trim();
+    if(!title || !msg) return alert('Başlık ve mesaj girin');
+    try{
+      await db.collection('announcements').add({ title, message: msg, createdAt: FieldValue.serverTimestamp(), sticky: false });
+      logAction(adminName,'post_announcement',{title});
+      toast('Duyuru yayınlandı');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- COUPONS ----------
+  $('createCouponBtn').addEventListener('click', async ()=>{
+    const code = $('couponCode').value.trim(); const amount = Number($('couponAmount').value||0); const uses = Number($('couponUses').value||0);
+    if(!code || !amount) return alert('Kod ve miktar girin');
+    try{
+      await db.collection('coupons').doc(code).set({ code, amount, uses: uses||0, createdAt: FieldValue.serverTimestamp() });
+      logAction(adminName,'create_coupon',{code,amount,uses});
+      toast('Kupon oluşturuldu');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- MAINTENANCE ----------
+  $('applyMaintenanceBtn').addEventListener('click', async ()=>{
+    const mode = $('maintenanceMode').value === 'on';
+    const reason = $('maintenanceReason').value || '';
+    const until = $('maintenanceUntil').value || null;
+    try{
+      await db.collection('meta').doc('settings').set({ maintenance: { enabled: mode, reason, until } }, { merge: true });
+      logAction(adminName,'set_maintenance',{mode,reason,until});
+      toast('Ayar kaydedildi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- SCHEDULER ----------
+  $('createSchedBtn').addEventListener('click', async ()=>{
+    const name = $('schedName').value.trim(); const when = $('schedWhen').value.trim(); const action = $('schedAction').value; const payloadRaw = $('schedPayload').value.trim();
+    if(!name || !when) return alert('isim ve zaman girin');
+    let payload = {};
+    try{ payload = payloadRaw ? JSON.parse(payloadRaw) : {}; }catch(e){ return alert('Payload JSON geçersiz'); }
+    try{
+      await db.collection('admin_schedules').add({ name, when, action, payload, createdAt: FieldValue.serverTimestamp(), executed:false });
+      logAction(adminName,'create_schedule',{name,when,action});
+      toast('Plan kaydedildi');
+    }catch(e){ console.error(e); alert('Hata: '+e.message); }
+  });
+
+  // ---------- LOGS ----------
+  async function subscribeLogs(){
+    if(logsUnsub) logsUnsub();
+    const area = $('logsArea');
+    area.innerHTML = '<div class="spinner"></div>';
+    logsUnsub = db.collection('admin_logs').orderBy('ts','desc').limit(200).onSnapshot(snap=>{
+      area.innerHTML = '';
+      let last = null;
+      snap.forEach(doc=>{
+        const d = doc.data();
+        const div = document.createElement('div');
+        div.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        div.style.padding = '6px 0';
+        div.innerHTML = `<strong>${escapeHtml(d.action)}</strong> <span class="muted">${new Date(d.ts).toLocaleString()}</span><div class="muted" style="font-size:0.85rem">${escapeHtml(JSON.stringify(d.meta))}</div>`;
+        area.appendChild(div);
+        last = doc;
+      });
+      lastLogDoc = last;
+    }, err=>{ console.error(err); area.innerHTML='Hata'; });
+  }
+
+  $('undoLastBtn').addEventListener('click', async ()=>{
+    if(!lastLogDoc) return alert('Geri alınacak log yok');
+    const last = (await lastLogDoc.ref.get()).data();
+    // Very simple undo: only supports a few actions (give_coins, create_product, delete_product) as example
+    if(last.action === 'give_coins'){
+      const { uid, amt } = last.meta || {};
+      if(uid && amt) await db.collection('users').doc(uid).update({ coins: FieldValue.increment(-Number(amt)) });
+      alert('geri alındı: give_coins');
+    } else {
+      alert('Bu işlem için undo desteklenmiyor (örnek amaçlı).');
+    }
+    logAction(adminName,'undo_last',{orig:last.action});
+  });
+
+  // ---------- INIT SUBSCRIPTIONS ----------
+  function init(){
+    subscribeUsers();
+    subscribeMarket();
+    subscribeRooms();
+    subscribeLogs();
+    // coupons/announcements/subscriptions can be added similarly when needed
+  }
+
+  // start
+  init();
+  </script>
+</body>
+</html>

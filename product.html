@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ürün — Lilemir</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo-3d" aria-hidden="true"><div class="logo-face"></div></div>
+      <h1>Lilemir</h1>
+    </div>
+    <nav>
+      <a href="index.html">Mağaza</a>
+      <a href="#" id="cart-link">Sepet (<span id="cart-count">0</span>)</a>
+      <button id="auth-btn" class="btn-ghost">Giriş / Kayıt</button>
+    </nav>
+  </header>
+
+  <main class="container product-page">
+    <div class="product-view">
+      <div id="model-container" class="model-3d">
+        <!-- model-viewer veya fallback image -->
+      </div>
+      <div class="product-info">
+        <h2 id="product-title">Yükleniyor...</h2>
+        <p id="product-desc"></p>
+
+        <div class="product-meta">
+          <div class="price" id="product-price">₺0</div>
+
+          <label for="size">Beden</label>
+          <div id="sizes" class="sizes"></div>
+
+          <label for="quantity">Adet</label>
+          <input id="quantity" type="number" min="1" value="1" />
+
+          <button id="add-to-cart" class="btn-primary">Sepete Ekle</button>
+        </div>
+
+        <div id="product-messages" class="messages"></div>
+      </div>
+    </div>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button id="modal-close" class="modal-close">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-init.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/cart.js"></script>
+  <script type="module" src="js/product.js"></script>
+</body>
+</html>

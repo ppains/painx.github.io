@@ -290,10 +290,11 @@
         <h3>Kullanıcı Adı / Şifre ile Giriş</h3>
         <small>Giriş ve kayıt /users koleksiyonundan yönetilir. (Not: Basit client-side örnek — sunucu doğrulaması önerilir.)</small>
         <div class="row">
-            <input id="sq-username-input" type="text" placeholder="Kullanıcı adı (örnek: emir123)">
+            <!-- autocomplete ve autocapitalize eklendi: mobilde eposta önerisini engellemek için -->
+            <input id="sq-username-input" name="username" type="text" inputmode="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Kullanıcı adı (örnek: emir123)">
         </div>
         <div class="row">
-            <input id="sq-password-input" type="password" placeholder="Şifre">
+            <input id="sq-password-input" name="password" type="password" autocomplete="current-password" placeholder="Şifre">
         </div>
         <div style="display:flex; justify-content:flex-end;">
             <button id="sq-signin-btn">Giriş</button>
@@ -679,6 +680,8 @@
               tx.set(userRef, { balance: currentBal + 15 }, { merge: true });
               tx.update(lobbyRef, { paidOut: true, winnerUid: uid, paidAt: firebase.firestore.FieldValue.serverTimestamp() });
             });
+            // bildirim: diğer sekmelere haber ver
+            try{ localStorage.setItem('sq_last_award', JSON.stringify({ uid, amount: 15, lobbyId: lobbyId, ts: Date.now() })); }catch(e){}
             showToast('Kazandınız! Hesabınıza $15 eklendi (online).');
           } else {
             const userRef = sqDb.collection('users').doc(uid);
@@ -687,6 +690,7 @@
               const currentBal = (uSnap.exists && Number(uSnap.data().balance || 0)) || 0;
               tx.set(userRef, { balance: currentBal + 15 }, { merge: true });
             });
+            try{ localStorage.setItem('sq_last_award', JSON.stringify({ uid, amount: 15, lobbyId: null, ts: Date.now() })); }catch(e){}
             showToast('Kazandınız! Hesabınıza $15 eklendi (tekli).');
           }
         }catch(e){

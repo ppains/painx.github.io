@@ -1,675 +1,122 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>emir2MİNN</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-  <!-- Yeni çerçeve stilleri -->
-  <link rel="stylesheet" href="frames.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PAİNDEX - 502 Bad Gateway</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #0f0f17;
+      color: #d0d0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 640px;
+      width: 90%;
+      text-align: center;
+      padding: 40px 24px;
+    }
+
+    .error-code {
+      font-size: 10rem;
+      font-weight: 800;
+      color: #444466;
+      letter-spacing: -10px;
+      margin-bottom: 0.15em;
+      line-height: 0.9;
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.3rem;
+      color: #9090b0;
+      margin-bottom: 2rem;
+    }
+
+    .message {
+      font-size: 1.15rem;
+      color: #b0b0d0;
+      margin: 1.4rem 0;
+    }
+
+    .highlight {
+      color: #ff7777;
+      font-weight: 500;
+    }
+
+    .contact {
+      background-color: #14141f;
+      border: 1px solid #22223a;
+      border-radius: 10px;
+      padding: 28px;
+      margin-top: 2.5rem;
+      font-size: 1.1rem;
+    }
+
+    .contact strong {
+      color: #e0e0ff;
+    }
+
+    @media (max-width: 480px) {
+      .error-code {
+        font-size: 7rem;
+        letter-spacing: -6px;
+      }
+      h1 {
+        font-size: 1.9rem;
+      }
+      .subtitle {
+        font-size: 1.15rem;
+      }
+      .message {
+        font-size: 1.05rem;
+      }
+    }
+  </style>
 </head>
 <body>
-   <div class="snowflakes" aria-hidden="true">
-  <div class="snowflake">❅</div>
-  <div class="snowflake">❆</div>
-  </div>
-<div id="snow-container"></div>
- <div id="santa-claus-background"></div>
-  <div id="sideMenuOverlay" class="side-menu-overlay" onclick="toggleSideMenu()"></div>
-  <div id="sideMenu" class="side-menu">
-     <div class="side-menu-header">
-        <h3>Menü</h3>
-        <button onclick="toggleSideMenu()" class="close-menu-btn">✕</button>
-     </div>
-     <div class="side-menu-content">
-        <a href="menubar.html" class="menu-link"><i class="fa-solid fa-gamepad"></i> APPs</a>
-        <a href="aktiflik.html" class="menu-link" id="menuActivityBtn" onclick="openLeaderboard('activity')"><i class="fa-solid fa-chart-line"></i> Aktiflik Sıralama</a>
-       <a href="gunluk.html" id="menuDailyBtn" class="menu-link"><i class="fa-solid fa-gift"></i> Günlük</a>
-       <a href="kullanici.html" class="menu-link"><i class="fa-solid fa-user"></i></i> Kullanıcılar </a>
-<a href="profilduzen.html" class="menu-link"><i class="fa-solid fa-user-pen"></i></i> Profilim </a>
-<a href="dm.html" class="menu-link"><i class="fa-solid fa-envelope"></i> DM</a>
-<a href="klan.html" class="menu-link"><i class="fa-solid fa-users"></i> Klan</a>
-<a href="sqgame.html" class="menu-link"><i class="fa-solid fa-baby"></i>Squid Game</a>
-<a href="oda.html" id="menuRoomsBtn" class="menu-link"><i class="fa-solid fa-door-open"></i> Odalar</a>
-        <a href="sohret.html" class="menu-link" id="menuFameBtn" onclick="openLeaderboard('fame')"><i class="fa-solid fa-sack-dollar"></i> Şöhret Sıralaması</a>
-        <a href="rank.html" class="menu-link" id="menuRankBtn" onclick="openLeaderboard('rank')"><i class="fa-solid fa-trophy"></i> Rank Sıralaması</a>
-        <a href="bildirim.html" class="menu-link" id="notifMenuLink" onclick="openNotifications()"><i class="fa-solid fa-bell"></i> Bildirimler <span id="notifBadge" class="notif-dot hidden" aria-hidden="true"></span></a>
-        <a href="bezmibot.html" class="menu-link"><i class="fa-solid fa-robot"></i> BezmiBOT</a>
-        <a href="soundc.html" class="menu-link soundcloud-link"> 
-    <i class="fa-brands fa-soundcloud"></i> 
-    SoundCloud
-</a>
-<a href="spoti.html" class="menu-link spotify-link"> 
-    <i class="fa-brands fa-spotify"></i> Spotify
-</a>
-<a href="ytb.html" class="menu-link youtube-link"> 
-    <i class="fa-brands fa-youtube"></i> YouTube
-</a>
-        <!-- Market link eklendi -->
-        <a href="market.html" class="menu-link" id="menuMarketBtn" onclick="openMarket()"><i class="fa-solid fa-store"></i> Market</a>
-        <a href="admin.html" class="menu-link"><i class="fa-solid fa-lock"></i> </a>
-        <a href="html.html" class="menu-link version-link"> 
-    <i class="fa-solid fa-file-signature"></i> Versiyon Notları
-</a>
 
-        <div class="menu-divider"></div>
-        <p style="font-size:0.8rem; color:#aaa; padding:10px;">Versiyon 3.0 </p>
-     </div>
-  </div>
+  <div class="container">
+    <div class="error-code">502</div>
+    <h1>Bad Gateway</h1>
 
-  <div class="maintenance-banner" id="maintenanceBanner" style="display:none;">
-    <div style="flex:1;"><span id="maintenanceReasonText"></span></div>
-    <button id="closeMaintBannerBtn">✕</button>
-  </div>
-  <div class="announcement-banner" id="announcementBanner" style="display:none;">
-    <div style="flex:1;"><strong id="announcementTitleText"></strong> <span id="announcementMsgText"></span></div>
-    <button id="closeAnnouncementBtn">✕</button>
-  </div>
-  <div id="announceAnimContainer"></div>
-  <div id="banOverlay" style="display:none;"></div>
-
-  <div class="app-container">
-
-    <button>
-      <a href="jadminpanel.html" id="adminLoginLink" class="admin-link"><i class="fa-solid fa-lock"></i></a>
-   </button>
-
-    <div id="appView">
-      <div id="mainContent" style="display: none;">
-        
-        <header class="app-header">
-           <div class="user-info">
-              <!-- Avatar: foto/baş harf ve çerçeve overlay -->
-              <div class="avatar" id="avatar">
-                 <div id="avatarInitials">US</div>
-                 <!-- Eğer kullanıcı fotoğrafı olacaksa buraya src setlenir; default hidden -->
-                 <img id="avatarPhoto" class="avatar-photo" src="" alt="avatar foto" style="display:none;">
-                 <!-- Çerçeve: sen buraya frame dosyalarını koyacaksın (ör: frame1.gif) -->
-                 <img id="avatarFrame" class="avatar-frame" src="" alt="avatar çerçevesi" style="display:none; pointer-events:none;">
-              </div>
-              <div>
-                 <h2 id="displayName" class="username">Yükleniyor...</h2>
-                 <div class="badges">
-                    <span id="levelBadge" class="badge">BRONZ</span>
-                    <span id="profilePremiumBadge" class="badge premium" style="display:none;">PREM</span>
-                 </div>
-              </div>
-           </div>
-          
-           <button class="menu-toggle-btn" onclick="toggleSideMenu()">
-              <i class="fa-solid fa-bars"></i>
-           </button>
-        </header>
-
-        <section class="balance-card">
-           <div class="label">Toplam Bakiye</div>
-           <div class="amount" id="moneyEarned">$0.00</div>
-           <div class="stats-grid">
-              <div class="stat">
-                 <span>Tıklama</span>
-                 <strong id="clickCount">0</strong>
-              </div>
-              <div class="stat">
-                 <span>Limit</span>
-                 <div class="progress-bar"><div id="clickFill" class="fill"></div></div>
-                 <small id="clickRemainText">0/0</small>
-              </div>
-              <div class="stat">
-                 <span>Kazanç</span>
-                 <div class="progress-bar"><div id="earnFill" class="fill"></div></div>
-                 <small id="earnRemainText">0/0</small>
-              </div>
-           </div>
-           <div id="activeCouponArea" style="margin-top:10px;"></div>
-        </section>
-
-        <section class="click-area">
-           <button id="clickBtn" class="giant-btn">
-              <div class="pulse-ring"></div>
-              <span id="clickBtnText">TIKLA</span>
-              <span id="cooldownText" class="cooldown-msg" style="display:none;">BEKLE</span>
-           </button>
-        </section>
-
-        <section class="controls-area">
-           <div class="game-row">
-              <input id="betAmountInput" type="number" placeholder="Bahis $" />
-              <button id="betOddBtn" class="game-btn odd">TEK</button>
-              <button id="betEvenBtn" class="game-btn even">ÇİFT</button>
-           </div>
-
-           <div class="action-grid">
-              <button class="action-card" id="chatActionCard" onclick="toggleSection('publicChatCard')">
-                 <i class="fa-solid fa-comments" style="color:#00A3FF"></i>
-                 <span>Sohbet</span>
-                 <span id="chatNotifDot" class="notif-dot hidden" aria-hidden="true" style="position:absolute; right:16px; top:10px;"></span>
-              </button>
-              <button class="action-card" onclick="toggleSection('withdrawSection')">
-                 <i class="fa-solid fa-wallet" style="color:#00FF8C"></i>
-                 <span>Çekim</span>
-              </button>
-              <button class="action-card" id="profileEditBtn">
-                 <i class="fa-solid fa-user-pen" style="color:#FFD400"></i>
-                 <span>Profil</span>
-              </button>
-              <button class="action-card" id="logoutBtn">
-                 <i class="fa-solid fa-power-off" style="color:#FF4080"></i>
-                 <span>Çıkış</span>
-                 <span id="logoutUsername" style="display:none;"></span>
-              </button>
-<!-- message yapısında örnek -->
-
-              <!-- === KUTULAR (EKLENDI) === -->
-<section class="boxes-area" style="margin-top:14px; display:grid; gap:12px;">
-  <h3 style="margin:0 0 6px 0; font-size:1rem;">KUTULAR</h3>
-
-  <div class="box-row" style="display:flex; gap:12px; align-items:flex-end;">
-    <!-- Normal kutu (küçük) -->
-    <div class="box normal-box" style="flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); padding:12px; border-radius:12px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <strong>Normal Kutu</strong>
-        <small id="normalBoxCount" style="color:var(--text-muted);">0</small>
-      </div>
-      <div class="progress-track" style="background:rgba(255,255,255,0.03); height:8px; border-radius:999px; overflow:hidden; margin-bottom:8px;">
-        <div id="normalBoxProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg,#00D4FF,#00FF8C);"></div>
-      </div>
-      <div style="display:flex; justify-content:flex-end;">
-        <button id="openNormalBoxBtn" class="qcm-action qcm-small" style="padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.04); color:var(--text-muted);" disabled>Bekleniyor</button>
-      </div>
+    <div class="subtitle">
+      Sunucu geçici olarak yanıt veremiyor
     </div>
 
-    <!-- Büyük kutu (büyük) -->
-    <div class="box big-box" style="flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); padding:12px; border-radius:12px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <strong>Büyük Kutu</strong>
-        <small id="bigBoxCount" style="color:var(--text-muted);">0</small>
-      </div>
-      <div class="progress-track" style="background:rgba(255,255,255,0.03); height:8px; border-radius:999px; overflow:hidden; margin-bottom:8px;">
-        <div id="bigBoxProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg,#FF9A00,#FF4080);"></div>
-      </div>
-      <div style="display:flex; justify-content:flex-end;">
-        <button id="openBigBoxBtn" class="qcm-action qcm-small" style="padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.04); color:var(--text-muted);" disabled>Bekleniyor</button>
-      </div>
-    </div>
-  </div>
-  <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">Normal: 400 tıklama → Açılır • Büyük: 700 tıklama → Açılır</div>
-</section>
-              <!-- === /KUTULAR === -->
-
-           </div>
-        </section>
-
-        <div id="publicChatCard" class="bottom-sheet">
-           <div class="sheet-header">
-              <h3>Canlı Sohbet</h3>
-              <button onclick="toggleSection('publicChatCard')">✕</button>
-           </div>
-           <div id="chatMessages" class="chat-body"></div>
-           <div id="emojiPicker" class="emoji-area" style="display:none;">
-             <button data-emoji="👍">👍</button><button data-emoji="😂">😂</button><button data-emoji="🔥">🔥</button>
-           </div>
-           <div class="chat-footer">
-              <button id="emojiBtn">😊</button>
-              <input id="chatInput" type="text" placeholder="Mesaj..." />
-              <input id="chatFileInput" type="file" hidden />
-              <label for="chatFileInput" class="attach-btn"><i class="fa-solid fa-paperclip"></i></label>
-              <button id="chatSendBtn" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
-           </div>
-        </div>
-
-        <div id="withdrawSection" class="bottom-sheet">
-           <div class="sheet-header">
-              <h3>Para Çekme</h3>
-              <!-- Güncellenmiş minimum gösterimi: 2k -->
-              <span id="minWithdrawalText" class="badge-pill">$2000 Min</span>
-              <button onclick="toggleSection('withdrawSection')">✕</button>
-           </div>
-           <form id="userForm" class="sheet-form">
-              <div class="input-group">
-                 <input id="firstname" placeholder="Ad" />
-                 <input id="lastname" placeholder="Soyad" />
-              </div>
-
-              <!-- Yeni: Kullanıcı tarafından girilecek çekim miktarı -->
-              <div class="input-with-btn" style="margin-top:8px;">
-                 <input id="withdrawAmountInput" type="number" placeholder="Çekilecek Tutar $ (Min $2000)" step="0.01" />
-              </div>
-
-              <select id="bankSelect">
-                 <option value="" disabled selected>Banka Seç</option>
-                 <option value="Papara">Papara</option>
-                 <option value="Ziraat">Ziraat</option>
-                 <option value="Garanti">Garanti</option>
-                 <option value="Akbank">Akbank</option>
-                 <option value="IBAN">IBAN</option>
-              </select>
-              <div class="input-with-btn">
-                 <input id="ibanInput" placeholder="TR..." />
-                 <button type="button" id="clearIban">Sil</button>
-              </div>
-              <div id="ibanInvalid" style="color:red; font-size:0.8rem; display:none;">Hatalı IBAN</div>
-              
-              <!-- Açıklama alanı eklendi -->
-              <div>
-                <textarea id="withdrawDescription" placeholder="Açıklama (opsiyonel)" rows="3" style="width:100%; resize:vertical; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); color: #fff; margin-top:8px;"></textarea>
-              </div>
-
-              <div class="input-with-btn">
-                 <input id="couponInput" placeholder="Kupon Kodu" />
-                 <button type="button" id="applyCouponBtn">Kullan</button>
-              </div>
-              <div id="couponInfo" style="font-size:0.8rem; color:#aaa;"></div>
-
-              <button type="button" id="withdrawBtn" class="primary-btn full">ÇEKİM TALEBİ OLUŞTUR</button>
-           </form>
-        </div>
-
-      </div> <div id="authView">
-         <div class="auth-card">
-            <h1 class="logo-text">GİRİŞ YAP</h1>
-            <form id="authForm">
-               <!-- autocomplete ve autocapitalize eklendi: mobilde e‑posta önerisini engellemek için -->
-               <input id="authUsername" name="username" autocomplete="username" autocapitalize="none" placeholder="Kullanıcı Adı" required />
-               <input id="authPassword" name="password" autocomplete="current-password" type="password" placeholder="Şifre" required />
-               <div id="authMessage" style="color:#FF4080; display:none;"></div>
-               <button type="submit" id="authSubmitBtn" class="primary-btn full">GİRİŞ</button>
-               <p id="switchText" onclick="window.switchAuthMode()">Hesabın yok mu? <b>Kayıt Ol</b></p>
-            </form>
-         </div>
-      </div>
-
-    </div> <div id="successOverlay" class="overlay-center" style="display:none;">
-       <div class="success-box">
-          <div style="font-size:3rem;">🎉</div>
-          <h3>BAŞARILI!</h3>
-          <div id="successDetails"></div>
-          <button onclick="closeSuccessOverlay()">Tamam</button>
-       </div>
+    <div class="message">
+      Arka plandaki sunucular arasında bir iletişim sorunu yaşanıyor.<br>
+      Bu genellikle bakım, aşırı yük veya <span class="highlight">devam eden saldırı önleme</span> çalışmaları sırasında görülür.
     </div>
 
-    <div id="profileModal" class="overlay-center" style="display:none;">
-       <div class="modal-box">
-          <h3>Profili Düzenle</h3>
-          <input id="profileNameInput" placeholder="Yeni İsim" />
-          <div class="colors">
-             <label><input type="radio" name="profileColor" value="#FFD400"><span>🟡</span></label>
-             <label><input type="radio" name="profileColor" value="#00A3FF"><span>🔵</span></label>
-             <label><input type="radio" name="profileColor" value="#FF4080"><span>🔴</span></label>
-          </div>
-
-          <!-- ÇERÇEVELER: kullanıcı yükleyemez; sen frame dosyalarını koyacaksın -->
-        
-
-          <div class="modal-btns">
-             <button id="closeProfileBtn" class="secondary">İptal</button>
-             <button id="saveProfileBtn" class="primary">Kaydet</button>
-          </div>
-       </div>
+    <div class="message">
+      Lütfen birkaç dakika sonra tekrar deneyin.<br>
+      Sorun devam ederse en kısa sürede düzeltilecektir.
     </div>
-    
-    <div id="privateChatModal" class="overlay-center" style="display:none;">
-       <div class="modal-box chat-modal">
-          <div class="modal-header">
-             <strong id="dmTitle">Chat</strong>
-             <button id="closeDmBtn">✕</button>
-          </div>
-          <div id="dmMessages" class="dm-body"></div>
-          <div class="dm-footer">
-             <input id="dmInput" placeholder="Yaz..." />
-             <button id="dmSendBtn">➤</button>
-          </div>
-       </div>
-    </div>
-    
-    <div id="toastContainer"></div>
- 
-  </div>
-  </div>
 
-  <!-- Leaderboard modal (Yılbaşı temalı) -->
-  <div id="leaderboardModal" class="overlay-center" style="display:none;">
-    <div class="modal-box" style="max-width:720px; width:96%; background: linear-gradient(180deg,#071428,#0b2236); border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.04);">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <h3 style="margin:0; font-size:1.3rem;">🎄 Haftalık Sıralamalar (Yılbaşı Özel)</h3>
-          <div style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">Her hafta yenilenir • 1.'ye $200 ödül</div>
-        </div>
-        <div>
-          <button id="lbCloseBtn" class="secondary" style="padding:8px 10px; border-radius:8px;">Kapat</button>
-        </div>
-      </div>
-      <div style="margin-top:12px; display:flex; gap:8px;">
-        <button id="lbActiveBtn" class="qcm-action qcm-small" style="background:linear-gradient(90deg,#00D4FF,#00FF8C);">Aktiflik</button>
-        <button id="lbFameBtn" class="qcm-action qcm-small" style="background:linear-gradient(90deg,#FFD400,#FF9A00);">Şöhret</button>
-      </div>
-      <div id="lbContent" style="margin-top:14px; max-height:56vh; overflow:auto; padding-right:8px;"></div>
-      <div style="margin-top:12px; font-size:0.9rem; color:var(--text-muted);">Yılbaşı temalı arka plan ve kar efekti etkin.</div>
+    <div class="contact">
+      <strong>Sorununuz devam ederse bizimle iletişime geçebilirsiniz:</strong><br><br>
+      Discord: <strong>paindexsupport</strong><br>
+      E-posta: <strong>admin@paindex.live</strong>
     </div>
   </div>
 
-  <!-- Notifications modal -->
-  <div id="notificationModal" class="overlay-center" style="display:none;">
-    <div class="modal-box" style="max-width:720px; width:96%; padding:14px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0;">📣 Bildirimler</h3>
-        <button id="notifCloseBtn" class="secondary">Kapat</button>
-      </div>
-      <div id="notifList" style="margin-top:12px; max-height:56vh; overflow:auto;"></div>
-      <div style="margin-top:12px; text-align:right;">
-        <button id="markNotifReadBtn" class="qcm-action qcm-small" style="background:linear-gradient(90deg,#00D4FF,#00FF8C);">Hepsini Okundu Yap</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Market modal eklendi -->
-  <div id="marketModal" class="overlay-center" style="display:none;">
-    <div class="modal-box" style="max-width:720px; width:96%; padding:14px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0;">🛒 Market</h3>
-        <button id="marketCloseBtn" class="secondary">Kapat</button>
-      </div>
-
-      <div id="marketItemsList" style="margin-top:12px; display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; max-height:60vh; overflow:auto; padding-top:10px;">
-        <!-- JS ile buraya ürün kartları eklenecek -->
-      </div>
-
-      <div style="margin-top:12px; text-align:right;">
-        <button id="marketRefreshBtn" class="qcm-action qcm-small">Yenile</button>
-      </div>
-    </div>
-  </div>
-  
-
-  </div> <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script>
-    // Firebase Config (Aynen korundu)
-    const firebaseConfig = {
-      apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
-      authDomain: "lilemir-new.firebaseapp.com",
-      projectId: "lilemir-new",
-      storageBucket: "lilemir-new.firebasestorage.app",
-      messagingSenderId: "339863121380",
-      appId: "1:339863121380:web:123195552e821b085e6bf1"
-    };
-    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-
-    // -- ROLE / TAG renk haritası
-    const ROLE_MAP = {
-      'vip-': { label: 'VIP-', color: '#3b82f6', contrast: '#fff', multiplier: 1.25, withdrawBonusPercent: 10 },
-      'vip+': { label: 'VIP+', color: '#ef4444', contrast: '#fff', multiplier: 1.5, withdrawBonusPercent: 20 },
-      'mvp-': { label: 'MVP-', color: '#fbbf24', contrast: '#000', multiplier: 1.75, withdrawBonusPercent: 30 },
-      'mvp+': { label: 'MVP+', color: 'rainbow', contrast: '#000', perClickDollar: 1.00, withdrawBonusPercent: 50, priorityWithdraw: true }
-    };
-
-    // MENÜ VE PANEL AÇMA KAPAMA FONKSİYONLARI (Extra JS)
-    function toggleSideMenu() {
-       document.getElementById('sideMenu').classList.toggle('open');
-       document.getElementById('sideMenuOverlay').classList.toggle('open');
-    }
-    function toggleSection(id) {
-       const el = document.getElementById(id);
-       // Varsa diğer açık panelleri kapat (opsiyonel)
-       document.querySelectorAll('.bottom-sheet.open').forEach(p => {
-          if(p.id !== id) p.classList.remove('open');
-       });
-       el.classList.toggle('open');
-    }
-
-    // Kullanıcı aboneliği / session
-    let currentUid = null;
-    let currentUserData = null;
-    let currentUserUnsub = null;
-    const clickBtn = document.getElementById('clickBtn');
-    const moneyEarnedEl = document.getElementById('moneyEarned');
-    const clickCountEl = document.getElementById('clickCount');
-    const profilePremiumBadge = document.getElementById('profilePremiumBadge');
-    const displayNameEl = document.getElementById('displayName');
-
-    function hexToRgba(hex, a=1){
-      if(!hex || hex === 'rainbow') return `rgba(0,0,0,${a})`;
-      const c = hex.replace('#','');
-      const r = parseInt(c.substr(0,2),16);
-      const g = parseInt(c.substr(2,2),16);
-      const b = parseInt(c.substr(4,2),16);
-      return `rgba(${r},${g},${b},${a})`;
-    }
-    function getContrastColor(hex){
-      if(!hex || hex === 'rainbow') return '#000';
-      const c = hex.replace('#','');
-      const r = parseInt(c.substr(0,2),16);
-      const g = parseInt(c.substr(2,2),16);
-      const b = parseInt(c.substr(4,2),16);
-      const yiq = (r*299 + g*587 + b*114)/1000;
-      return yiq >= 128 ? '#000' : '#fff';
-    }
-
-    function getUserBonuses(userData){
-      if(!userData) return { clickMultiplier: 1, perClickDollar: 0, withdrawBonusPercent: 0, priorityWithdraw:false };
-      return {
-        clickMultiplier: Number(userData.clickMultiplier) || 1,
-        perClickDollar: Number(userData.perClickDollar) || 0,
-        withdrawBonusPercent: Number(userData.withdrawBonusPercent) || 0,
-        priorityWithdraw: !!userData.priorityWithdraw
-      };
-    }
-
-    // Tıklama ödülü hesaplama (baseAmount $ baz)
-    function computeClickReward(userData, baseAmount){
-      const b = getUserBonuses(userData);
-      if(b.perClickDollar && b.perClickDollar > 0){
-        return { amount: Number(b.perClickDollar), type: 'dollar' };
-      }
-      const amount = Number(baseAmount) * Number(b.clickMultiplier || 1);
-      return { amount, type: 'dollar' };
-    }
-
-    // Abone ol / oturumu başlat
-    function startUserSession(uid){
-      if(currentUserUnsub) currentUserUnsub();
-      currentUid = uid;
-      currentUserUnsub = db.collection('users').doc(uid).onSnapshot(snap=>{
-        if(!snap.exists) {
-          currentUserData = null;
-          refreshUIForUser();
-          return;
-        }
-        currentUserData = snap.data();
-        currentUserData.uid = snap.id;
-        refreshUIForUser();
-      });
-    }
-
-    function stopUserSession(){
-      if(currentUserUnsub) currentUserUnsub();
-      currentUserUnsub = null;
-      currentUid = null;
-      currentUserData = null;
-      refreshUIForUser();
-    }
-
-    function refreshUIForUser(){
-      if(currentUserData){
-        displayNameEl.textContent = currentUserData.displayName || currentUserData.username || currentUserData.uid || 'Kullanıcı';
-        moneyEarnedEl.textContent = '$' + Number(currentUserData.balance || currentUserData.money || 0).toFixed(2);
-        clickCountEl.textContent = Number(currentUserData.totalClicks || currentUserData.clicks || 0).toLocaleString();
-        // Rol badge göster
-        const role = (currentUserData.role || '').toLowerCase();
-        if(role && ROLE_MAP[role]){
-          const cfg = ROLE_MAP[role];
-          profilePremiumBadge.style.display = 'inline-block';
-          profilePremiumBadge.textContent = cfg.label;
-          if(cfg.color === 'rainbow'){
-            profilePremiumBadge.style.background = 'linear-gradient(90deg,#ff004c,#ffd400,#00ff6a,#00d4ff,#7c3aed)';
-            profilePremiumBadge.style.color = cfg.contrast || '#000';
-            profilePremiumBadge.classList.add('glow-rainbow');
-          } else {
-            profilePremiumBadge.style.background = cfg.color;
-            profilePremiumBadge.style.color = cfg.contrast || getContrastColor(cfg.color);
-            profilePremiumBadge.classList.remove('glow-rainbow');
-          }
-        } else {
-          profilePremiumBadge.style.display = 'none';
-        }
-      } else {
-        displayNameEl.textContent = 'Misafir';
-        moneyEarnedEl.textContent = '$0.00';
-        clickCountEl.textContent = '0';
-        profilePremiumBadge.style.display = 'none';
-      }
-    }
-
-    // Basit cooldown koruması
-    let clickCooldown = false;
-    const BASE_CLICK_AMOUNT = 0.10; // örnek baz tıklama miktarı ($)
-
-    async function performClick(){
-      if(!currentUid || !currentUserData) { toast('Önce giriş yapın.'); return; }
-      if(clickCooldown) return;
-      clickCooldown = true;
-      setTimeout(()=> clickCooldown = false, 800); // 800ms cooldown
-
-      // hesapla
-      const reward = computeClickReward(currentUserData, BASE_CLICK_AMOUNT);
-      const amount = Number(reward.amount || 0);
-
-      try{
-        await db.runTransaction(async tx => {
-          const uRef = db.collection('users').doc(currentUid);
-          const snap = await tx.get(uRef);
-          if(!snap.exists) throw new Error('Kullanıcı bulunamadı');
-          const u = snap.data();
-          const newBalance = (Number(u.balance||u.money||0) + amount);
-          const totalClicks = Number(u.totalClicks || u.clicks || 0) + 1;
-          const dailyClicks = Number(u.dailyClicks || u.daily_clicks || 0) + 1;
-          tx.update(uRef, {
-            balance: newBalance,
-            totalClicks: totalClicks,
-            dailyClicks: dailyClicks,
-            lastClickAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        });
-        // UI güncellemesi firestore aboneliğiyle otomatik olacaktır
-        // küçük görsel feedback
-        pulseClickEffect(amount);
-      }catch(err){
-        console.error('Click error', err);
-        toast('Tıklama sırasında hata: '+ (err.message || err));
-      }
-    }
-
-    function pulseClickEffect(amount){
-      const old = moneyEarnedEl.textContent;
-      moneyEarnedEl.style.transition = 'transform 0.18s';
-      moneyEarnedEl.style.transform = 'scale(1.05)';
-      setTimeout(()=> moneyEarnedEl.style.transform = 'scale(1)', 180);
-      // kısa toast
-      toast(`+ $${Number(amount||0).toFixed(2)}`);
-    }
-
-    function toast(msg){
-      const c = document.getElementById('toastContainer');
-      const el = document.createElement('div');
-      el.className = 'toast';
-      el.style = 'background:rgba(0,0,0,0.7); color:#fff; padding:8px 12px; border-radius:8px; margin-top:8px;';
-      el.textContent = msg;
-      c.appendChild(el);
-      setTimeout(()=> { el.style.opacity = '0'; setTimeout(()=> el.remove(),400); }, 2200);
-    }
-
-    // market modal açma (market.html/ mmrkt.html ile uyum)
-    function openMarket(){
-      document.getElementById('marketModal').style.display = 'block';
-      loadMarketItemsIntoModal();
-    }
-    document.getElementById('marketCloseBtn').addEventListener('click', ()=> document.getElementById('marketModal').style.display='none');
-
-    // Basit ürün listesi (aynı ürünleri markette ekle)
-    const MARKET_PRODUCTS = [
-      { id: 'vip_minus', title: 'VIP-', priceCoins: 5000, role: 'vip-', color:'#3b82f6' },
-      { id: 'vip_plus', title: 'VIP+', priceCoins:10000, role: 'vip+', color:'#ef4444' },
-      { id: 'mvp_minus', title: 'MVP-', priceCoins:15000, role: 'mvp-', color:'#fbbf24' },
-      { id: 'mvp_plus', title: 'MVP+', priceCoins:20000, role: 'mvp+', color:'rainbow' }
-    ];
-    function loadMarketItemsIntoModal(){
-      const el = document.getElementById('marketItemsList');
-      el.innerHTML = '';
-      MARKET_PRODUCTS.forEach(p=>{
-        const card = document.createElement('div');
-        card.className = 'market-card';
-        card.style = 'background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);';
-        const colorStyle = p.color === 'rainbow' ? 'background:linear-gradient(90deg,#ff004c,#ffd400,#00ff6a,#00d4ff,#7c3aed); color:#000; padding:6px 8px; border-radius:6px;' : `background:${p.color}; color:${getContrastColor(p.color)}; padding:6px 8px; border-radius:6px;`;
-        card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><strong>${p.title}</strong><span style="${colorStyle}">${p.priceCoins.toLocaleString()} coin</span></div><div style="margin-top:8px;"><button class="buy-market-btn" data-id="${p.id}">Satın Al</button></div>`;
-        el.appendChild(card);
-      });
-      el.querySelectorAll('.buy-market-btn').forEach(b=> b.addEventListener('click', async (ev)=>{
-        const id = ev.currentTarget.dataset.id;
-        if(!currentUid){ toast('Önce giriş yapmalısınız.'); return; }
-        // yönlendir: ayrı market sayfas/ modal veya mmrkt.html satın alma işlemini tetikleyebilirsin.
-        // burada basitçe bir satın alma popup'ı sunmuyoruz, kullanıcı zaten market sayfasında da satın alabilir.
-        window.open('mmrkt.html', '_blank');
-      }));
-    }
-
-    // Başlangıç: session geri yükle (market sayfası lokal user id ile uyumlu)
-    (async function init(){
-      // sayfanın açılmasında auth kullanmıyorsan market ile kullanılan yerel uid'yi okuyalım
-      const savedUid = localStorage.getItem('market_user');
-      if(savedUid){
-        // var mı kontrol et
-        try{
-          const doc = await db.collection('users').doc(savedUid).get();
-          if(doc.exists) startUserSession(savedUid);
-          else localStorage.removeItem('market_user');
-        }catch(e){ console.error(e); }
-      }
-      // click buton handler
-      clickBtn.addEventListener('click', performClick);
-
-      // market modal button
-      document.getElementById('marketRefreshBtn').addEventListener('click', loadMarketItemsIntoModal);
-    })();
-
-    // storage event: diğer sekmelerden sq_last_award bildirimi gelirse güncelle
-    window.addEventListener('storage', (e) => {
-      if(!e || !e.key) return;
-      if(e.key === 'sq_last_award' && e.newValue) {
-        try {
-          const payload = JSON.parse(e.newValue);
-          if(payload && payload.uid && Number(payload.amount)) {
-            // Eğer aynı kullanıcı oturumu açıksa güncelle ve toast göster
-            if(currentUid && currentUid === payload.uid) {
-              db.collection('users').doc(payload.uid).get().then(snap => {
-                if(snap.exists) {
-                  currentUserData = snap.data();
-                  currentUserData.uid = snap.id;
-                  refreshUIForUser();
-                  toast(`+ $${Number(payload.amount).toFixed(2)} ödül!`);
-                }
-              }).catch(err => console.error('sq_last_award fetch err', err));
-            } else {
-              // Farklı kullanıcı veya oturum yoksa isterseniz sessiyon hatırlatması gösterebilirsiniz
-              // Örneğin: toast('Bir oyun ödülü verildi (girişli kullanıcı için).');
-            }
-          }
-        } catch (err) { console.error('sq_last_award parse err', err); }
-      }
-    });
-
-    // Başarı overlay kapatma
-    window.closeSuccessOverlay = () => document.getElementById('successOverlay').style.display = 'none';
-  </script>
-  <script src="script.js" defer></script>
-  <script src="features.js" defer></script>
-  <script src="features.fix.js" defer></script>
-  <!-- Çerçeve seçici için küçük eklenti -->
- 
 </body>
 </html>

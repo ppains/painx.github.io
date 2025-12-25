@@ -49,7 +49,7 @@
 </a>
         <!-- Market link eklendi -->
         <a href="market.html" class="menu-link" id="menuMarketBtn" onclick="openMarket()"><i class="fa-solid fa-store"></i> Market</a>
-      
+        <a href="admin.html" class="menu-link"><i class="fa-solid fa-lock"></i> </a>
         <a href="html.html" class="menu-link version-link"> 
     <i class="fa-solid fa-file-signature"></i> Versiyon Notları
 </a>
@@ -270,8 +270,9 @@
          <div class="auth-card">
             <h1 class="logo-text">GİRİŞ YAP</h1>
             <form id="authForm">
-               <input id="authUsername" placeholder="Kullanıcı Adı" required />
-               <input id="authPassword" type="password" placeholder="Şifre" required />
+               <!-- autocomplete ve autocapitalize eklendi: mobilde e‑posta önerisini engellemek için -->
+               <input id="authUsername" name="username" autocomplete="username" autocapitalize="none" placeholder="Kullanıcı Adı" required />
+               <input id="authPassword" name="password" autocomplete="current-password" type="password" placeholder="Şifre" required />
                <div id="authMessage" style="color:#FF4080; display:none;"></div>
                <button type="submit" id="authSubmitBtn" class="primary-btn full">GİRİŞ</button>
                <p id="switchText" onclick="window.switchAuthMode()">Hesabın yok mu? <b>Kayıt Ol</b></p>
@@ -636,6 +637,32 @@
       document.getElementById('marketRefreshBtn').addEventListener('click', loadMarketItemsIntoModal);
     })();
 
+    // storage event: diğer sekmelerden sq_last_award bildirimi gelirse güncelle
+    window.addEventListener('storage', (e) => {
+      if(!e || !e.key) return;
+      if(e.key === 'sq_last_award' && e.newValue) {
+        try {
+          const payload = JSON.parse(e.newValue);
+          if(payload && payload.uid && Number(payload.amount)) {
+            // Eğer aynı kullanıcı oturumu açıksa güncelle ve toast göster
+            if(currentUid && currentUid === payload.uid) {
+              db.collection('users').doc(payload.uid).get().then(snap => {
+                if(snap.exists) {
+                  currentUserData = snap.data();
+                  currentUserData.uid = snap.id;
+                  refreshUIForUser();
+                  toast(`+ $${Number(payload.amount).toFixed(2)} ödül!`);
+                }
+              }).catch(err => console.error('sq_last_award fetch err', err));
+            } else {
+              // Farklı kullanıcı veya oturum yoksa isterseniz sessiyon hatırlatması gösterebilirsiniz
+              // Örneğin: toast('Bir oyun ödülü verildi (girişli kullanıcı için).');
+            }
+          }
+        } catch (err) { console.error('sq_last_award parse err', err); }
+      }
+    });
+
     // Başarı overlay kapatma
     window.closeSuccessOverlay = () => document.getElementById('successOverlay').style.display = 'none';
   </script>
@@ -645,5 +672,4 @@
   <!-- Çerçeve seçici için küçük eklenti -->
  
 </body>
-
 </html>
